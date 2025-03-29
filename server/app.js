@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import morgan from "morgan";
+import { errorHandler, notFoundHandler } from "./middleware/errorMiddleware.js";
 
 // Load environment variables
 dotenv.config();
@@ -36,14 +37,10 @@ app.get("/", (req, res) => {
   res.json({ message: "Welcome to FlowFocus API" });
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
-  res.status(statusCode);
-  res.json({
-    message: err.message,
-    stack: process.env.NODE_ENV === "production" ? null : err.stack,
-  });
-});
+// Handle 404 errors for undefined routes
+app.use(notFoundHandler);
+
+// Global error handling middleware
+app.use(errorHandler);
 
 export { app, connectDB };
