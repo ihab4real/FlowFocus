@@ -1,4 +1,5 @@
 import { AppError } from "../utils/AppError.js";
+import { logError, logWarn, logInfo } from "../utils/logger.js";
 
 /**
  * Handle 404 errors for undefined routes
@@ -17,8 +18,8 @@ const errorHandler = (err, req, res, next) => {
   error.message = err.message;
   error.stack = err.stack;
 
-  // Log error for server-side debugging
-  console.error("ERROR 💥", {
+  // Log error with appropriate level based on status code
+  const logContext = {
     name: err.name,
     message: err.message,
     statusCode: err.statusCode,
@@ -28,7 +29,22 @@ const errorHandler = (err, req, res, next) => {
       process.env.NODE_ENV === "production"
         ? "Hidden in production"
         : err.stack,
-  });
+    request: {
+      method: req.method,
+      path: req.path,
+      body: req.body,
+      params: req.params,
+      query: req.query,
+    },
+  };
+
+  if (err.statusCode >= 500) {
+    logError("Server Error", logContext);
+  } else if (err.statusCode >= 400) {
+    logWarn("Client Error", logContext);
+  } else {
+    logInfo("Request Error", logContext);
+  }
 
   // Mongoose validation error
   if (err.name === "ValidationError") {
