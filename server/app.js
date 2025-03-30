@@ -4,12 +4,17 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import morgan from "morgan";
 import { errorHandler, notFoundHandler } from "./middleware/errorMiddleware.js";
+import { swaggerDocs } from "./config/swagger.js";
 
 // Load environment variables
 dotenv.config();
 
 // Create Express application
 const app = express();
+
+// Initialize Swagger documentation
+const PORT = process.env.PORT || 3000;
+swaggerDocs(app, PORT);
 
 // Middleware
 app.use(express.json());
