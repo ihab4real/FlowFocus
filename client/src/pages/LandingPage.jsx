@@ -2,6 +2,9 @@ import { Link } from "react-router-dom";
 import { Logo } from "../components/Logo";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { CheckCircle, Github } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import dashboardIllustration from "@/assets/dashboard-illustration.svg";
+import rocketAnimation from "@/assets/rocket-animation.svg";
 
 export default function LandingPage() {
   return (
@@ -31,44 +34,49 @@ export default function LandingPage() {
               </Link>
             </nav>
             <ThemeToggle />
-            <button className="btn btn-primary">
+            <Button asChild className="bg-[#6C63FF] hover:bg-[#6C63FF]/90">
               <Link to="/dashboard">Try Demo</Link>
-            </button>
+            </Button>
           </div>
         </div>
       </header>
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="py-20 md:py-32 bg-gradient-to-b from-background to-primary/5">
+        <section className="py-20 md:py-32 bg-gradient-to-b from-background to-[#6C63FF]/5">
           <div className="container mx-auto px-4 grid md:grid-cols-2 gap-8 items-center">
             <div>
               <h1 className="text-4xl md:text-6xl font-bold mb-4">
-                Organize. Focus. <span className="text-primary">Flow.</span>
+                Organize. Focus. <span className="text-[#6C63FF]">Flow.</span>
               </h1>
               <p className="text-xl mb-8 text-muted-foreground">
-                CamelCase is a minimalist productivity dashboard for developers
+                FlowFocus is a minimalist productivity dashboard for developers
                 and creatives. Manage tasks, take notes, and track habits—all in
                 one clutter-free workspace designed for deep work.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/dashboard" className="btn btn-primary">
-                  Try Demo
-                </Link>
-                <a
-                  href="https://github.com/yourusername/camelcase"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-outline"
+                <Button
+                  asChild
+                  size="lg"
+                  className="bg-[#6C63FF] hover:bg-[#6C63FF]/90"
                 >
-                  <Github className="mr-2 h-4 w-4" /> GitHub
-                </a>
+                  <Link to="/dashboard">Try Demo</Link>
+                </Button>
+                <Button asChild size="lg" variant="outline">
+                  <a
+                    href="https://github.com/ihab4real/flowfocus"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Github className="mr-2 h-4 w-4" /> GitHub
+                  </a>
+                </Button>
               </div>
             </div>
             <div className="rounded-lg border border-border shadow-lg overflow-hidden">
               <img
-                src="/placeholder.svg"
-                alt="CamelCase Dashboard"
+                src={dashboardIllustration}
+                alt="FlowFocus Dashboard"
                 className="w-full h-auto"
               />
             </div>
@@ -116,8 +124,33 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Demo Section */}
+        <section
+          id="demo"
+          className="py-20 bg-gradient-to-b from-background to-[#6C63FF]/10"
+        >
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center mb-8">
+              See FlowFocus in Action
+            </h2>
+            <p className="text-center text-lg text-muted-foreground max-w-2xl mx-auto mb-12">
+              Experience the seamless workflow and intuitive interface that
+              helps you stay focused and productive.
+            </p>
+            <div className="flex justify-center">
+              <div className="max-w-3xl w-full rounded-lg border border-border shadow-lg overflow-hidden bg-card">
+                <img
+                  src={rocketAnimation}
+                  alt="FlowFocus Animation"
+                  className="w-full h-auto"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Tech Stack Section */}
-        <section id="tech" className="py-20 bg-primary/5">
+        <section id="tech" className="py-20 bg-[#6C63FF]/5">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-12">Built With</h2>
             <div className="flex flex-wrap justify-center gap-4">
@@ -135,7 +168,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 text-center">
           <Logo />
           <p className="mt-4 text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} CamelCase. All rights reserved.
+            &copy; {new Date().getFullYear()} FlowFocus. All rights reserved.
           </p>
         </div>
       </footer>
@@ -145,7 +178,7 @@ export default function LandingPage() {
 
 function FeatureCard({ title, description, icon }) {
   return (
-    <div className="card p-6 hover:border-primary/30 transition-colors">
+    <div className="bg-card p-6 rounded-lg border border-border shadow-sm hover:border-[#6C63FF]/30 transition-colors">
       <div className="text-4xl mb-4">{icon}</div>
       <h3 className="text-xl font-bold mb-2">{title}</h3>
       <p className="text-muted-foreground">{description}</p>
@@ -155,8 +188,8 @@ function FeatureCard({ title, description, icon }) {
 
 function TechBadge({ name }) {
   return (
-    <div className="card px-4 py-2 rounded-full flex items-center gap-2">
-      <CheckCircle className="h-4 w-4 text-primary" />
+    <div className="bg-card px-4 py-2 rounded-full border border-border shadow-sm flex items-center gap-2">
+      <CheckCircle className="h-4 w-4 text-[#4FD1C5]" />
       <span className="font-medium">{name}</span>
     </div>
   );
