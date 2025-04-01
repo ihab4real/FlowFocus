@@ -2,8 +2,9 @@ import { createBrowserRouter } from "react-router-dom";
 import App from "../App";
 import RootLayout from "../layouts/RootLayout";
 import ErrorBoundary from "../components/ErrorBoundary";
-import Home from "../pages/Home";
+import Dashboard from "../pages/Dashboard";
 import NotFound from "../pages/NotFound";
+import LandingPage from "../pages/LandingPage";
 
 // Root loader function for initial data fetching
 async function rootLoader() {
@@ -23,9 +24,13 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <Home />,
+            element: <LandingPage />,
+          },
+          {
+            path: "dashboard",
+            element: <Dashboard />,
             loader: async () => {
-              // You can fetch any data needed for the home page
+              // You can fetch any data needed for the dashboard
               return {};
             },
           },
