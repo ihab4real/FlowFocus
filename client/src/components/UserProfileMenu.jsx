@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { LogOut, Settings, User } from "lucide-react";
@@ -7,6 +8,7 @@ import { LogOut, Settings, User } from "lucide-react";
 export function UserProfileMenu({ user: userProp }) {
   const [isOpen, setIsOpen] = useState(false);
   const { user: contextUser, logout } = useAuth();
+  const navigate = useNavigate();
 
   // Use the prop if provided, otherwise fall back to context
   const user = userProp || contextUser;
@@ -64,7 +66,10 @@ export function UserProfileMenu({ user: userProp }) {
                 <button
                   className="flex w-full items-center px-4 py-2 text-sm hover:bg-accent"
                   role="menuitem"
-                  onClick={closeMenu}
+                  onClick={() => {
+                    closeMenu();
+                    navigate("/profile");
+                  }}
                 >
                   <User className="mr-2 h-4 w-4" />
                   Profile

@@ -8,6 +8,7 @@ import LandingPage from "../pages/LandingPage";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import ProtectedRoute from "../components/ProtectedRoute";
+import Profile from "../pages/Profile";
 
 // Root loader function for initial data fetching
 async function rootLoader() {
@@ -48,6 +49,14 @@ export const router = createBrowserRouter([
               // You can fetch any data needed for the dashboard
               return {};
             },
+          },
+          {
+            path: "profile",
+            element: (
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            ),
           },
           {
             path: "*",
