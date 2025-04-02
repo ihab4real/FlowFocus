@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { useAuthStore } from "@/stores/authStore";
 import { AuthContext } from "./AuthContext";
 
@@ -17,7 +18,17 @@ export function AuthProvider({ children }) {
     register,
     logout,
     setError,
+    checkAuth,
   } = useAuthStore();
+
+  // Verify authentication status when the app loads
+  useEffect(() => {
+    const verifyAuth = async () => {
+      await checkAuth();
+    };
+
+    verifyAuth();
+  }, [checkAuth]);
 
   // Handle logout
   const handleLogout = () => {
@@ -37,6 +48,7 @@ export function AuthProvider({ children }) {
         register,
         logout: handleLogout,
         setError,
+        checkAuth,
       }}
     >
       {children}
