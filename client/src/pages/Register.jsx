@@ -87,6 +87,7 @@ export default function Register() {
       name: formData.name,
       email: formData.email,
       password: formData.password,
+      passwordConfirm: formData.confirmPassword,
     });
 
     if (result.success) {
