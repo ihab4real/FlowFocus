@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { authService } from "@/services/api/authService";
 
 /**
  * Authentication store using Zustand
@@ -21,72 +22,60 @@ export const useAuthStore = create(
       // Set error state
       setError: (error) => set({ error }),
 
-      // Login action (will be connected to API later)
+      // Login action using real API
       login: async (credentials) => {
         set({ isLoading: true, error: null });
         try {
-          // Mock successful login for now
-          // This will be replaced with actual API call
-          const mockUser = {
-            id: "1",
-            name: credentials.email.split("@")[0],
-            email: credentials.email,
-          };
-          const mockToken = "mock-jwt-token";
-
-          // Simulate API delay
-          await new Promise((resolve) => setTimeout(resolve, 800));
+          const response = await authService.login(credentials);
 
           set({
-            user: mockUser,
-            token: mockToken,
+            user: response.data.user,
+            token: response.token,
             isAuthenticated: true,
             isLoading: false,
           });
           return { success: true };
         } catch (error) {
+          const errorMessage =
+            error.response?.data?.message || error.message || "Failed to login";
           set({
-            error: error.message || "Failed to login",
+            error: errorMessage,
             isLoading: false,
           });
-          return { success: false, error: error.message };
+          return { success: false, error: errorMessage };
         }
       },
 
-      // Register action (will be connected to API later)
+      // Register action using real API
       register: async (userData) => {
         set({ isLoading: true, error: null });
         try {
-          // Mock successful registration for now
-          // This will be replaced with actual API call
-          const mockUser = {
-            id: "1",
-            name: userData.name,
-            email: userData.email,
-          };
-          const mockToken = "mock-jwt-token";
-
-          // Simulate API delay
-          await new Promise((resolve) => setTimeout(resolve, 800));
+          const response = await authService.register(userData);
 
           set({
-            user: mockUser,
-            token: mockToken,
+            user: response.data.user,
+            token: response.token,
             isAuthenticated: true,
             isLoading: false,
           });
           return { success: true };
         } catch (error) {
+          const errorMessage =
+            error.response?.data?.message ||
+            error.message ||
+            "Failed to register";
           set({
-            error: error.message || "Failed to register",
+            error: errorMessage,
             isLoading: false,
           });
-          return { success: false, error: error.message };
+          return { success: false, error: errorMessage };
         }
       },
 
       // Logout action
       logout: () => {
+        // No need to call API for logout as we're using JWT
+        // Just clear the state
         set({
           user: null,
           token: null,
@@ -96,9 +85,25 @@ export const useAuthStore = create(
       },
 
       // Check if user is authenticated (will be used for protected routes)
-      checkAuth: () => {
+      checkAuth: async () => {
         const state = useAuthStore.getState();
-        return state.isAuthenticated && state.token;
+        if (state.isAuthenticated && state.token) {
+          try {
+            // Verify token validity with the server
+            const response = await authService.getCurrentUser();
+            // Update user data with the latest from server
+            useAuthStore.setState({
+              user: response.data.user,
+              isAuthenticated: true,
+            });
+            return true;
+          } catch (error) {
+            // If token is invalid, clear auth state
+            useAuthStore.getState().logout();
+            return false;
+          }
+        }
+        return false;
       },
     }),
     {
