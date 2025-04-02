@@ -223,6 +223,17 @@ export default function Register() {
                       formErrors.confirmPassword ? "border-destructive" : ""
                     }
                   />
+                  <button
+                    type="button"
+                    onClick={togglePasswordVisibility}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? (
+                      <EyeOffIcon className="h-4 w-4" />
+                    ) : (
+                      <EyeIcon className="h-4 w-4" />
+                    )}
+                  </button>
                 </div>
                 {formErrors.confirmPassword && (
                   <p className="text-xs text-destructive mt-1">
