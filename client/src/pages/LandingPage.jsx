@@ -1,12 +1,14 @@
 import { Link } from "react-router-dom";
 import { Logo } from "../components/Logo";
 import { ThemeToggle } from "../components/ThemeToggle";
-import { CheckCircle, Github } from "lucide-react";
+import { CheckCircle, Github, User } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/Button";
 import dashboardIllustration from "@/assets/dashboard-illustration.svg";
 import rocketAnimation from "@/assets/rocket-animation.svg";
 
 export default function LandingPage() {
+  const { isAuthenticated, user } = useAuth();
   return (
     <div className="min-h-screen flex flex-col">
       <header className="border-b border-border">
@@ -14,34 +16,45 @@ export default function LandingPage() {
           <Logo />
           <div className="flex items-center gap-4">
             <nav className="hidden md:flex items-center gap-6">
-              <Link
-                to="#features"
+              <a
+                href="#features"
                 className="text-sm font-medium hover:text-primary transition-colors"
               >
                 Features
-              </Link>
-              <Link
-                to="#demo"
+              </a>
+              <a
+                href="#demo"
                 className="text-sm font-medium hover:text-primary transition-colors"
               >
                 Demo
-              </Link>
-              <Link
-                to="#tech"
+              </a>
+              <a
+                href="#tech"
                 className="text-sm font-medium hover:text-primary transition-colors"
               >
                 Tech Stack
-              </Link>
+              </a>
             </nav>
             <ThemeToggle />
-            <div className="flex items-center gap-2">
-              <Button asChild variant="outline">
-                <Link to="/login">Sign in</Link>
-              </Button>
-              <Button asChild className="bg-[#6C63FF] hover:bg-[#6C63FF]/90">
-                <Link to="/register">Sign up</Link>
-              </Button>
-            </div>
+            {isAuthenticated ? (
+              <div className="flex items-center gap-2">
+                <Button asChild variant="outline">
+                  <Link to="/dashboard">
+                    <User className="mr-2 h-4 w-4" />
+                    Dashboard
+                  </Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Button asChild variant="outline">
+                  <Link to="/login">Sign in</Link>
+                </Button>
+                <Button asChild className="bg-[#6C63FF] hover:bg-[#6C63FF]/90">
+                  <Link to="/register">Sign up</Link>
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -65,7 +78,9 @@ export default function LandingPage() {
                   size="lg"
                   className="bg-[#6C63FF] hover:bg-[#6C63FF]/90"
                 >
-                  <Link to="/dashboard">Try Demo</Link>
+                  <Link to={isAuthenticated ? "/dashboard" : "/login"}>
+                    {isAuthenticated ? "Go to Dashboard" : "Try Demo"}
+                  </Link>
                 </Button>
                 <Button asChild size="lg" variant="outline">
                   <a
