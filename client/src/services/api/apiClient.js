@@ -12,8 +12,10 @@ const apiClient = axios.create({
 // Request interceptor
 apiClient.interceptors.request.use(
   (config) => {
-    // Get token from localStorage or your auth store
-    const token = localStorage.getItem("token");
+    // Get token from auth store
+    // We need to import directly to avoid circular dependencies
+    const { token } =
+      JSON.parse(localStorage.getItem("auth-storage"))?.state || {};
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -34,9 +36,9 @@ apiClient.interceptors.response.use(
     if (response) {
       switch (response.status) {
         case 401:
-          // Handle unauthorized access
-          localStorage.removeItem("token");
-          window.location.href = "/login";
+          // Let the auth store handle unauthorized access
+          // We'll clear the auth state in the store instead of redirecting here
+          // This allows for better error handling and user experience
           break;
         case 403:
           // Handle forbidden access
