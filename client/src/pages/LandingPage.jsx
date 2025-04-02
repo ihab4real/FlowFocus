@@ -34,9 +34,14 @@ export default function LandingPage() {
               </Link>
             </nav>
             <ThemeToggle />
-            <Button asChild className="bg-[#6C63FF] hover:bg-[#6C63FF]/90">
-              <Link to="/dashboard">Try Demo</Link>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button asChild variant="outline">
+                <Link to="/login">Sign in</Link>
+              </Button>
+              <Button asChild className="bg-[#6C63FF] hover:bg-[#6C63FF]/90">
+                <Link to="/register">Sign up</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </header>
