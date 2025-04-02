@@ -1,10 +1,14 @@
 import React from "react";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "../hooks/useAuth";
+import { UserProfileMenu } from "./UserProfileMenu";
 
 export function DashboardHeader() {
+  const { user } = useAuth();
+
   return (
     <header className="border-b border-border p-4 flex items-center justify-between">
       <div className="flex items-center w-full max-w-sm">
@@ -16,10 +20,11 @@ export function DashboardHeader() {
         <Button className="bg-[#6C63FF] hover:bg-[#6C63FF]/90">
           <Plus className="w-4 h-4 mr-2" /> New Task
         </Button>
-        <Avatar>
+        {/* <Avatar>
           <AvatarImage src="/placeholder.svg?height=32&width=32" />
           <AvatarFallback>JD</AvatarFallback>
-        </Avatar>
+        </Avatar> */}
+        <UserProfileMenu user={user} />
       </div>
     </header>
   );
