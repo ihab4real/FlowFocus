@@ -1,8 +1,15 @@
 import React from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 export function Logo({ collapsed = false }) {
+  const { isAuthenticated } = useAuth();
+
   return (
-    <div className="flex items-center">
+    <Link
+      to={isAuthenticated ? "/dashboard" : "/"}
+      className="flex items-center hover:opacity-80 transition-opacity"
+    >
       <div className="flex items-center justify-center">
         <svg
           width="32"
@@ -50,6 +57,6 @@ export function Logo({ collapsed = false }) {
           FlowFocus
         </div>
       )}
-    </div>
+    </Link>
   );
 }
