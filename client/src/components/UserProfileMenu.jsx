@@ -35,7 +35,7 @@ export function UserProfileMenu({ user: userProp }) {
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
-        <Avatar className="h-8 w-8 bg-primary text-primary-foreground">
+        <Avatar className="h-8 w-8 bg-primary text-primary-foreground flex items-center justify-center">
           <span className="text-xs font-medium">{getInitials(user?.name)}</span>
         </Avatar>
         <span className="text-sm font-medium hidden md:inline-block">
