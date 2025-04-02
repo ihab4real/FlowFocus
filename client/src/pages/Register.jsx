@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -17,7 +17,9 @@ import { EyeIcon, EyeOffIcon, Loader2 } from "lucide-react";
 
 export default function Register() {
   const navigate = useNavigate();
-  const { register, isLoading, error, setError } = useAuthStore();
+  const location = useLocation();
+  const { register, isLoading, error, setError, isAuthenticated } =
+    useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -78,6 +80,15 @@ export default function Register() {
     return Object.keys(errors).length === 0;
   };
 
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      // Redirect to the page they were trying to access, or dashboard as fallback
+      const from = location.state?.from || "/dashboard";
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, location]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -91,7 +102,9 @@ export default function Register() {
     });
 
     if (result.success) {
-      navigate("/dashboard");
+      // Redirect to the page they were trying to access, or dashboard as fallback
+      const from = location.state?.from || "/dashboard";
+      navigate(from, { replace: true });
     }
   };
 

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -17,12 +17,22 @@ import { EyeIcon, EyeOffIcon, Loader2 } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, isLoading, error, setError } = useAuthStore();
+  const location = useLocation();
+  const { login, isLoading, error, setError, isAuthenticated } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      // Redirect to the page they were trying to access, or dashboard as fallback
+      const from = location.state?.from || "/dashboard";
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, location]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -38,7 +48,9 @@ export default function Login() {
     e.preventDefault();
     const result = await login(formData);
     if (result.success) {
-      navigate("/dashboard");
+      // Redirect to the page they were trying to access, or dashboard as fallback
+      const from = location.state?.from || "/dashboard";
+      navigate(from, { replace: true });
     }
   };
 
