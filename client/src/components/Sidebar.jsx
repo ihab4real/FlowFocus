@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Home,
   CheckSquare,
@@ -12,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Logo } from "./Logo";
 
-function NavItem({ icon, label, collapsed, active = false }) {
+function NavItem({ icon, label, collapsed, active = false, to }) {
   return (
     <Button
       variant={active ? "default" : "ghost"}
@@ -21,9 +22,12 @@ function NavItem({ icon, label, collapsed, active = false }) {
         collapsed ? "px-2" : "px-4",
         active && "bg-[#6C63FF] hover:bg-[#6C63FF]/90"
       )}
+      asChild
     >
-      {icon}
-      {!collapsed && <span className="ml-2">{label}</span>}
+      <Link to={to}>
+        {icon}
+        {!collapsed && <span className="ml-2">{label}</span>}
+      </Link>
     </Button>
   );
 }
@@ -56,11 +60,32 @@ export function Sidebar() {
           label="Dashboard"
           collapsed={collapsed}
           active
+          to="/dashboard"
         />
-        <NavItem icon={<CheckSquare />} label="Tasks" collapsed={collapsed} />
-        <NavItem icon={<FileText />} label="Notes" collapsed={collapsed} />
-        <NavItem icon={<Clock />} label="Pomodoro" collapsed={collapsed} />
-        <NavItem icon={<Settings />} label="Settings" collapsed={collapsed} />
+        <NavItem
+          icon={<CheckSquare />}
+          label="Tasks"
+          collapsed={collapsed}
+          to="/dashboard/tasks"
+        />
+        <NavItem
+          icon={<FileText />}
+          label="Notes"
+          collapsed={collapsed}
+          to="/dashboard/notes"
+        />
+        <NavItem
+          icon={<Clock />}
+          label="Pomodoro"
+          collapsed={collapsed}
+          to="/dashboard/pomodoro"
+        />
+        <NavItem
+          icon={<Settings />}
+          label="Settings"
+          collapsed={collapsed}
+          to="/dashboard/settings"
+        />
       </nav>
 
       {!collapsed && (
