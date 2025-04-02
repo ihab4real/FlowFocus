@@ -5,6 +5,9 @@ import ErrorBoundary from "../components/ErrorBoundary";
 import Dashboard from "../pages/Dashboard";
 import NotFound from "../pages/NotFound";
 import LandingPage from "../pages/LandingPage";
+import Login from "../pages/Login";
+import Register from "../pages/Register";
+import ProtectedRoute from "../components/ProtectedRoute";
 
 // Root loader function for initial data fetching
 async function rootLoader() {
@@ -27,8 +30,20 @@ export const router = createBrowserRouter([
             element: <LandingPage />,
           },
           {
+            path: "login",
+            element: <Login />,
+          },
+          {
+            path: "register",
+            element: <Register />,
+          },
+          {
             path: "dashboard",
-            element: <Dashboard />,
+            element: (
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            ),
             loader: async () => {
               // You can fetch any data needed for the dashboard
               return {};
