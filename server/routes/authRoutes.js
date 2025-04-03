@@ -4,11 +4,11 @@ import {
   login,
   forgotPassword,
   resetPassword,
-  protect,
   getMe,
   updateProfile,
   changePassword,
 } from "../controllers/authController.js";
+import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
