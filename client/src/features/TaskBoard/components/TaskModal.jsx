@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import TaskForm from "./TaskForm";
 
-const TaskModal = ({ isOpen, onClose, initialData = null, onSubmit }) => {
+const TaskModal = ({ isOpen, onClose, initialData = null, selectedColumnId = null, onSubmit }) => {
   const handleSubmit = (taskData) => {
     onSubmit(taskData);
     onClose();
@@ -23,6 +23,7 @@ const TaskModal = ({ isOpen, onClose, initialData = null, onSubmit }) => {
         </DialogHeader>
         <TaskForm
           initialData={initialData}
+          selectedColumnId={selectedColumnId}
           onSubmit={handleSubmit}
           onCancel={onClose}
         />

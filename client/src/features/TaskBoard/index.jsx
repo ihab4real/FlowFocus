@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Maximize2, Minimize2 } from "lucide-react";
@@ -16,11 +16,25 @@ function TaskBoard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [columns, setColumns] = useState([]);
+  const [selectedColumnId, setSelectedColumnId] = useState(null);
+  const [customColumnCount, setCustomColumnCount] = useState(0);
+  const [newColumnId, setNewColumnId] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
   
   // Check if we're in fullscreen mode
   const isFullscreen = location.pathname === "/dashboard/taskboard";
+
+  // Reset new column ID after a delay to avoid keeping columns in edit mode
+  useEffect(() => {
+    if (newColumnId) {
+      const timer = setTimeout(() => {
+        setNewColumnId(null);
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [newColumnId]);
 
   // Fetch tasks from API
   const fetchTasks = useCallback(async () => {
@@ -28,7 +42,22 @@ function TaskBoard() {
     try {
       const response = await taskService.getTasks();
       const tasks = response.data;
-      setColumns(groupTasksByStatus(tasks));
+      
+      // Get standard columns 
+      const standardColumns = groupTasksByStatus(tasks);
+      
+      // Add any custom columns from state if they exist
+      const mergedColumns = [...standardColumns];
+      
+      // Add custom columns from local storage or state
+      const savedCustomColumns = localStorage.getItem('customColumns');
+      if (savedCustomColumns) {
+        const customCols = JSON.parse(savedCustomColumns);
+        mergedColumns.push(...customCols);
+        setCustomColumnCount(customCols.length);
+      }
+      
+      setColumns(mergedColumns);
     } catch (err) {
       console.error("Error fetching tasks:", err);
       setError("Failed to load tasks. Please try again.");
@@ -41,14 +70,70 @@ function TaskBoard() {
     fetchTasks();
   }, [fetchTasks]);
 
-  const handleAddTask = () => {
+  const handleAddTask = (columnId = null) => {
     setSelectedTask(null);
+    setSelectedColumnId(columnId);
     setIsModalOpen(true);
   };
 
   const handleEditTask = (task) => {
     setSelectedTask(task);
+    setSelectedColumnId(null);
     setIsModalOpen(true);
+  };
+
+  // Add a new column
+  const handleAddColumn = () => {
+    const newColumnCount = customColumnCount + 1;
+    const newColId = `custom-${Date.now()}`;
+    const newColumn = {
+      id: newColId,
+      title: `New Column`,
+      tasks: [],
+      custom: true
+    };
+    
+    const updatedColumns = [...columns, newColumn];
+    setColumns(updatedColumns);
+    setCustomColumnCount(newColumnCount);
+    setNewColumnId(newColId);
+    
+    // Save custom columns to localStorage
+    const customColumns = updatedColumns.filter(col => col.custom);
+    localStorage.setItem('customColumns', JSON.stringify(customColumns));
+  };
+
+  // Edit column title
+  const handleEditColumn = (columnId, newTitle) => {
+    const updatedColumns = columns.map(col => {
+      if (col.id === columnId) {
+        return { ...col, title: newTitle };
+      }
+      return col;
+    });
+    
+    setColumns(updatedColumns);
+    
+    // Update local storage
+    const customColumns = updatedColumns.filter(col => col.custom);
+    localStorage.setItem('customColumns', JSON.stringify(customColumns));
+  };
+
+  // Delete a column
+  const handleDeleteColumn = (columnId) => {
+    // Check if it's a standard column
+    const isStandardColumn = ['todo', 'in-progress', 'done'].includes(columnId);
+    if (isStandardColumn) {
+      setError("Cannot delete standard columns");
+      return;
+    }
+    
+    const updatedColumns = columns.filter(col => col.id !== columnId);
+    setColumns(updatedColumns);
+    
+    // Update local storage
+    const customColumns = updatedColumns.filter(col => col.custom);
+    localStorage.setItem('customColumns', JSON.stringify(customColumns));
   };
 
   // Toggle fullscreen mode
@@ -83,7 +168,7 @@ function TaskBoard() {
     async (taskId, newStatus) => {
       try {
         // Call API to update task status
-        await taskService.moveTask(taskId, statusMap[newStatus]);
+        await taskService.moveTask(taskId, statusMap[newStatus] || newStatus);
         // Refresh tasks after moving
         fetchTasks();
       } catch (err) {
@@ -93,6 +178,22 @@ function TaskBoard() {
     },
     [fetchTasks]
   );
+
+  // Calculate column layout classes based on number of columns and fullscreen mode
+  const getColumnLayoutClasses = () => {
+    if (!isFullscreen) {
+      return "flex gap-4 overflow-x-auto pb-4 h-full";
+    }
+    
+    const columnCount = columns.length;
+    if (columnCount <= 4) {
+      // For 4 or fewer columns, distribute them evenly with small gaps
+      return "flex gap-3 pb-4 h-full justify-between";
+    } else {
+      // For more than 4 columns, allow horizontal scrolling
+      return "flex gap-3 pb-4 h-full overflow-x-auto";
+    }
+  };
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -109,7 +210,7 @@ function TaskBoard() {
             <Button
               size="sm"
               className="bg-[#6C63FF] hover:bg-[#6C63FF]/90"
-              onClick={handleAddTask}
+              onClick={() => handleAddTask()}
             >
               <Plus className="w-4 h-4 mr-1" />
               Add Task
@@ -117,6 +218,7 @@ function TaskBoard() {
             <Button 
               size="sm" 
               className="bg-[#6C63FF] hover:bg-[#6C63FF]/90"
+              onClick={handleAddColumn}
             >
               <Plus className="w-4 h-4 mr-1" />
               Add Column
@@ -156,12 +258,8 @@ function TaskBoard() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#6C63FF]"></div>
             </div>
           ) : (
-            <div className={`
-              flex gap-4 pb-4 h-full
-              ${isFullscreen ? "overflow-x-auto pt-2 w-full" : "overflow-x-auto"}
-              ${isFullscreen && columns.length <= 4 ? "justify-between" : ""}
-            `}>
-              {columns.map((column, index) => (
+            <div className={getColumnLayoutClasses()}>
+              {columns.map((column) => (
                 <TaskColumn
                   key={column.id}
                   id={column.id}
@@ -169,6 +267,10 @@ function TaskBoard() {
                   tasks={column.tasks}
                   getPriorityColor={getPriorityColor}
                   onMoveTask={handleMoveTask}
+                  onAddTask={handleAddTask}
+                  onDeleteColumn={handleDeleteColumn}
+                  onEditColumn={handleEditColumn}
+                  isNewColumn={column.id === newColumnId}
                 />
               ))}
             </div>
@@ -179,8 +281,12 @@ function TaskBoard() {
       {/* Task Modal */}
       <TaskModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedColumnId(null);
+        }}
         initialData={selectedTask}
+        selectedColumnId={selectedColumnId}
         onSubmit={handleTaskSubmit}
       />
     </DndProvider>

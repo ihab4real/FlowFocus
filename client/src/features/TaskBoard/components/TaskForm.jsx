@@ -1,23 +1,94 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { X, Calendar, Loader2 } from "lucide-react";
 import taskService from "@/services/api/taskService";
+import { statusMap } from "../taskUtils";
+import { format } from "date-fns";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
-const TaskForm = ({ onSubmit, initialData = null, onCancel }) => {
+const TaskForm = ({ onSubmit, initialData = null, selectedColumnId = null, onCancel }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [availableStatuses, setAvailableStatuses] = useState([
+    { value: "Todo", label: "Todo" },
+    { value: "Doing", label: "Doing" },
+    { value: "Done", label: "Done" },
+  ]);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  
+  // Initialize form data
   const [formData, setFormData] = useState({
     title: initialData?.title || "",
     description: initialData?.description || "",
     priority: initialData?.priority || "Medium",
     dueDate: initialData?.dueDate
-      ? new Date(initialData.dueDate).toISOString().split("T")[0]
+      ? new Date(initialData.dueDate)
       : "",
     tags: initialData?.tags || [],
     status: initialData?.status || "Todo",
   });
+
+  // Set initial status based on selected column
+  useEffect(() => {
+    if (selectedColumnId && !initialData) {
+      // For standard columns, map ID to status using statusMap
+      if (statusMap[selectedColumnId]) {
+        setFormData(prev => ({ ...prev, status: statusMap[selectedColumnId] }));
+      } else if (selectedColumnId.startsWith('custom-')) {
+        // For custom columns, use the column ID as status
+        setFormData(prev => ({ ...prev, status: selectedColumnId }));
+        
+        // Add custom column to available statuses if not already present
+        const customStatusExists = availableStatuses.some(status => status.value === selectedColumnId);
+        if (!customStatusExists) {
+          setAvailableStatuses(prev => [
+            ...prev, 
+            { 
+              value: selectedColumnId, 
+              label: `Custom (${selectedColumnId.split('-')[1]})` 
+            }
+          ]);
+        }
+      }
+    }
+  }, [selectedColumnId, initialData, availableStatuses]);
+
+  // Get all unique statuses from local storage
+  useEffect(() => {
+    const savedCustomColumns = localStorage.getItem('customColumns');
+    if (savedCustomColumns) {
+      try {
+        const customCols = JSON.parse(savedCustomColumns);
+        
+        // Create a set of all statuses (standard + custom)
+        const statusSet = new Set([
+          ...availableStatuses.map(s => s.value),
+          ...customCols.map(col => col.id)
+        ]);
+        
+        // Convert to array of status objects
+        const allStatuses = Array.from(statusSet).map(status => {
+          // Check if it's a standard status
+          const stdStatus = availableStatuses.find(s => s.value === status);
+          if (stdStatus) return stdStatus;
+          
+          // Otherwise, it's a custom status
+          const customCol = customCols.find(col => col.id === status);
+          return {
+            value: status,
+            label: customCol ? customCol.title : `Custom (${status.split('-')[1]})`
+          };
+        });
+        
+        setAvailableStatuses(allStatuses);
+      } catch (err) {
+        console.error("Error parsing custom columns:", err);
+      }
+    }
+  }, []);
 
   const [tagInput, setTagInput] = useState("");
   const [error, setError] = useState("");
@@ -25,6 +96,11 @@ const TaskForm = ({ onSubmit, initialData = null, onCancel }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleDateChange = (date) => {
+    setFormData((prev) => ({ ...prev, dueDate: date }));
+    setCalendarOpen(false);
   };
 
   const handleTagInput = (e) => {
@@ -57,15 +133,22 @@ const TaskForm = ({ onSubmit, initialData = null, onCancel }) => {
       return;
     }
 
+    // Prepare data for submission
+    const submissionData = {
+      ...formData,
+      // Format date if it exists
+      dueDate: formData.dueDate ? formData.dueDate : undefined,
+    };
+
     setIsLoading(true);
     try {
       // If we have initialData with an ID, it's an update
       if (initialData?._id) {
-        const updatedTask = await taskService.update(initialData._id, formData);
+        const updatedTask = await taskService.update(initialData._id, submissionData);
         onSubmit(updatedTask);
       } else {
         // Otherwise it's a new task
-        const newTask = await taskService.create(formData);
+        const newTask = await taskService.create(submissionData);
         onSubmit(newTask);
       }
     } catch (err) {
@@ -151,9 +234,11 @@ const TaskForm = ({ onSubmit, initialData = null, onCancel }) => {
               onChange={handleChange}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
             >
-              <option value="Todo">Todo</option>
-              <option value="Doing">Doing</option>
-              <option value="Done">Done</option>
+              {availableStatuses.map((status) => (
+                <option key={status.value} value={status.value}>
+                  {status.label}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -185,19 +270,40 @@ const TaskForm = ({ onSubmit, initialData = null, onCancel }) => {
           >
             Due Date
           </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <Calendar className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-            </div>
-            <Input
-              type="date"
-              id="dueDate"
-              name="dueDate"
-              value={formData.dueDate}
-              onChange={handleChange}
-              className="pl-10"
-            />
-          </div>
+          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full flex justify-between items-center text-left font-normal h-10"
+              >
+                <span className="flex items-center">
+                  <Calendar className="h-4 w-4 text-gray-500 dark:text-gray-400 mr-2" />
+                  {formData.dueDate ? (
+                    format(formData.dueDate, "PPP")
+                  ) : (
+                    <span className="text-muted-foreground">Pick a date</span>
+                  )}
+                </span>
+                {formData.dueDate && (
+                  <X
+                    className="h-4 w-4 opacity-70 hover:opacity-100 cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFormData((prev) => ({ ...prev, dueDate: "" }));
+                    }}
+                  />
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <CalendarComponent
+                mode="single"
+                selected={formData.dueDate}
+                onSelect={handleDateChange}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
         </div>
 
         <div className="space-y-2">
@@ -252,18 +358,16 @@ const TaskForm = ({ onSubmit, initialData = null, onCancel }) => {
               Cancel
             </Button>
           )}
-          <Button
-            type="submit"
-            className="bg-[#6C63FF] hover:bg-[#6C63FF]/90"
-            disabled={isLoading}
-          >
+          <Button type="submit" disabled={isLoading} className="bg-[#6C63FF] hover:bg-[#6C63FF]/90">
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {initialData ? "Updating..." : "Creating..."}
+                Saving...
               </>
+            ) : initialData ? (
+              "Update Task"
             ) : (
-              <>{initialData ? "Update Task" : "Create Task"}</>
+              "Create Task"
             )}
           </Button>
         </div>
