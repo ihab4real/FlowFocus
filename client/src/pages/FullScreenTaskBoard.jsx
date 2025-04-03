@@ -16,18 +16,18 @@ export function FullScreenTaskBoard() {
     const timer = setTimeout(() => {
       setIsVisible(true);
     }, 100);
-    
+
     return () => clearTimeout(timer);
   }, []);
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       <Sidebar />
-      <main 
+      <main
         className={`
           flex-1 flex flex-col overflow-hidden
           transition-all duration-500 ease-in-out
-          ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
+          ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
         `}
       >
         <DashboardHeader />
