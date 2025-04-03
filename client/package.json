@@ -42,6 +42,7 @@
     "axios": "^1.8.4",
     "class-variance-authority": "^0.7.1",
     "clx": "^1.0.0",
+    "date-fns": "^4.1.0",
     "lucide-react": "^0.486.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
