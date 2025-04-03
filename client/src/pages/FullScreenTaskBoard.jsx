@@ -21,17 +21,17 @@ export function FullScreenTaskBoard() {
   }, []);
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className="flex h-screen bg-background">
       <Sidebar />
       <main
         className={`
-          flex-1 flex flex-col overflow-hidden
+          flex-1 flex flex-col
           transition-all duration-500 ease-in-out
           ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
         `}
       >
         <DashboardHeader />
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1">
           <TaskBoard />
         </div>
       </main>
