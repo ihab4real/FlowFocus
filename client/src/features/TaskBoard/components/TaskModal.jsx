@@ -5,7 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import TaskForm from "@/components/TaskForm/TaskForm";
+import TaskForm from "./TaskForm";
 
 const TaskModal = ({ isOpen, onClose, initialData = null, onSubmit }) => {
   const handleSubmit = (taskData) => {
