@@ -84,4 +84,35 @@ const deleteTask = asyncHandler(async (req, res) => {
   });
 });
 
-export { createTask, getTasks, getTask, updateTask, deleteTask };
+// Move a task to a different status
+const moveTask = asyncHandler(async (req, res) => {
+  const { status } = req.body;
+
+  // Validate status
+  if (!status || !["Todo", "Doing", "Done"].includes(status)) {
+    throw new AppError("Invalid status value", 400);
+  }
+
+  const task = await Task.findOneAndUpdate(
+    {
+      _id: req.params.id,
+      user: req.user._id,
+    },
+    { status, updatedAt: Date.now() },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  if (!task) {
+    throw new AppError("No task found with that ID", 404);
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: task,
+  });
+});
+
+export { createTask, getTasks, getTask, updateTask, deleteTask, moveTask };

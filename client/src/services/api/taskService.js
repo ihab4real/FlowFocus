@@ -12,7 +12,7 @@ const taskService = new ApiService("/api/tasks");
  * @returns {Promise<Object>} - Response with updated task data
  */
 taskService.moveTask = async (id, status) => {
-  return taskService.executeAction(id, "move", { status });
+  return taskService.executeAction(id, "move", { status }, "PATCH");
 };
 
 /**

@@ -6,6 +6,7 @@ import {
   getTask,
   updateTask,
   deleteTask,
+  moveTask,
 } from "../controllers/taskController.js";
 
 const router = express.Router();
@@ -15,7 +16,7 @@ router.use(protect);
 
 /**
  * @swagger
- * /api/v1/tasks:
+ * /api/tasks:
  *   get:
  *     summary: Get all tasks for the authenticated user
  *     tags: [Tasks]
@@ -41,7 +42,7 @@ router.use(protect);
  */
 /**
  * @swagger
- * /api/v1/tasks:
+ * /api/tasks:
  *   post:
  *     summary: Create a new task
  *     tags: [Tasks]
@@ -93,7 +94,7 @@ router.route("/").get(getTasks).post(createTask);
 
 /**
  * @swagger
- * /api/v1/tasks/{id}:
+ * /api/tasks/{id}:
  *   get:
  *     summary: Get a task by ID
  *     tags: [Tasks]
@@ -120,7 +121,7 @@ router.route("/").get(getTasks).post(createTask);
  */
 /**
  * @swagger
- * /api/v1/tasks/{id}:
+ * /api/tasks/{id}:
  *   patch:
  *     summary: Update a task
  *     tags: [Tasks]
@@ -173,7 +174,7 @@ router.route("/").get(getTasks).post(createTask);
  */
 /**
  * @swagger
- * /api/v1/tasks/{id}:
+ * /api/tasks/{id}:
  *   delete:
  *     summary: Delete a task
  *     tags: [Tasks]
@@ -204,5 +205,8 @@ router
   .patch(updateTask)
   .put(updateTask)
   .delete(deleteTask);
+
+// Route for moving a task between columns
+router.route("/:id/move").post(moveTask);
 
 export default router;
