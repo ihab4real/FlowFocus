@@ -1,0 +1,112 @@
+/* Custom Calendar Styles */
+
+/* Properly align weekday headers */
+.rdp-weekday {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+/* Improve general spacing and alignment */
+.rdp-month_grid {
+  width: 100%;
+  border-spacing: 0;
+  border-collapse: collapse;
+}
+
+/* Completely restructure the caption area to fix arrow positioning */
+.rdp-caption {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100%;
+  padding: 0.5rem 0;
+  position: relative;
+}
+
+.rdp-caption_label {
+  font-weight: 600;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Fix the navigation buttons positioning */
+.rdp-nav {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.rdp-nav_button {
+  width: 28px !important;
+  height: 28px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Specific positioning for prev/next buttons */
+.rdp-nav-prev {
+  order: 1;
+}
+
+.rdp-nav-next {
+  order: 3;
+}
+
+/* Improve weekdays display */
+.rdp-weekdays {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.rdp-weeks {
+  display: flex;
+  flex-direction: column;
+}
+
+.rdp-week {
+  display: flex;
+  justify-content: space-between;
+  margin: 2px 0;
+}
+
+.rdp-day {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+}
+
+/* Better spacing */
+.rdp-root {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Today styling with accent color */
+.rdp-day_today:not(.rdp-day_outside) {
+  font-weight: bold;
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+/* Selected date styling with primary color */
+.rdp-day_selected:not(.rdp-day_outside) {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  font-weight: bold;
+}
+
+/* Style for hover state */
+.rdp-day:hover:not(.rdp-day_outside):not(.rdp-day_selected) {
+  background-color: hsl(var(--accent) / 0.5);
+} 
