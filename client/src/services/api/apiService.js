@@ -1,6 +1,6 @@
 import apiClient from "./apiClient";
 
-class ApiService {
+export class ApiService {
   constructor(resourcePath) {
     this.resourcePath = resourcePath;
   }
@@ -52,3 +52,4 @@ export const exampleService = new ApiService("/api/examples");
 // Add more service instances as needed
 // export const userService = new ApiService('/api/users');
 // export const projectService = new ApiService('/api/projects');
+// Note: Task service is implemented in taskService.js
