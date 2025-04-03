@@ -159,3 +159,13 @@
     height: 16px; /* Ensure horizontal scrollbars are thicker */
   }
 }
+
+/* Hide scrollbars for task columns */
+.task-column-content {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.task-column-content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}

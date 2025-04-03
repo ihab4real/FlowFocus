@@ -1,12 +1,16 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Plus } from "lucide-react";
 import { useDrop } from "react-dnd";
 import TaskCard from "./TaskCard";
 import { ItemTypes } from "../constants";
+import { useLocation } from "react-router-dom";
 
 // TaskColumn component - serves as a drop target for tasks
 function TaskColumn({ id, title, tasks, getPriorityColor, onMoveTask }) {
+  const location = useLocation();
+  const isFullscreen = location.pathname === "/dashboard/taskboard";
+
   // Set up drop target
   const [{ isOver }, drop] = useDrop({
     accept: ItemTypes.TASK,
@@ -24,18 +28,49 @@ function TaskColumn({ id, title, tasks, getPriorityColor, onMoveTask }) {
   return (
     <div
       ref={drop}
-      className={`flex-shrink-0 w-72 rounded-lg p-2 ${
-        isOver ? "bg-[#6C63FF]/10" : "bg-muted"
-      } transition-colors duration-200`}
+      className={`
+        flex-shrink-0 
+        w-72 
+        rounded-lg 
+        p-2 
+        flex 
+        flex-col 
+        ${isOver ? "bg-[#6C63FF]/10" : "bg-muted"}
+        transition-colors duration-200 
+        ${isFullscreen ? "h-full flex-1 max-w-[350px] min-w-[280px]" : ""}
+      `}
     >
       <div className="flex items-center justify-between mb-2">
         <h3 className="font-medium">{title}</h3>
-        <Button variant="ghost" size="icon" className="h-6 w-6">
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center space-x-1">
+          <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-[#6C63FF]/10 hover:text-[#6C63FF]">
+            <Plus className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-[#6C63FF]/10 hover:text-[#6C63FF]">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
-      <div className="space-y-2 min-h-[100px]">
+      <div 
+        className={`
+          task-column-content
+          space-y-2 
+          min-h-[100px] 
+          overflow-y-auto 
+          ${isFullscreen ? "flex-1 pr-2" : "max-h-[60vh]"}
+        `}
+        style={{ 
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          WebkitOverflowScrolling: 'touch'
+        }}
+      >
+        <style jsx global>{`
+          .task-column-content::-webkit-scrollbar {
+            display: none;
+          }
+        `}</style>
         {tasks.length > 0 ? (
           tasks.map((task) => (
             <TaskCard
