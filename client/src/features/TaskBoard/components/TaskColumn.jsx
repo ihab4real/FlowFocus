@@ -198,6 +198,7 @@ function TaskColumn({
           min-h-[100px] 
           overflow-y-auto 
           ${isFullscreen ? "flex-1 pr-2" : "max-h-[60vh]"}
+          scrollbar-hide
         `}
         style={{
           scrollbarWidth: "none",
@@ -205,11 +206,6 @@ function TaskColumn({
           WebkitOverflowScrolling: "touch",
         }}
       >
-        <style jsx global>{`
-          .task-column-content::-webkit-scrollbar {
-            display: none;
-          }
-        `}</style>
         {tasks.length > 0 ? (
           tasks.map((task) => (
             <TaskCard

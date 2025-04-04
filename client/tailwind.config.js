@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 import tailwindAnimate from "tailwindcss-animate";
+import tailwindScrollbarHide from "tailwind-scrollbar-hide";
 
 export const darkMode = ["class"];
 export const content = [
@@ -60,4 +61,4 @@ export const theme = {
     },
   },
 };
-export const plugins = [tailwindAnimate];
+export const plugins = [tailwindAnimate, tailwindScrollbarHide];
