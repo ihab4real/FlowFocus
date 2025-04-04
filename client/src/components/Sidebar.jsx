@@ -19,8 +19,8 @@ function NavItem({ icon, label, collapsed, active = false, to }) {
     <Button
       variant={active ? "default" : "ghost"}
       className={cn(
-        "w-full justify-start",
-        collapsed ? "px-2" : "px-4",
+        "w-full flex items-center",
+        collapsed ? "justify-center px-2" : "justify-start px-4",
         active && "bg-[#6C63FF] hover:bg-[#6C63FF]/90"
       )}
       asChild
@@ -35,28 +35,44 @@ function NavItem({ icon, label, collapsed, active = false, to }) {
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  const [isHoverExpanded, setIsHoverExpanded] = useState(false);
   const location = useLocation();
+
+  const handleMouseEnter = () => {
+    if (collapsed) {
+      setIsHoverExpanded(true);
+      setCollapsed(false);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (isHoverExpanded) {
+      setIsHoverExpanded(false);
+      setCollapsed(true);
+    }
+  };
 
   return (
     <div
       className={cn(
-        "h-screen border-r border-border transition-all duration-300 flex flex-col",
+        "h-screen border-r border-border transition-all duration-500 ease-in-out flex flex-col",
         collapsed ? "w-16" : "w-64"
       )}
     >
-      <div className="flex items-center justify-between p-4 border-b border-border">
+      <div
+        className={cn(
+          "flex items-center border-b border-border transition-all duration-500 ease-in-out",
+          collapsed ? "justify-center py-2" : "justify-center p-4"
+        )}
+      >
         <Logo collapsed={collapsed} />
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setCollapsed(!collapsed)}
-          className="ml-auto text-primary"
-        >
-          {collapsed ? <Menu /> : <X />}
-        </Button>
       </div>
 
-      <nav className="p-2 space-y-2 flex-1 overflow-y-auto">
+      <nav
+        className="p-2 space-y-2 flex-1 overflow-y-auto"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
         <NavItem
           icon={<Home />}
           label="Dashboard"
@@ -99,6 +115,20 @@ export function Sidebar() {
           active={location.pathname === "/dashboard/settings"}
           to="/dashboard/settings"
         />
+        <div className="mt-4 flex justify-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setCollapsed(!collapsed)}
+            className={cn(
+              "text-primary transition-all duration-500",
+              "hover:scale-110 hover:bg-[#6C63FF]/10",
+              collapsed ? "rotate-180" : "rotate-0"
+            )}
+          >
+            {collapsed ? <Menu /> : <X />}
+          </Button>
+        </div>
       </nav>
 
       {!collapsed && (
