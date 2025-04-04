@@ -9,6 +9,7 @@ import { errorHandler, notFoundHandler } from "./middleware/errorMiddleware.js";
 import { swaggerDocs } from "./config/swagger.js";
 import authRoutes from "./routes/authRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
+import noteRoutes from "./routes/noteRoutes.js";
 
 // Load environment variables
 dotenv.config();
@@ -62,6 +63,7 @@ app.get("/", (req, res) => {
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
+app.use("/api/notes", noteRoutes);
 
 // Handle 404 errors for undefined routes
 app.use(notFoundHandler);
