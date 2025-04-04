@@ -89,10 +89,10 @@ export function Sidebar() {
         />
         <NavItem
           icon={<FileText />}
-          label="Notes"
+          label="Note Panel"
           collapsed={collapsed}
-          active={location.pathname === "/dashboard/notes"}
-          to="/dashboard/notes"
+          active={location.pathname === "/dashboard/notepanel"}
+          to="/dashboard/notepanel"
         />
         <NavItem
           icon={<Clock />}

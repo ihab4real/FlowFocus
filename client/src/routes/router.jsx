@@ -10,6 +10,7 @@ import Register from "../pages/Register";
 import ProtectedRoute from "../components/ProtectedRoute";
 import Profile from "../pages/Profile";
 import FullScreenTaskBoard from "../pages/FullScreenTaskBoard";
+import NotesPage from "../pages/NotesPage";
 
 // Root loader function for initial data fetching
 async function rootLoader() {
@@ -56,6 +57,14 @@ export const router = createBrowserRouter([
             element: (
               <ProtectedRoute>
                 <FullScreenTaskBoard />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "dashboard/notepanel",
+            element: (
+              <ProtectedRoute>
+                <NotesPage />
               </ProtectedRoute>
             ),
           },
