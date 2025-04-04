@@ -1,5 +1,6 @@
 import express from "express";
 import { protect } from "../middleware/authMiddleware.js";
+import { sanitizeBody } from "../middleware/sanitizationMiddleware.js";
 import {
   getAllNotes,
   getNote,
@@ -69,7 +70,9 @@ router.use(protect);
  *       401:
  *         description: Unauthorized - Authentication required
  */
-router.route("/").get(getAllNotes).post(createNote);
+router.route("/")
+  .get(getAllNotes)
+  .post(sanitizeBody(['content']), createNote);
 
 /**
  * @swagger
@@ -165,7 +168,10 @@ router.route("/").get(getAllNotes).post(createNote);
  *       404:
  *         description: Note not found
  */
-router.route("/:id").get(getNote).patch(updateNote).delete(deleteNote);
+router.route("/:id")
+  .get(getNote)
+  .patch(sanitizeBody(['content']), updateNote)
+  .delete(deleteNote);
 
 /**
  * @swagger
