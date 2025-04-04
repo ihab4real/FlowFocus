@@ -62,7 +62,7 @@ const MenuBar = ({ editor }) => {
       editor.chain().focus().setImage({ src: url }).run();
     }
   }, [editor]);
-  
+
   if (!editor) {
     return null;
   }
@@ -158,7 +158,10 @@ const MenuBar = ({ editor }) => {
 const TipTapEditor = ({ content, onUpdate }) => {
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        // Exclude codeBlock as we're adding CodeBlockLowlight separately
+        codeBlock: false,
+      }),
       Placeholder.configure({
         placeholder: "Start writing here...",
       }),
@@ -168,9 +171,9 @@ const TipTapEditor = ({ content, onUpdate }) => {
       Image,
       Underline,
       TextAlign.configure({
-        types: ['heading', 'paragraph'],
-        alignments: ['left', 'center', 'right'],
-        defaultAlignment: 'left',
+        types: ["heading", "paragraph"],
+        alignments: ["left", "center", "right"],
+        defaultAlignment: "left",
       }),
       CodeBlockLowlight.configure({
         lowlight,
