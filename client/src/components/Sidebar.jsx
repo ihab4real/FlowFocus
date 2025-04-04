@@ -88,13 +88,6 @@ export function Sidebar() {
           to="/dashboard/taskboard"
         />
         <NavItem
-          icon={<CheckSquare />}
-          label="Tasks"
-          collapsed={collapsed}
-          active={location.pathname === "/dashboard/tasks"}
-          to="/dashboard/tasks"
-        />
-        <NavItem
           icon={<FileText />}
           label="Notes"
           collapsed={collapsed}
