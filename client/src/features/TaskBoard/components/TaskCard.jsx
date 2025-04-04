@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, GripVertical } from "lucide-react";
-import { format } from "date-fns";
+import { Calendar, GripVertical, AlertTriangle, Clock } from "lucide-react";
+import { format, isAfter, parseISO, formatDistanceToNow } from "date-fns";
 import { useDrag } from "react-dnd";
 import { ItemTypes } from "../constants";
 
@@ -16,7 +16,7 @@ function TaskCard({ task, columnId, getPriorityColor }) {
     }),
   });
 
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     // Prevent click when dragging
     if (isDragging) return;
 
@@ -26,7 +26,50 @@ function TaskCard({ task, columnId, getPriorityColor }) {
       const event = new CustomEvent("editTask", { detail: task });
       window.dispatchEvent(event);
     }
-  };
+  }, [isDragging, task]);
+
+  // Check if task is overdue - memoize to avoid recalculations
+  const isOverdue = useMemo(() => {
+    if (!task.dueDate) return false;
+    try {
+      const now = new Date();
+      const dueDate = parseISO(task.dueDate);
+      return isAfter(now, dueDate) && task.status !== "Done";
+    } catch (error) {
+      console.error("Error parsing due date:", error);
+      return false;
+    }
+  }, [task.dueDate, task.status]);
+
+  // Get relative time for due date - memoize to avoid recalculations
+  const dueTimeString = useMemo(() => {
+    if (!task.dueDate) return '';
+    
+    try {
+      const dueDate = parseISO(task.dueDate);
+      const now = new Date();
+      
+      if (isAfter(now, dueDate) && task.status !== "Done") {
+        return `Overdue by ${formatDistanceToNow(dueDate)}`;
+      }
+      
+      return `Due ${formatDistanceToNow(dueDate)} from now`;
+    } catch (error) {
+      console.error("Error formatting due date:", error);
+      return '';
+    }
+  }, [task.dueDate, task.status]);
+
+  // Format due date for display - memoize to avoid recalculations
+  const formattedDueDate = useMemo(() => {
+    if (!task.dueDate) return '';
+    try {
+      return format(parseISO(task.dueDate), "MMM d, yyyy");
+    } catch (error) {
+      console.error("Error formatting due date:", error);
+      return '';
+    }
+  }, [task.dueDate]);
 
   return (
     <div
@@ -37,7 +80,7 @@ function TaskCard({ task, columnId, getPriorityColor }) {
         p-3 
         shadow-sm 
         border 
-        border-border 
+        ${isOverdue ? 'border-red-300 dark:border-red-800' : 'border-border'}
         hover:border-[#6C63FF]/30 
         hover:shadow-md
         transition-all
@@ -57,8 +100,9 @@ function TaskCard({ task, columnId, getPriorityColor }) {
         </div>
         <Badge 
           variant="secondary" 
-          className={`${getPriorityColor(task.priority)} flex-shrink-0 whitespace-nowrap`}
+          className={`${getPriorityColor(task.priority)} flex-shrink-0 whitespace-nowrap flex items-center gap-1`}
         >
+          {task.priority === "High" && <AlertTriangle className="w-3 h-3" />}
           {task.priority}
         </Badge>
       </div>
@@ -82,13 +126,24 @@ function TaskCard({ task, columnId, getPriorityColor }) {
         </div>
       )}
       {task.dueDate && (
-        <div className="flex items-center mt-2 text-xs text-muted-foreground ml-6">
-          <Calendar className="w-3 h-3 mr-1 flex-shrink-0" />
-          {format(new Date(task.dueDate), "MMM d, yyyy")}
+        <div className={`flex items-center mt-2 text-xs ml-6 ${
+          isOverdue ? 'text-red-500 dark:text-red-400 font-medium' : 'text-muted-foreground'
+        }`}>
+          {isOverdue ? (
+            <>
+              <Clock className="w-3 h-3 mr-1 flex-shrink-0" />
+              {dueTimeString}
+            </>
+          ) : (
+            <>
+              <Calendar className="w-3 h-3 mr-1 flex-shrink-0" />
+              {formattedDueDate}
+            </>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-export default TaskCard;
+export default React.memo(TaskCard);
