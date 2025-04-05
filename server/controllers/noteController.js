@@ -32,7 +32,9 @@ export const getNote = asyncHandler(async (req, res) => {
 
   // Check if the note belongs to the user
   if (note.user.toString() !== req.user.id) {
-    throw errorTypes.forbidden("You do not have permission to access this note");
+    throw errorTypes.forbidden(
+      "You do not have permission to access this note"
+    );
   }
 
   res.status(200).json({
@@ -76,7 +78,9 @@ export const updateNote = asyncHandler(async (req, res) => {
 
   // Check if the note belongs to the user
   if (note.user.toString() !== req.user.id) {
-    throw errorTypes.forbidden("You do not have permission to update this note");
+    throw errorTypes.forbidden(
+      "You do not have permission to update this note"
+    );
   }
 
   // Update the note
@@ -108,7 +112,9 @@ export const deleteNote = asyncHandler(async (req, res) => {
 
   // Check if the note belongs to the user
   if (note.user.toString() !== req.user.id) {
-    throw errorTypes.forbidden("You do not have permission to delete this note");
+    throw errorTypes.forbidden(
+      "You do not have permission to delete this note"
+    );
   }
 
   await Note.findByIdAndDelete(req.params.id);
@@ -151,9 +157,9 @@ export const createFolder = asyncHandler(async (req, res) => {
   }
 
   // Check if folder already exists for this user
-  const folderExists = await Note.findOne({ 
-    user: req.user.id, 
-    folder: name 
+  const folderExists = await Note.findOne({
+    user: req.user.id,
+    folder: name,
   });
 
   if (folderExists) {
@@ -185,16 +191,16 @@ export const createFolder = asyncHandler(async (req, res) => {
  */
 export const deleteFolder = asyncHandler(async (req, res) => {
   const { name } = req.params;
-  
+
   // Don't allow deleting the default "General" folder
   if (name === "General") {
     throw errorTypes.badRequest("Cannot delete the General folder");
   }
-  
+
   // Check if folder exists for this user
-  const folderExists = await Note.findOne({ 
-    user: req.user.id, 
-    folder: name 
+  const folderExists = await Note.findOne({
+    user: req.user.id,
+    folder: name,
   });
 
   if (!folderExists) {
@@ -207,17 +213,17 @@ export const deleteFolder = asyncHandler(async (req, res) => {
     { folder: "General" }
   );
 
-  logInfo("Folder deleted", { 
-    folder: name, 
+  logInfo("Folder deleted", {
+    folder: name,
     userId: req.user.id,
-    notesUpdated: updateResult.modifiedCount
+    notesUpdated: updateResult.modifiedCount,
   });
 
   res.status(200).json({
     status: "success",
     data: {
       message: `Folder "${name}" deleted. ${updateResult.modifiedCount} notes moved to General folder.`,
-      notesUpdated: updateResult.modifiedCount
+      notesUpdated: updateResult.modifiedCount,
     },
   });
 });
@@ -229,32 +235,32 @@ export const deleteFolder = asyncHandler(async (req, res) => {
 export const renameFolder = asyncHandler(async (req, res) => {
   const { name } = req.params;
   const { name: newName } = req.body;
-  
+
   // Don't allow renaming the default "General" folder
   if (name === "General") {
     throw errorTypes.badRequest("Cannot rename the General folder");
   }
-  
+
   if (!newName || newName.trim() === "") {
     throw errorTypes.badRequest("New folder name is required");
   }
-  
+
   // Check if folder exists for this user
-  const folderExists = await Note.findOne({ 
-    user: req.user.id, 
-    folder: name 
+  const folderExists = await Note.findOne({
+    user: req.user.id,
+    folder: name,
   });
 
   if (!folderExists) {
     throw errorTypes.notFound("Folder not found");
   }
-  
+
   // Check if the new folder name already exists
   const newFolderExists = await Note.findOne({
     user: req.user.id,
-    folder: newName
+    folder: newName,
   });
-  
+
   if (newFolderExists) {
     throw errorTypes.badRequest("A folder with this name already exists");
   }
@@ -265,11 +271,11 @@ export const renameFolder = asyncHandler(async (req, res) => {
     { folder: newName }
   );
 
-  logInfo("Folder renamed", { 
+  logInfo("Folder renamed", {
     oldName: name,
     newName: newName,
     userId: req.user.id,
-    notesUpdated: updateResult.modifiedCount
+    notesUpdated: updateResult.modifiedCount,
   });
 
   res.status(200).json({
@@ -278,7 +284,7 @@ export const renameFolder = asyncHandler(async (req, res) => {
       message: `Folder renamed from "${name}" to "${newName}". ${updateResult.modifiedCount} notes updated.`,
       oldName: name,
       newName: newName,
-      notesUpdated: updateResult.modifiedCount
+      notesUpdated: updateResult.modifiedCount,
     },
   });
-}); 
+});
