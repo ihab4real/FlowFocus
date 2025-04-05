@@ -1,7 +1,18 @@
+import { useState } from "react";
 import { PlusIcon, Trash2Icon, FolderIcon } from "lucide-react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const NotesList = ({
   notes,
@@ -12,6 +23,9 @@ const NotesList = ({
   loading,
   currentFolder,
 }) => {
+  const [noteToDelete, setNoteToDelete] = useState(null);
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+
   // Function to format the note preview (strip HTML tags and truncate)
   const formatPreview = (content) => {
     // Simple HTML tag stripping (a more robust solution might be needed for production)
@@ -19,6 +33,20 @@ const NotesList = ({
     return strippedContent.length > 100
       ? `${strippedContent.substring(0, 100)}...`
       : strippedContent;
+  };
+
+  const handleDeleteClick = (e, note) => {
+    e.stopPropagation();
+    setNoteToDelete(note);
+    setShowDeleteAlert(true);
+  };
+
+  const confirmDelete = () => {
+    if (noteToDelete) {
+      onDeleteNote(noteToDelete._id);
+      setShowDeleteAlert(false);
+      setNoteToDelete(null);
+    }
   };
 
   return (
@@ -80,14 +108,7 @@ const NotesList = ({
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (
-                          confirm("Are you sure you want to delete this note?")
-                        ) {
-                          onDeleteNote(note._id);
-                        }
-                      }}
+                      onClick={(e) => handleDeleteClick(e, note)}
                       aria-label="Delete note"
                     >
                       <Trash2Icon className="h-4 w-4" />
@@ -105,6 +126,28 @@ const NotesList = ({
           </ul>
         )}
       </CardContent>
+
+      {/* Delete note confirmation dialog */}
+      <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Note</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{noteToDelete?.title}"? This action
+              cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };

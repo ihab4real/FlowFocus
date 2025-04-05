@@ -1,21 +1,30 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { debounce } from "lodash";
 import TipTapEditor from "./TipTapEditor";
 
-const NoteEditor = ({ note, onUpdateNote }) => {
+const NoteEditor = ({ note, onUpdateNote, isNewNote }) => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const titleInputRef = useRef(null);
 
   // Update local state when the selected note changes
   useEffect(() => {
     if (note) {
       setTitle(note.title);
       setContent(note.content);
+      
+      // If this is a new note or editing has just begun, focus on the title
+      if (isNewNote && titleInputRef.current) {
+        setTimeout(() => {
+          titleInputRef.current.focus();
+          titleInputRef.current.select();
+        }, 50);
+      }
     } else {
       setTitle("");
       setContent("");
     }
-  }, [note]);
+  }, [note, isNewNote]);
 
   // Create a memoized debounce function
   const debouncedSave = useMemo(
@@ -73,6 +82,7 @@ const NoteEditor = ({ note, onUpdateNote }) => {
       {/* Title input */}
       <div className="border-b border-gray-200 dark:border-gray-700 p-4">
         <input
+          ref={titleInputRef}
           type="text"
           value={title}
           onChange={handleTitleChange}

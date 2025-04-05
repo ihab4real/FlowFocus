@@ -16,6 +16,7 @@ const NotesContainer = () => {
   const [loading, setLoading] = useState(false);
   const [currentFolder, setCurrentFolder] = useState(DEFAULT_FOLDER);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isNewNote, setIsNewNote] = useState(false);
 
   // Fetch notes when component mounts or folder changes
   useEffect(() => {
@@ -94,8 +95,10 @@ const NotesContainer = () => {
         folder: currentFolder,
       });
 
-      setNotes([response.data.note, ...notes]);
-      setSelectedNote(response.data.note);
+      const newNote = response.data.note;
+      setNotes([newNote, ...notes]);
+      setSelectedNote(newNote);
+      setIsNewNote(true); // Mark as new note to trigger title focus
       toast.success("Note created");
     } catch (error) {
       console.error("Error creating note:", error);
@@ -106,6 +109,7 @@ const NotesContainer = () => {
   // Handler for selecting a note
   const handleSelectNote = (note) => {
     setSelectedNote(note);
+    setIsNewNote(false); // Not a new note
   };
 
   // Handler for updating a note
@@ -118,6 +122,11 @@ const NotesContainer = () => {
 
       if (selectedNote && selectedNote._id === id) {
         setSelectedNote(response.data.note);
+      }
+
+      // If we're updating the title of a new note, clear the new note flag
+      if (updatedData.title && isNewNote) {
+        setIsNewNote(false);
       }
 
       // No toast here as this will be called frequently during auto-save
@@ -271,7 +280,11 @@ const NotesContainer = () => {
       />
 
       {/* Right section with note editor */}
-      <NoteEditor note={selectedNote} onUpdateNote={handleUpdateNote} />
+      <NoteEditor 
+        note={selectedNote} 
+        onUpdateNote={handleUpdateNote} 
+        isNewNote={isNewNote}
+      />
     </div>
   );
 };
