@@ -177,4 +177,108 @@ export const createFolder = asyncHandler(async (req, res) => {
       note: newNote,
     },
   });
+});
+
+/**
+ * Delete a folder
+ * @route DELETE /api/notes/folders/:name
+ */
+export const deleteFolder = asyncHandler(async (req, res) => {
+  const { name } = req.params;
+  
+  // Don't allow deleting the default "General" folder
+  if (name === "General") {
+    throw errorTypes.badRequest("Cannot delete the General folder");
+  }
+  
+  // Check if folder exists for this user
+  const folderExists = await Note.findOne({ 
+    user: req.user.id, 
+    folder: name 
+  });
+
+  if (!folderExists) {
+    throw errorTypes.notFound("Folder not found");
+  }
+
+  // Move all notes from this folder to the General folder
+  const updateResult = await Note.updateMany(
+    { user: req.user.id, folder: name },
+    { folder: "General" }
+  );
+
+  logInfo("Folder deleted", { 
+    folder: name, 
+    userId: req.user.id,
+    notesUpdated: updateResult.modifiedCount
+  });
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      message: `Folder "${name}" deleted. ${updateResult.modifiedCount} notes moved to General folder.`,
+      notesUpdated: updateResult.modifiedCount
+    },
+  });
+});
+
+/**
+ * Rename a folder
+ * @route PATCH /api/notes/folders/:name
+ */
+export const renameFolder = asyncHandler(async (req, res) => {
+  const { name } = req.params;
+  const { name: newName } = req.body;
+  
+  // Don't allow renaming the default "General" folder
+  if (name === "General") {
+    throw errorTypes.badRequest("Cannot rename the General folder");
+  }
+  
+  if (!newName || newName.trim() === "") {
+    throw errorTypes.badRequest("New folder name is required");
+  }
+  
+  // Check if folder exists for this user
+  const folderExists = await Note.findOne({ 
+    user: req.user.id, 
+    folder: name 
+  });
+
+  if (!folderExists) {
+    throw errorTypes.notFound("Folder not found");
+  }
+  
+  // Check if the new folder name already exists
+  const newFolderExists = await Note.findOne({
+    user: req.user.id,
+    folder: newName
+  });
+  
+  if (newFolderExists) {
+    throw errorTypes.badRequest("A folder with this name already exists");
+  }
+
+  // Update all notes in this folder with the new folder name
+  const updateResult = await Note.updateMany(
+    { user: req.user.id, folder: name },
+    { folder: newName }
+  );
+
+  logInfo("Folder renamed", { 
+    oldName: name,
+    newName: newName,
+    userId: req.user.id,
+    notesUpdated: updateResult.modifiedCount
+  });
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      message: `Folder renamed from "${name}" to "${newName}". ${updateResult.modifiedCount} notes updated.`,
+      oldName: name,
+      newName: newName,
+      notesUpdated: updateResult.modifiedCount
+    },
+  });
 }); 

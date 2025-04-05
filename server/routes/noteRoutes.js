@@ -8,7 +8,9 @@ import {
   updateNote,
   deleteNote,
   getFolders,
-  createFolder
+  createFolder,
+  deleteFolder,
+  renameFolder
 } from "../controllers/noteController.js";
 
 const router = express.Router();
@@ -56,7 +58,6 @@ router.use(protect);
  *               folder:
  *                 type: string
  *                 description: The folder name
- *                 default: General
  *               tags:
  *                 type: array
  *                 items:
@@ -216,5 +217,68 @@ router.route("/:id")
  *         description: Unauthorized - Authentication required
  */
 router.route("/folders").get(getFolders).post(createFolder);
+
+/**
+ * @swagger
+ * /api/notes/folders/{name}:
+ *   delete:
+ *     summary: Delete a folder and move notes to General folder
+ *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: name
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Folder name
+ *     responses:
+ *       200:
+ *         description: Folder deleted successfully
+ *       400:
+ *         description: Bad Request - Cannot delete General folder
+ *       401:
+ *         description: Unauthorized - Authentication required
+ *       404:
+ *         description: Folder not found
+ * 
+ *   patch:
+ *     summary: Rename a folder
+ *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: name
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Current folder name
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: New folder name
+ *     responses:
+ *       200:
+ *         description: Folder renamed successfully
+ *       400:
+ *         description: Bad Request - Cannot rename General folder or name already exists
+ *       401:
+ *         description: Unauthorized - Authentication required
+ *       404:
+ *         description: Folder not found
+ */
+router.route("/folders/:name")
+  .delete(deleteFolder)
+  .patch(renameFolder);
 
 export default router; 
