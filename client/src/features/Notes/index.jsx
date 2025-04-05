@@ -22,8 +22,19 @@ const NotesContainer = () => {
     const fetchNotes = async () => {
       setLoading(true);
       try {
+        // Make sure we're explicitly filtering by the current folder
         const response = await noteService.getNotes({ folder: currentFolder });
-        setNotes(response.data.notes || []);
+
+        // Only show notes that belong to the current folder
+        const folderNotes =
+          response.data.notes?.filter(
+            (note) => note.folder === currentFolder
+          ) || [];
+
+        setNotes(folderNotes);
+
+        // Clear selected note when changing folders
+        setSelectedNote(null);
       } catch (error) {
         console.error("Error fetching notes:", error);
         toast.error("Failed to load notes. Please try again.");
@@ -118,8 +129,11 @@ const NotesContainer = () => {
 
   // Handler for changing folders
   const handleFolderChange = (folder) => {
-    setCurrentFolder(folder);
-    setSelectedNote(null);
+    // Only change if it's a different folder
+    if (folder !== currentFolder) {
+      setCurrentFolder(folder);
+      // Selected note is cleared in the useEffect when notes are fetched
+    }
   };
 
   // Handler for creating a new folder
