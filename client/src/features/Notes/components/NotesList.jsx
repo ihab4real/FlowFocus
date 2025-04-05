@@ -1,5 +1,7 @@
-import { PlusIcon, Trash2Icon } from "lucide-react";
+import { PlusIcon, Trash2Icon, FolderIcon } from "lucide-react";
 import { format } from "date-fns";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 const NotesList = ({
   notes,
@@ -7,80 +9,94 @@ const NotesList = ({
   onSelectNote,
   onCreateNote,
   onDeleteNote,
-  loading
+  loading,
+  currentFolder,
 }) => {
   // Function to format the note preview (strip HTML tags and truncate)
   const formatPreview = (content) => {
     // Simple HTML tag stripping (a more robust solution might be needed for production)
-    const strippedContent = content.replace(/<[^>]*>/g, '');
+    const strippedContent = content.replace(/<[^>]*>/g, "");
     return strippedContent.length > 100
       ? `${strippedContent.substring(0, 100)}...`
       : strippedContent;
   };
 
   return (
-    <div className="w-80 h-full bg-white dark:bg-gray-850 border-r border-gray-200 dark:border-gray-700 flex flex-col">
-      {/* Header with create button */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Notes</h2>
-        <button
+    <Card className="w-80 h-full border-r border-border flex flex-col overflow-hidden">
+      {/* Header with folder name and create button */}
+      <CardHeader className="border-b border-border flex flex-row items-center justify-between py-3 px-4 space-y-0">
+        <div className="flex items-center gap-2">
+          <FolderIcon className="h-4 w-4 text-primary" />
+          <CardTitle className="text-lg font-semibold">
+            {currentFolder || "Notes"}
+          </CardTitle>
+        </div>
+        <Button
           onClick={onCreateNote}
-          className="p-2 text-white bg-indigo-600 rounded-full hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          size="icon"
+          className="h-8 w-8"
           aria-label="Create note"
         >
-          <PlusIcon className="h-5 w-5" />
-        </button>
-      </div>
+          <PlusIcon className="h-4 w-4" />
+        </Button>
+      </CardHeader>
 
       {/* Notes list */}
-      <div className="overflow-y-auto flex-grow">
+      <CardContent className="overflow-y-auto flex-grow p-0">
         {loading ? (
           <div className="flex justify-center items-center h-32">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
           </div>
         ) : notes.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-32 p-4 text-center">
-            <p className="text-gray-500 dark:text-gray-400 mb-2">No notes in this folder</p>
-            <button
+            <p className="text-muted-foreground mb-2">
+              No notes in this folder
+            </p>
+            <Button
+              variant="outline"
               onClick={onCreateNote}
-              className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
+              className="text-primary border-primary"
             >
               Create one now
-            </button>
+            </Button>
           </div>
         ) : (
-          <ul>
+          <ul className="divide-y divide-border">
             {notes.map((note) => (
-              <li key={note._id} className="border-b border-gray-200 dark:border-gray-700 last:border-0">
+              <li key={note._id}>
                 <div
-                  className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer ${
+                  className={`p-4 hover:bg-muted cursor-pointer transition-colors ${
                     selectedNote && selectedNote._id === note._id
-                      ? "bg-indigo-50 dark:bg-indigo-900"
+                      ? "bg-primary/10 border-l-4 border-primary"
                       : ""
                   }`}
                   onClick={() => onSelectNote(note)}
                 >
                   <div className="flex justify-between items-start">
-                    <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-1 truncate">
+                    <h3 className="font-medium text-card-foreground mb-1 truncate">
                       {note.title}
                     </h3>
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (confirm("Are you sure you want to delete this note?")) {
+                        if (
+                          confirm("Are you sure you want to delete this note?")
+                        ) {
                           onDeleteNote(note._id);
                         }
                       }}
-                      className="text-gray-400 hover:text-red-500 dark:hover:text-red-400 p-1"
                       aria-label="Delete note"
                     >
                       <Trash2Icon className="h-4 w-4" />
-                    </button>
+                    </Button>
                   </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-2 line-clamp-2">
+                  <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
                     {formatPreview(note.content)}
                   </p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                  <p className="text-xs text-muted-foreground/70">
                     {format(new Date(note.updatedAt), "MMM d, yyyy")}
                   </p>
                 </div>
@@ -88,9 +104,9 @@ const NotesList = ({
             ))}
           </ul>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
-export default NotesList; 
+export default NotesList;

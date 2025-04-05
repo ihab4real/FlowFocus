@@ -253,6 +253,7 @@ const NotesContainer = () => {
         onCreateNote={handleCreateNote}
         onDeleteNote={handleDeleteNote}
         loading={loading}
+        currentFolder={currentFolder}
       />
 
       {/* Right section with note editor */}
