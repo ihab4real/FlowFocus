@@ -25,11 +25,25 @@ swaggerDocs(app, PORT);
 app.use(helmet()); // Set security HTTP headers
 
 // Rate limiting
-const limiter = rateLimit({
-  max: 100, // 100 requests from same IP
-  windowMs: 60 * 60 * 1000, // 1 hour
-  message: "Too many requests from this IP, please try again in an hour!",
-});
+let limiter;
+if (process.env.NODE_ENV === "development") {
+  // More permissive rate limiting for development
+  limiter = rateLimit({
+    max: 1000, // 1000 requests from same IP
+    windowMs: 60 * 60 * 1000, // 1 hour
+    message: "Too many requests from this IP, please try again in an hour!",
+  });
+  console.log(
+    "⚠️ Rate limiting configured with permissive settings for development"
+  );
+} else {
+  // Stricter rate limiting for production
+  limiter = rateLimit({
+    max: 100, // 100 requests from same IP
+    windowMs: 60 * 60 * 1000, // 1 hour
+    message: "Too many requests from this IP, please try again in an hour!",
+  });
+}
 app.use("/api", limiter);
 
 // Body parser middleware
@@ -37,7 +51,21 @@ app.use(express.json({ limit: "10kb" })); // Body limit is 10kb
 app.use(express.urlencoded({ extended: true }));
 
 // CORS middleware
-app.use(cors());
+if (process.env.NODE_ENV === "development") {
+  // More permissive CORS settings for development
+  app.use(
+    cors({
+      origin: true, // Allow any origin in development
+      credentials: true, // Allow cookies
+      methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+    })
+  );
+  console.log("⚠️ CORS configured with permissive settings for development");
+} else {
+  // Default CORS settings for production
+  app.use(cors());
+}
 
 // Development logging middleware
 if (process.env.NODE_ENV !== "production") {
