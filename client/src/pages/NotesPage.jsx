@@ -2,14 +2,22 @@ import React, { useState, useEffect } from "react";
 import NotesContainer from "../features/Notes";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Sidebar } from "@/components/Sidebar";
+import { Button } from "@/components/ui/button";
+import { Maximize2, Minimize2 } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 /**
  * NotesPage component
  * Renders a fullscreen version of the Notes feature with the sidebar and header
- * Includes an entrance animation
+ * Includes an entrance animation and a fullscreen toggle button
  */
 const NotesPage = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check if we're in fullscreen mode
+  const isFullscreen = location.pathname === "/dashboard/notepanel";
 
   useEffect(() => {
     // Apply entrance animation after mount
@@ -19,6 +27,15 @@ const NotesPage = () => {
 
     return () => clearTimeout(timer);
   }, []);
+
+  // Toggle fullscreen mode
+  const toggleFullscreen = () => {
+    if (isFullscreen) {
+      navigate("/dashboard");
+    } else {
+      navigate("/dashboard/notepanel");
+    }
+  };
 
   return (
     <div className="flex h-screen bg-background">
@@ -31,7 +48,28 @@ const NotesPage = () => {
         `}
       >
         <DashboardHeader />
-        <div className="flex-1">
+        <div className="flex-1 relative">
+          <div className="absolute top-2 right-4 z-10">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={toggleFullscreen}
+              className={`
+                transition-all duration-300 ease-in-out 
+                group overflow-hidden border-[#6C63FF]/30
+                hover:border-[#6C63FF] hover:bg-[#6C63FF]/5
+                ${isFullscreen ? "bg-[#6C63FF]/10 text-[#6C63FF]" : ""}
+              `}
+              title={isFullscreen ? "Exit Full Screen" : "Enter Full Screen"}
+            >
+              <span className="absolute inset-0 bg-[#6C63FF]/0 group-hover:bg-[#6C63FF]/5 transition-all duration-300"></span>
+              {isFullscreen ? (
+                <Minimize2 className="w-4 h-4 relative z-10 group-hover:scale-95 transition-transform" />
+              ) : (
+                <Maximize2 className="w-4 h-4 relative z-10 group-hover:scale-110 transition-transform" />
+              )}
+            </Button>
+          </div>
           <NotesContainer />
         </div>
       </main>
@@ -39,4 +77,4 @@ const NotesPage = () => {
   );
 };
 
-export default NotesPage; 
+export default NotesPage;

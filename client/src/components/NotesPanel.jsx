@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bold, Italic, List, ListOrdered, ExternalLink } from "lucide-react";
+import {
+  Bold,
+  Italic,
+  List,
+  ListOrdered,
+  ExternalLink,
+  Maximize2,
+} from "lucide-react";
 import noteService from "@/services/api/noteService";
 import { toast } from "react-hot-toast";
 import { debounce } from "lodash";
@@ -12,6 +19,7 @@ export function NotesPanel() {
   const [notes, setNotes] = useState([]);
   const [activeNote, setActiveNote] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   // Fetch notes when component mounts
   useEffect(() => {
@@ -40,7 +48,7 @@ export function NotesPanel() {
         title: "New Note",
         content: "",
       });
-      
+
       setNotes([response.data.note, ...notes]);
       setActiveNote(response.data.note._id);
       toast.success("Note created");
@@ -79,8 +87,8 @@ export function NotesPanel() {
       <Card className="h-full shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Notes</CardTitle>
-          <Button 
-            size="sm" 
+          <Button
+            size="sm"
             className="bg-[#6C63FF] hover:bg-[#6C63FF]/90"
             onClick={handleCreateNote}
           >
@@ -89,8 +97,8 @@ export function NotesPanel() {
         </CardHeader>
         <CardContent className="flex flex-col justify-center items-center h-64">
           <p className="text-gray-500 mb-2">No notes yet</p>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={handleCreateNote}
             className="text-[#6C63FF] border-[#6C63FF]"
           >
@@ -101,25 +109,32 @@ export function NotesPanel() {
     );
   }
 
+  // Handle fullscreen navigation
+  const handleFullScreen = () => {
+    navigate("/dashboard/notepanel");
+  };
+
   return (
     <Card className="h-full shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Notes</CardTitle>
         <div className="flex gap-2">
-          <Button 
-            size="sm" 
+          <Button
+            size="sm"
             className="bg-[#6C63FF] hover:bg-[#6C63FF]/90"
             onClick={handleCreateNote}
           >
             New Note
           </Button>
-          <Link 
-            to="/dashboard/notepanel"
-            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-[#6C63FF] text-[#6C63FF] hover:bg-accent hover:text-accent-foreground px-3 py-1.5"
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleFullScreen}
+            className="transition-all duration-300 ease-in-out border-[#6C63FF]/30 hover:border-[#6C63FF] hover:bg-[#6C63FF]/5 text-[#6C63FF]"
+            title="Full Screen"
           >
-            <ExternalLink className="h-4 w-4 mr-1" />
-            Full View
-          </Link>
+            <Maximize2 className="h-4 w-4 hover:scale-110 transition-transform" />
+          </Button>
         </div>
       </CardHeader>
       <CardContent>
@@ -131,17 +146,17 @@ export function NotesPanel() {
                 value={note._id}
                 className="flex-1 data-[state=active]:bg-[#6C63FF] data-[state=active]:text-white"
               >
-                {note.title.length > 15 
-                  ? `${note.title.substring(0, 15)}...` 
+                {note.title.length > 15
+                  ? `${note.title.substring(0, 15)}...`
                   : note.title}
               </TabsTrigger>
             ))}
           </TabsList>
 
           {notes.map((note) => (
-            <TabsContent 
-              key={note._id} 
-              value={note._id} 
+            <TabsContent
+              key={note._id}
+              value={note._id}
               className="mt-4"
               // Only render the selected tab's content to optimize performance
               hidden={note._id !== activeNote}
@@ -181,7 +196,7 @@ export function NotesPanel() {
 
               <textarea
                 className="w-full h-40 bg-background resize-none p-2 rounded-md focus:outline-none focus:ring-1 focus:ring-[#6C63FF] font-mono"
-                defaultValue={note.content.replace(/<[^>]*>/g, '')} // Strip HTML tags for plain text display
+                defaultValue={note.content.replace(/<[^>]*>/g, "")} // Strip HTML tags for plain text display
                 onChange={(e) => handleUpdateNote(note._id, e.target.value)}
               />
             </TabsContent>
