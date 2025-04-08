@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,47 +10,87 @@ import {
   ListOrdered,
   ExternalLink,
   Maximize2,
+  FolderIcon,
+  Plus,
 } from "lucide-react";
 import noteService from "@/services/api/noteService";
 import { toast } from "react-hot-toast";
 import { debounce } from "lodash";
+import { DEFAULT_FOLDER } from "@/features/Notes/constants";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import MiniTipTapEditor from "@/features/Notes/components/MiniTipTapEditor";
 
 export function NotesPanel() {
   const [notes, setNotes] = useState([]);
+  const [folders, setFolders] = useState([DEFAULT_FOLDER]);
   const [activeNote, setActiveNote] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newNoteTitle, setNewNoteTitle] = useState("New Note");
+  const [selectedFolder, setSelectedFolder] = useState(DEFAULT_FOLDER);
+  const editorRefs = useRef({});
+  
   const navigate = useNavigate();
 
-  // Fetch notes when component mounts
+  // Fetch notes and folders when component mounts
   useEffect(() => {
-    const fetchNotes = async () => {
+    const fetchData = async () => {
       try {
-        const response = await noteService.getNotes({ limit: 5 });
-        const fetchedNotes = response.data.notes || [];
+        // Fetch notes
+        const notesResponse = await noteService.getNotes({ limit: 5 });
+        const fetchedNotes = notesResponse.data.notes || [];
+        
+        // Get folders from localStorage and ensure no duplicates
+        const storedFolders = JSON.parse(localStorage.getItem('note-folders') || '[]');
+        const allFolders = storedFolders.includes(DEFAULT_FOLDER) 
+          ? storedFolders 
+          : [DEFAULT_FOLDER, ...storedFolders];
+        
         setNotes(fetchedNotes);
+        setFolders(allFolders);
+        
         if (fetchedNotes.length > 0) {
           setActiveNote(fetchedNotes[0]._id);
         }
       } catch (error) {
-        console.error("Error fetching notes:", error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchNotes();
+    fetchData();
   }, []);
 
   // Handle creating a new note
   const handleCreateNote = async () => {
     try {
       const response = await noteService.create({
-        title: "New Note",
+        title: newNoteTitle,
         content: "",
+        folder: selectedFolder,
       });
 
       setNotes([response.data.note, ...notes]);
       setActiveNote(response.data.note._id);
+      setIsCreateDialogOpen(false);
+      setNewNoteTitle("New Note");
       toast.success("Note created");
     } catch (error) {
       console.error("Error creating note:", error);
@@ -66,6 +106,28 @@ export function NotesPanel() {
       console.error("Error updating note:", error);
     }
   }, 500);
+
+  // Handle fullscreen navigation
+  const handleFullScreen = () => {
+    if (activeNote) {
+      navigate("/dashboard/notepanel", { state: { initialNoteId: activeNote } });
+    } else {
+      navigate("/dashboard/notepanel");
+    }
+  };
+
+  // Handle textarea blur for saving
+  const handleBlur = (id, content) => {
+    handleUpdateNote.flush(); // Immediately process any pending debounced calls
+    toast.success("Note saved", { id: "note-save", duration: 2000 });
+  };
+
+  // Open create dialog
+  const openCreateDialog = () => {
+    setIsCreateDialogOpen(true);
+    setSelectedFolder(DEFAULT_FOLDER);
+    setNewNoteTitle("New Note");
+  };
 
   // If loading, show a loading state
   if (loading) {
@@ -90,7 +152,7 @@ export function NotesPanel() {
           <Button
             size="sm"
             className="bg-[#6C63FF] hover:bg-[#6C63FF]/90"
-            onClick={handleCreateNote}
+            onClick={openCreateDialog}
           >
             New Note
           </Button>
@@ -99,20 +161,62 @@ export function NotesPanel() {
           <p className="text-gray-500 mb-2">No notes yet</p>
           <Button
             variant="outline"
-            onClick={handleCreateNote}
+            onClick={openCreateDialog}
             className="text-[#6C63FF] border-[#6C63FF]"
           >
             Create your first note
           </Button>
         </CardContent>
+
+        {/* Create Note Dialog */}
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Note</DialogTitle>
+              <DialogDescription>
+                Create a new note and organize it in a folder
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="title">Title</Label>
+                <Input 
+                  id="title" 
+                  value={newNoteTitle} 
+                  onChange={(e) => setNewNoteTitle(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="folder">Folder</Label>
+                <Select value={selectedFolder} onValueChange={setSelectedFolder}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select folder" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {folders.map((folder) => (
+                      <SelectItem key={folder} value={folder}>
+                        {folder}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateNote}>Create</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </Card>
     );
   }
-
-  // Handle fullscreen navigation
-  const handleFullScreen = () => {
-    navigate("/dashboard/notepanel");
-  };
 
   return (
     <Card className="h-full shadow-sm">
@@ -122,7 +226,7 @@ export function NotesPanel() {
           <Button
             size="sm"
             className="bg-[#6C63FF] hover:bg-[#6C63FF]/90"
-            onClick={handleCreateNote}
+            onClick={openCreateDialog}
           >
             New Note
           </Button>
@@ -131,7 +235,7 @@ export function NotesPanel() {
             variant="outline"
             onClick={handleFullScreen}
             className="transition-all duration-300 ease-in-out border-[#6C63FF]/30 hover:border-[#6C63FF] hover:bg-[#6C63FF]/5 text-[#6C63FF]"
-            title="Full Screen"
+            title="Open in Editor"
           >
             <Maximize2 className="h-4 w-4 hover:scale-110 transition-transform" />
           </Button>
@@ -139,26 +243,46 @@ export function NotesPanel() {
       </CardHeader>
       <CardContent>
         <Tabs value={activeNote} onValueChange={setActiveNote}>
-          <TabsList className="w-full bg-muted">
-            {notes.slice(0, 3).map((note) => (
-              <TabsTrigger
-                key={note._id}
-                value={note._id}
-                className="flex-1 data-[state=active]:bg-[#6C63FF] data-[state=active]:text-white"
-              >
-                {note.title.length > 15
-                  ? `${note.title.substring(0, 15)}...`
-                  : note.title}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          <div className="relative">
+            <TabsList className="w-full max-w-full overflow-x-auto bg-muted [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              <div className="flex min-w-full px-1">
+                {notes.slice(0, 3).map((note) => (
+                  <TabsTrigger
+                    key={note._id}
+                    value={note._id}
+                    className="flex-none data-[state=active]:bg-[#6C63FF] data-[state=active]:text-white"
+                  >
+                    <div className="flex items-center gap-1.5 truncate">
+                      <span className="truncate">
+                        {note.title.length > 12
+                          ? `${note.title.substring(0, 12)}...`
+                          : note.title}
+                      </span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        ({note.folder || DEFAULT_FOLDER})
+                      </span>
+                    </div>
+                  </TabsTrigger>
+                ))}
+                {notes.length > 3 && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleFullScreen}
+                    className="flex-none text-[#6C63FF] hover:text-[#6C63FF]/80 ml-2"
+                  >
+                    See More
+                  </Button>
+                )}
+              </div>
+            </TabsList>
+          </div>
 
           {notes.map((note) => (
             <TabsContent
               key={note._id}
               value={note._id}
               className="mt-4"
-              // Only render the selected tab's content to optimize performance
               hidden={note._id !== activeNote}
             >
               <div className="border-b border-border pb-2 mb-2">
@@ -167,6 +291,8 @@ export function NotesPanel() {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-[#6C63FF]"
+                    onClick={() => editorRefs.current[note._id]?.commands.toggleBold()}
+                    title="Bold (Ctrl+B)"
                   >
                     <Bold className="h-4 w-4" />
                   </Button>
@@ -174,6 +300,8 @@ export function NotesPanel() {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-[#6C63FF]"
+                    onClick={() => editorRefs.current[note._id]?.commands.toggleItalic()}
+                    title="Italic (Ctrl+I)"
                   >
                     <Italic className="h-4 w-4" />
                   </Button>
@@ -181,6 +309,8 @@ export function NotesPanel() {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-[#6C63FF]"
+                    onClick={() => editorRefs.current[note._id]?.commands.toggleBulletList()}
+                    title="Bullet List"
                   >
                     <List className="h-4 w-4" />
                   </Button>
@@ -188,21 +318,74 @@ export function NotesPanel() {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-[#6C63FF]"
+                    onClick={() => editorRefs.current[note._id]?.commands.toggleOrderedList()}
+                    title="Numbered List"
                   >
                     <ListOrdered className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
 
-              <textarea
-                className="w-full h-40 bg-background resize-none p-2 rounded-md focus:outline-none focus:ring-1 focus:ring-[#6C63FF] font-mono"
-                defaultValue={note.content.replace(/<[^>]*>/g, "")} // Strip HTML tags for plain text display
-                onChange={(e) => handleUpdateNote(note._id, e.target.value)}
-              />
+              <div className="h-40 overflow-y-auto">
+                <MiniTipTapEditor
+                  content={note.content}
+                  onUpdate={(content) => handleUpdateNote(note._id, content)}
+                  onBlur={() => handleBlur(note._id, note.content)}
+                  editorRef={(editor) => editorRefs.current[note._id] = editor}
+                  className="min-h-full"
+                />
+              </div>
             </TabsContent>
           ))}
         </Tabs>
       </CardContent>
+
+      {/* Create Note Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Note</DialogTitle>
+            <DialogDescription>
+              Create a new note and organize it in a folder
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="title">Title</Label>
+              <Input 
+                id="title" 
+                value={newNoteTitle} 
+                onChange={(e) => setNewNoteTitle(e.target.value)}
+                autoFocus
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="folder">Folder</Label>
+              <Select value={selectedFolder} onValueChange={setSelectedFolder}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select folder" />
+                </SelectTrigger>
+                <SelectContent>
+                  {folders.map((folder) => (
+                    <SelectItem key={folder} value={folder}>
+                      {folder}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateNote}>Create</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

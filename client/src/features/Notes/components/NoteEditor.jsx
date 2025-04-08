@@ -3,12 +3,19 @@ import { debounce } from "lodash";
 import TipTapEditor from "./TipTapEditor";
 import { Maximize2, Minimize2 } from "lucide-react";
 
-const NoteEditor = ({ note, onUpdateNote, isNewNote }) => {
+const NoteEditor = ({ note, onUpdateNote, isNewNote, isFullScreen: externalIsFullScreen, onToggleFullScreen }) => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showPulse, setShowPulse] = useState(false);
   const titleInputRef = useRef(null);
+
+  // Sync with external fullscreen state if provided
+  useEffect(() => {
+    if (externalIsFullScreen !== undefined) {
+      setIsFullScreen(externalIsFullScreen);
+    }
+  }, [externalIsFullScreen]);
 
   // Update local state when the selected note changes
   useEffect(() => {
@@ -39,13 +46,13 @@ const NoteEditor = ({ note, onUpdateNote, isNewNote }) => {
     const handleKeyDown = (e) => {
       // Exit fullscreen with Escape key
       if (e.key === "Escape" && isFullScreen) {
-        setIsFullScreen(false);
+        toggleFullScreen(false);
       }
       
       // Enter fullscreen with Ctrl+Shift+F
       if (e.key === "f" && e.ctrlKey && e.shiftKey && note) {
         e.preventDefault(); // Prevent browser's find action
-        setIsFullScreen(!isFullScreen);
+        toggleFullScreen(!isFullScreen);
       }
     };
 
@@ -71,15 +78,6 @@ const NoteEditor = ({ note, onUpdateNote, isNewNote }) => {
     }
   };
 
-  // Handle content change (for textarea)
-  // const handleContentChange = (e) => {
-  //   const newContent = e.target.value;
-  //   setContent(newContent);
-  //   if (note) {
-  //     debouncedSave(note._id, { content: newContent });
-  //   }
-  // };
-
   // Handle content change (for TipTap)
   const handleTipTapUpdate = (newContent) => {
     setContent(newContent);
@@ -89,8 +87,14 @@ const NoteEditor = ({ note, onUpdateNote, isNewNote }) => {
   };
 
   // Toggle full screen mode
-  const toggleFullScreen = () => {
-    setIsFullScreen(!isFullScreen);
+  const toggleFullScreen = (value) => {
+    const newValue = value !== undefined ? value : !isFullScreen;
+    setIsFullScreen(newValue);
+    
+    // Call external handler if provided
+    if (onToggleFullScreen) {
+      onToggleFullScreen(newValue);
+    }
   };
 
   // If no note is selected, show a placeholder
@@ -130,7 +134,7 @@ const NoteEditor = ({ note, onUpdateNote, isNewNote }) => {
 
       {/* Fullscreen toggle button - different positions based on mode */}
       <button
-        onClick={toggleFullScreen}
+        onClick={() => toggleFullScreen()}
         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-all duration-200 z-10 ${
           isFullScreen 
             ? "absolute top-5 right-5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300" 

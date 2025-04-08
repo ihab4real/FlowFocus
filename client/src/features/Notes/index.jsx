@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
+import { useLocation } from "react-router-dom";
 import noteService from "../../services/api/noteService";
 import { DEFAULT_FOLDER } from "./constants";
 
@@ -20,6 +21,35 @@ const NotesContainer = () => {
   const [currentFolder, setCurrentFolder] = useState(DEFAULT_FOLDER);
   const [searchQuery, setSearchQuery] = useState("");
   const [isNewNote, setIsNewNote] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  
+  // Get location to check for initial state passed from dashboard
+  const location = useLocation();
+
+  // Check if we should initialize with a specific note and/or focus mode
+  useEffect(() => {
+    if (location.state) {
+      const { initialNoteId } = location.state;
+      
+      if (initialNoteId) {
+        // Find the note by ID and select it
+        const fetchInitialNote = async () => {
+          try {
+            const response = await noteService.getById(initialNoteId);
+            if (response.data.note) {
+              setSelectedNote(response.data.note);
+              // Set the current folder to match the note's folder
+              setCurrentFolder(response.data.note.folder || DEFAULT_FOLDER);
+            }
+          } catch (error) {
+            console.error("Error fetching initial note:", error);
+          }
+        };
+        
+        fetchInitialNote();
+      }
+    }
+  }, [location.state]);
 
   // Fetch notes when component mounts or folder changes
   useEffect(() => {
@@ -37,8 +67,10 @@ const NotesContainer = () => {
 
         setNotes(folderNotes);
 
-        // Clear selected note when changing folders
-        setSelectedNote(null);
+        // Clear selected note when changing folders unless we have a specific note requested
+        if (!location.state?.initialNoteId) {
+          setSelectedNote(null);
+        }
       } catch (error) {
         console.error("Error fetching notes:", error);
         toast.error("Failed to load notes. Please try again.");
@@ -48,7 +80,7 @@ const NotesContainer = () => {
     };
 
     fetchNotes();
-  }, [currentFolder]);
+  }, [currentFolder, location.state?.initialNoteId]);
 
   // Fetch folders when component mounts or when returning to the component
   useEffect(() => {
@@ -299,6 +331,8 @@ const NotesContainer = () => {
             note={selectedNote}
             onUpdateNote={handleUpdateNote}
             isNewNote={isNewNote}
+            isFullScreen={isFullScreen}
+            onToggleFullScreen={() => setIsFullScreen(!isFullScreen)}
           />
         </Panel>
       </PanelGroup>
