@@ -50,7 +50,7 @@ const NotesList = ({
   };
 
   return (
-    <Card className="w-80 h-full border-r border-border flex flex-col overflow-hidden shadow-sm bg-card">
+    <Card className="h-full w-full border-r border-border flex flex-col overflow-hidden shadow-sm bg-card">
       {/* Header with folder name and create button */}
       <CardHeader className="border-b border-border flex flex-row items-center justify-between py-3 px-4 space-y-0">
         <div className="flex items-center gap-2">

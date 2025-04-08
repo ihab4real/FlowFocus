@@ -86,7 +86,7 @@ const NotesNavbar = ({
   };
 
   return (
-    <div className="w-64 h-full bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-4 flex flex-col">
+    <div className="w-full h-full bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-4 flex flex-col">
       {/* Search input */}
       <div className="relative mb-4">
         <span className="absolute inset-y-0 left-0 flex items-center pl-3">

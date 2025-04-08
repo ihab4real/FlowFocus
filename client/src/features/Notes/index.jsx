@@ -8,6 +8,9 @@ import NotesList from "./components/NotesList";
 import NotesNavbar from "./components/NotesNavbar";
 import NoteEditor from "./components/NoteEditor";
 
+// Resizable panels imports
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+
 const NotesContainer = () => {
   // State management
   const [notes, setNotes] = useState([]);
@@ -255,36 +258,50 @@ const NotesContainer = () => {
   );
 
   return (
-    <div className="flex h-full overflow-hidden">
-      {/* Left sidebar with folders and search */}
-      <NotesNavbar
-        folders={folders}
-        currentFolder={currentFolder}
-        onFolderChange={handleFolderChange}
-        onCreateFolder={handleCreateFolder}
-        onDeleteFolder={handleDeleteFolder}
-        onRenameFolder={handleRenameFolder}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-      />
+    <div className="h-full overflow-hidden">
+      <PanelGroup direction="horizontal" className="h-full">
+        {/* Left sidebar with folders and search - min width 240px (15%) */}
+        <Panel defaultSize={20} minSize={15} className="h-full">
+          <NotesNavbar
+            folders={folders}
+            currentFolder={currentFolder}
+            onFolderChange={handleFolderChange}
+            onCreateFolder={handleCreateFolder}
+            onDeleteFolder={handleDeleteFolder}
+            onRenameFolder={handleRenameFolder}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+          />
+        </Panel>
 
-      {/* Middle section with notes list */}
-      <NotesList
-        notes={filteredNotes}
-        selectedNote={selectedNote}
-        onSelectNote={handleSelectNote}
-        onCreateNote={handleCreateNote}
-        onDeleteNote={handleDeleteNote}
-        loading={loading}
-        currentFolder={currentFolder}
-      />
+        {/* Subtle divider between folders and notes list */}
+        <PanelResizeHandle className="w-px bg-border/30 hover:bg-primary/20 transition-colors duration-200" />
 
-      {/* Right section with note editor */}
-      <NoteEditor 
-        note={selectedNote} 
-        onUpdateNote={handleUpdateNote} 
-        isNewNote={isNewNote}
-      />
+        {/* Middle section with notes list - min width 240px (15%) */}
+        <Panel defaultSize={25} minSize={15} className="h-full">
+          <NotesList
+            notes={filteredNotes}
+            selectedNote={selectedNote}
+            onSelectNote={handleSelectNote}
+            onCreateNote={handleCreateNote}
+            onDeleteNote={handleDeleteNote}
+            loading={loading}
+            currentFolder={currentFolder}
+          />
+        </Panel>
+
+        {/* Subtle divider between notes list and editor */}
+        <PanelResizeHandle className="w-px bg-border/30 hover:bg-primary/20 transition-colors duration-200" />
+
+        {/* Right section with note editor - takes remaining space */}
+        <Panel defaultSize={55} className="h-full">
+          <NoteEditor
+            note={selectedNote}
+            onUpdateNote={handleUpdateNote}
+            isNewNote={isNewNote}
+          />
+        </Panel>
+      </PanelGroup>
     </div>
   );
 };
