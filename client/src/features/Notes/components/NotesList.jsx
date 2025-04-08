@@ -50,7 +50,7 @@ const NotesList = ({
   };
 
   return (
-    <Card className="w-80 h-full border-r border-border flex flex-col overflow-hidden">
+    <Card className="w-80 h-full border-r border-border flex flex-col overflow-hidden shadow-sm bg-card">
       {/* Header with folder name and create button */}
       <CardHeader className="border-b border-border flex flex-row items-center justify-between py-3 px-4 space-y-0">
         <div className="flex items-center gap-2">
@@ -73,17 +73,17 @@ const NotesList = ({
       <CardContent className="overflow-y-auto flex-grow p-0">
         {loading ? (
           <div className="flex justify-center items-center h-32">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary shadow-md"></div>
           </div>
         ) : notes.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-32 p-4 text-center">
-            <p className="text-muted-foreground mb-2">
+            <p className="text-muted-foreground mb-3">
               No notes in this folder
             </p>
             <Button
               variant="outline"
               onClick={onCreateNote}
-              className="text-primary border-primary"
+              className="text-primary border-primary hover:bg-primary/5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
             >
               Create one now
             </Button>
@@ -93,21 +93,21 @@ const NotesList = ({
             {notes.map((note) => (
               <li key={note._id}>
                 <div
-                  className={`p-4 hover:bg-muted cursor-pointer transition-colors ${
+                  className={`p-4 cursor-pointer transition-all duration-200 hover:bg-primary/5 hover:scale-[1.02] active:scale-[0.98] ${
                     selectedNote && selectedNote._id === note._id
-                      ? "bg-primary/10 border-l-4 border-primary"
-                      : ""
+                      ? "bg-primary/10 border-l-4 border-primary shadow-sm"
+                      : "border-l-4 border-transparent"
                   }`}
                   onClick={() => onSelectNote(note)}
                 >
                   <div className="flex justify-between items-start">
-                    <h3 className="font-medium text-card-foreground mb-1 truncate">
+                    <h3 className="font-medium text-primary mb-1 truncate">
                       {note.title}
                     </h3>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      className="h-7 w-7 opacity-70 hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200 rounded-full hover:scale-105 active:scale-95 shadow-sm hover:shadow"
                       onClick={(e) => handleDeleteClick(e, note)}
                       aria-label="Delete note"
                     >
@@ -117,7 +117,7 @@ const NotesList = ({
                   <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
                     {formatPreview(note.content)}
                   </p>
-                  <p className="text-xs text-muted-foreground/70">
+                  <p className="text-xs flex items-center gap-1 text-muted-foreground/80 font-medium">
                     {format(new Date(note.updatedAt), "MMM d, yyyy")}
                   </p>
                 </div>
@@ -133,8 +133,8 @@ const NotesList = ({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Note</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{noteToDelete?.title}"? This action
-              cannot be undone.
+              Are you sure you want to delete "{noteToDelete?.title}"? This
+              action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
