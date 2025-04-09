@@ -11,6 +11,7 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import Profile from "../pages/Profile";
 import FullScreenTaskBoard from "../pages/FullScreenTaskBoard";
 import NotesPage from "../pages/NotesPage";
+import PomodoroPage from "../pages/PomodoroPage";
 
 // Root loader function for initial data fetching
 async function rootLoader() {
@@ -65,6 +66,14 @@ export const router = createBrowserRouter([
             element: (
               <ProtectedRoute>
                 <NotesPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "dashboard/pomodoro",
+            element: (
+              <ProtectedRoute>
+                <PomodoroPage />
               </ProtectedRoute>
             ),
           },

@@ -3,7 +3,7 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import { Sidebar } from "@/components/Sidebar";
 import { TaskBoard } from "@/components/TaskBoard";
 import { NotesPanel } from "@/components/NotesPanel";
-import { PomodoroTimer } from "@/components/PomodoroTimer";
+import PomodoroContainer from "@/features/Pomodoro";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 function Dashboard() {
@@ -17,7 +17,7 @@ function Dashboard() {
             <TaskBoard />
           </div>
           <div className="space-y-4">
-            <PomodoroTimer />
+            <PomodoroContainer />
             <NotesPanel />
           </div>
         </div>
