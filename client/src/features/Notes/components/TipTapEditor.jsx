@@ -198,13 +198,13 @@ const TipTapEditor = ({ content, onUpdate, isFullScreen }) => {
   }, [content, editor]);
 
   // Apply different styles based on full-screen mode
-  const containerClasses = `flex flex-col h-full overflow-auto transition-all duration-300 ease-in-out ${
+  const containerClasses = `flex flex-col h-full overflow-auto scrollbar-hide transition-all duration-300 ease-in-out ${
     isFullScreen 
       ? "max-w-3xl mx-auto pt-2 pb-16" 
       : "pb-6"
   }`;
 
-  const editorContentClasses = `flex-grow overflow-auto p-4 transition-all duration-300 ease-in-out ${
+  const editorContentClasses = `flex-grow overflow-auto scrollbar-hide p-4 transition-all duration-300 ease-in-out ${
     isFullScreen 
       ? "md:px-8 lg:px-12 animate-in fade-in prose-lg" 
       : ""

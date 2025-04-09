@@ -219,8 +219,8 @@ export function NotesPanel() {
   }
 
   return (
-    <Card className="h-full shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between">
+    <Card className="h-full shadow-sm flex flex-col overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between flex-shrink-0">
         <CardTitle>Notes</CardTitle>
         <div className="flex gap-2">
           <Button
@@ -241,9 +241,9 @@ export function NotesPanel() {
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
-        <Tabs value={activeNote} onValueChange={setActiveNote}>
-          <div className="relative">
+      <CardContent className="flex-grow overflow-hidden">
+        <Tabs value={activeNote} onValueChange={setActiveNote} className="flex flex-col h-full">
+          <div className="relative flex-shrink-0">
             <TabsList className="w-full max-w-full overflow-x-auto bg-muted [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               <div className="flex min-w-full px-1">
                 {notes.slice(0, 3).map((note) => (
@@ -282,10 +282,10 @@ export function NotesPanel() {
             <TabsContent
               key={note._id}
               value={note._id}
-              className="mt-4"
+              className="mt-4 flex-grow overflow-hidden flex flex-col"
               hidden={note._id !== activeNote}
             >
-              <div className="border-b border-border pb-2 mb-2">
+              <div className="border-b border-border pb-2 mb-2 flex-shrink-0">
                 <div className="flex gap-1">
                   <Button
                     variant="ghost"
@@ -326,7 +326,7 @@ export function NotesPanel() {
                 </div>
               </div>
 
-              <div className="h-40 overflow-y-auto">
+              <div className="h-40 overflow-y-auto flex-grow scrollbar-hide">
                 <MiniTipTapEditor
                   content={note.content}
                   onUpdate={(content) => handleUpdateNote(note._id, content)}

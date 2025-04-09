@@ -86,9 +86,9 @@ const NotesNavbar = ({
   };
 
   return (
-    <div className="w-full h-full bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-4 flex flex-col">
+    <div className="w-full h-full bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-4 flex flex-col overflow-hidden">
       {/* Search input */}
-      <div className="relative mb-4">
+      <div className="relative mb-4 flex-shrink-0">
         <span className="absolute inset-y-0 left-0 flex items-center pl-3">
           <SearchIcon className="h-4 w-4 text-gray-400" />
         </span>
@@ -102,7 +102,7 @@ const NotesNavbar = ({
       </div>
 
       {/* Folder header with add button */}
-      <div className="flex justify-between items-center mb-2">
+      <div className="flex justify-between items-center mb-2 flex-shrink-0">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
           Folders
         </h2>
@@ -116,7 +116,7 @@ const NotesNavbar = ({
       </div>
 
       {/* Folder list */}
-      <div className="overflow-y-auto flex-grow" onClick={handleClickOutside}>
+      <div className="overflow-y-auto flex-grow scrollbar-hide" onClick={handleClickOutside}>
         <ul className="space-y-1">
           {folders.map((folder) => (
             <li key={folder} className="relative">

@@ -121,7 +121,7 @@ const NoteEditor = ({ note, onUpdateNote, isNewNote, isFullScreen: externalIsFul
   return (
     <div className={editorContainerClasses}>
       {/* Title input */}
-      <div className="border-b border-gray-200 dark:border-gray-700 p-4">
+      <div className="border-b border-gray-200 dark:border-gray-700 p-4 flex-shrink-0">
         <input
           ref={titleInputRef}
           type="text"
@@ -155,12 +155,12 @@ const NoteEditor = ({ note, onUpdateNote, isNewNote, isFullScreen: externalIsFul
       </button>
 
       {/* Editor content */}
-      <div className="flex-grow overflow-auto">
+      <div className="flex-grow overflow-y-auto scrollbar-hide">
         <TipTapEditor content={content} onUpdate={handleTipTapUpdate} isFullScreen={isFullScreen} />
       </div>
 
       {/* Footer with metadata - fixed at bottom when in fullscreen */}
-      <div className={`p-3 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 ${isFullScreen ? 'absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900' : ''}`}>
+      <div className={`p-3 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ${isFullScreen ? 'absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900' : ''}`}>
         <span>Last updated: {new Date(note.updatedAt).toLocaleString()}</span>
       </div>
     </div>

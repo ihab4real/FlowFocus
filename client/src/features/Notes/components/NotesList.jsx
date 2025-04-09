@@ -52,7 +52,7 @@ const NotesList = ({
   return (
     <Card className="h-full w-full border-r border-border flex flex-col overflow-hidden shadow-sm bg-card">
       {/* Header with folder name and create button */}
-      <CardHeader className="border-b border-border flex flex-row items-center justify-between py-3 px-4 space-y-0">
+      <CardHeader className="border-b border-border flex flex-row items-center justify-between py-3 px-4 space-y-0 flex-shrink-0">
         <div className="flex items-center gap-2">
           <FolderIcon className="h-4 w-4 text-primary" />
           <CardTitle className="text-lg font-semibold">
@@ -70,7 +70,7 @@ const NotesList = ({
       </CardHeader>
 
       {/* Notes list */}
-      <CardContent className="overflow-y-auto flex-grow p-0">
+      <CardContent className="overflow-y-auto flex-grow p-0 scrollbar-hide">
         {loading ? (
           <div className="flex justify-center items-center h-32">
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary shadow-md"></div>

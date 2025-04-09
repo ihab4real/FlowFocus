@@ -38,17 +38,17 @@ const NotesPage = () => {
   };
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-background overflow-hidden">
       <Sidebar />
       <main
         className={`
-          flex-1 flex flex-col
+          flex-1 flex flex-col overflow-hidden
           transition-all duration-500 ease-in-out
           ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
         `}
       >
         <DashboardHeader />
-        <div className="flex-1 relative">
+        <div className="flex-1 relative overflow-hidden">
           <div className="absolute top-2 right-4 z-10">
             <Button
               size="sm"
