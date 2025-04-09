@@ -12,7 +12,13 @@ const TimerHeader = ({
   toggleFullscreen, 
   isFullscreen 
 }) => {
-  const { mode, settings, isActive, timeLeft, setSettings: setStoreSettings } = usePomodoroStore();
+  const { 
+    mode = TIMER_MODES.FOCUS, 
+    settings = {}, 
+    isActive = false, 
+    timeLeft = 0, 
+    setSettings: setStoreSettings 
+  } = usePomodoroStore();
   const { mutate: updateServerSettings } = useUpdatePomodoroSettings();
   
   // Get title based on mode

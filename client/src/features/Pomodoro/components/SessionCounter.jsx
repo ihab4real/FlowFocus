@@ -1,6 +1,6 @@
 import React from "react";
 import usePomodoroStore from '@/stores/pomodoroStore';
-import { TIMER_MODES } from '../constants';
+import { DEFAULT_SETTINGS, TIMER_MODES } from '../constants';
 
 /**
  * SessionCounter component
@@ -8,9 +8,9 @@ import { TIMER_MODES } from '../constants';
  */
 const SessionCounter = () => {
   const { 
-    sessionCount,
-    sessionsUntilLongBreak,
-    mode,
+    sessionCount = 0,
+    sessionsUntilLongBreak = DEFAULT_SETTINGS.LONG_BREAK_INTERVAL,
+    mode = TIMER_MODES.FOCUS,
     settings
   } = usePomodoroStore();
   

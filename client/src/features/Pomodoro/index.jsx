@@ -41,18 +41,34 @@ const PomodoroContainer = () => {
   const location = useLocation();
   const isFullscreen = location.pathname === "/dashboard/pomodoro";
   
-  // Sound management
-  const { playEndSound } = TimerSound();
+  // Sound management - using the fixed TimerSound component
+  // Wrap in try/catch to handle potential errors
+  let timerSoundResult = { playEndSound: () => {} };
+  try {
+    timerSoundResult = TimerSound() || { playEndSound: () => {} };
+  } catch (error) {
+    console.error('Error initializing TimerSound:', error);
+  }
+  const { playEndSound = () => {} } = timerSoundResult;
   
   // Load settings from server on component mount
   useEffect(() => {
-    loadSettings();
+    try {
+      loadSettings();
+    } catch (error) {
+      console.error('Error loading settings:', error);
+      toast.error('Failed to load settings. Using defaults.');
+    }
   }, []);
 
   // Initialize timer with settings when they're loaded
   useEffect(() => {
     if (settings && !isLoadingSettings) {
-      initializeTimer(settings);
+      try {
+        initializeTimer(settings);
+      } catch (error) {
+        console.error('Error initializing timer:', error);
+      }
     }
   }, [settings, isLoadingSettings]);
   
@@ -61,32 +77,36 @@ const PomodoroContainer = () => {
     const handleKeyDown = (e) => {
       if (e.target.closest('input, textarea, [contenteditable]')) return;
       
-      switch (e.code) {
-        case KEYBOARD_SHORTCUTS.TOGGLE_TIMER:
-          e.preventDefault();
-          if (isActive) {
-            pauseTimer();
-          } else {
-            startSession();
-          }
-          break;
-        case KEYBOARD_SHORTCUTS.RESET_TIMER:
-          if (isActive) {
+      try {
+        switch (e.code) {
+          case KEYBOARD_SHORTCUTS.TOGGLE_TIMER:
+            e.preventDefault();
+            if (isActive) {
+              pauseTimer();
+            } else {
+              startSession();
+            }
+            break;
+          case KEYBOARD_SHORTCUTS.RESET_TIMER:
+            if (isActive) {
+              pauseTimer();
+              endSession();
+            }
+            break;
+          case KEYBOARD_SHORTCUTS.SKIP_SESSION:
             pauseTimer();
             endSession();
-          }
-          break;
-        case KEYBOARD_SHORTCUTS.SKIP_SESSION:
-          pauseTimer();
-          endSession();
-          switchToNextMode(settings);
-          break;
-        case KEYBOARD_SHORTCUTS.TOGGLE_FULLSCREEN:
-          toggleFullscreen();
-          break;
-        case KEYBOARD_SHORTCUTS.EXIT_FULLSCREEN:
-          if (isFullscreen) navigate("/dashboard");
-          break;
+            switchToNextMode(settings);
+            break;
+          case KEYBOARD_SHORTCUTS.TOGGLE_FULLSCREEN:
+            toggleFullscreen();
+            break;
+          case KEYBOARD_SHORTCUTS.EXIT_FULLSCREEN:
+            if (isFullscreen) navigate("/dashboard");
+            break;
+        }
+      } catch (error) {
+        console.error('Error handling keyboard shortcut:', error);
       }
     };
     
@@ -105,14 +125,19 @@ const PomodoroContainer = () => {
   
   // Handle settings save
   const handleSaveSettings = (newSettings) => {
-    // Update settings in store and on server
-    setStoreSettings(newSettings);
-    updateServerSettings(newSettings);
-    setIsSettingsOpen(false);
-    
-    toast.success("Settings updated", {
-      icon: "⚙️",
-    });
+    try {
+      // Update settings in store and on server
+      setStoreSettings(newSettings);
+      updateServerSettings(newSettings);
+      setIsSettingsOpen(false);
+      
+      toast.success("Settings updated", {
+        icon: "⚙️",
+      });
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      toast.error('Failed to save settings');
+    }
   };
 
   // Show loading state while settings are being fetched

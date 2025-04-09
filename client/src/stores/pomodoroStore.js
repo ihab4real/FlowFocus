@@ -47,6 +47,8 @@ const usePomodoroStore = create(
 
       // Mode switching
       switchToNextMode: (settings) => {
+        if (!settings) return;
+        
         const { mode, sessionCount } = get();
         
         if (mode === TIMER_MODES.FOCUS) {
@@ -56,22 +58,24 @@ const usePomodoroStore = create(
           set({
             sessionCount: newSessionCount,
             mode: isLongBreak ? TIMER_MODES.LONG_BREAK : TIMER_MODES.SHORT_BREAK,
-            timeLeft: isLongBreak ? settings.longBreakDuration * 60 : settings.shortBreakDuration * 60,
+            timeLeft: isLongBreak ? (settings.longBreakDuration || 15) * 60 : (settings.shortBreakDuration || 5) * 60,
             sessionsUntilLongBreak: isLongBreak ? settings.longBreakInterval : get().sessionsUntilLongBreak - 1
           });
         } else {
           set({
             mode: TIMER_MODES.FOCUS,
-            timeLeft: settings.focusDuration * 60
+            timeLeft: (settings.focusDuration || 25) * 60
           });
         }
       },
 
       // Initialize timer with settings
       initializeTimer: (settings) => {
+        if (!settings) return;
+        
         set({
-          timeLeft: settings.focusDuration * 60,
-          sessionsUntilLongBreak: settings.longBreakInterval
+          timeLeft: (settings.focusDuration || 25) * 60,
+          sessionsUntilLongBreak: settings.longBreakInterval || 4
         });
       },
       
@@ -79,18 +83,26 @@ const usePomodoroStore = create(
       setInterruptions: (count) => set({ interruptions: count }),
       
       // Settings actions
+      setSettings: (newSettings) => set({ settings: newSettings }),
+      
       loadSettings: async () => {
         set({ isLoadingSettings: true, settingsError: null });
         try {
           const response = await pomodoroService.getSettings();
-          set({ 
-            settings: response.data.settings,
-            isLoadingSettings: false 
-          });
+          if (response?.data?.settings) {
+            set({ 
+              settings: response.data.settings,
+              isLoadingSettings: false 
+            });
+          } else {
+            throw new Error('Invalid settings format');
+          }
         } catch (error) {
+          console.error('Failed to load settings:', error);
           set({ 
-            settingsError: error.message,
-            isLoadingSettings: false 
+            settingsError: error.message || 'Failed to load settings',
+            isLoadingSettings: false,
+            settings: DEFAULT_SETTINGS  // Fall back to default settings
           });
         }
       },
@@ -98,10 +110,14 @@ const usePomodoroStore = create(
       updateSettings: async (newSettings) => {
         try {
           const response = await pomodoroService.updateSettings(newSettings);
-          set({ settings: response.data.settings });
-          return true;
+          if (response?.data?.settings) {
+            set({ settings: response.data.settings });
+            return true;
+          }
+          throw new Error('Invalid settings format');
         } catch (error) {
-          set({ settingsError: error.message });
+          console.error('Failed to update settings:', error);
+          set({ settingsError: error.message || 'Failed to update settings' });
           return false;
         }
       },
@@ -109,9 +125,13 @@ const usePomodoroStore = create(
       // Session actions
       startSession: async () => {
         const { mode, settings } = get();
-        const startTime = new Date();
+        
+        // Start the timer first for better UX
+        const success = get().startTimer();
+        if (!success) return false;
+        
         const sessionData = {
-          startTime,
+          startTime: new Date().toISOString(),
           type: mode,
           category: null,
           tags: [],
@@ -121,24 +141,25 @@ const usePomodoroStore = create(
         
         try {
           const response = await pomodoroService.createSession(sessionData);
-          set({ 
-            currentSession: response.data.session,
-            isActive: true 
-          });
-          return true;
+          if (response?.data?.session) {
+            set({ currentSession: response.data.session });
+            return true;
+          } 
+          throw new Error('Invalid session format');
         } catch (error) {
           console.error('Failed to start session:', error);
+          // Don't pause the timer - let it continue even if the API call failed
           return false;
         }
       },
       
       endSession: async () => {
         const { currentSession, interruptions } = get();
-        if (!currentSession) return;
+        if (!currentSession || !currentSession._id) return;
         
         const endTime = new Date();
         const sessionData = {
-          endTime,
+          endTime: endTime.toISOString(),
           completed: true,
           interruptions
         };
@@ -153,6 +174,12 @@ const usePomodoroStore = create(
           return true;
         } catch (error) {
           console.error('Failed to end session:', error);
+          // Still reset the UI state even if the API call failed
+          set({ 
+            currentSession: null,
+            interruptions: 0,
+            isActive: false 
+          });
           return false;
         }
       },

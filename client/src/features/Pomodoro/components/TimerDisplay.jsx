@@ -3,7 +3,7 @@ import { TIMER_DIMENSIONS, TIMER_PROGRESS, TIMER_MODES, TIMER_COLORS, TIMER_COMP
 import usePomodoroStore from '@/stores/pomodoroStore';
 
 const TimerDisplay = ({ isFullscreen }) => {
-  const { timeLeft, mode, isActive } = usePomodoroStore();
+  const { timeLeft = 0, mode = TIMER_MODES.FOCUS, isActive = false } = usePomodoroStore();
   
   // Format the time display
   const formattedTime = useMemo(() => {

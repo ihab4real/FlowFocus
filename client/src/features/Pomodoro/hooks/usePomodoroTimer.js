@@ -36,7 +36,7 @@ const usePomodoroTimer = () => {
     if (settings && !isLoadingSettings) {
       initializeTimer(settings);
     }
-  }, [settings, isLoadingSettings]);
+  }, [settings, isLoadingSettings, initializeTimer]);
 
   // Start the timer
   const handleStartTimer = async () => {
@@ -56,8 +56,13 @@ const usePomodoroTimer = () => {
     };
 
     try {
-      const response = await createSession(sessionData);
-      currentSessionRef.current = response.data.session;
+      createSession(sessionData, {
+        onSuccess: (response) => {
+          if (response?.data?.session) {
+            currentSessionRef.current = response.data.session;
+          }
+        }
+      });
     } catch (error) {
       console.error('Failed to create session:', error);
       pauseTimer();
@@ -66,7 +71,7 @@ const usePomodoroTimer = () => {
 
   // Pause the timer
   const handlePauseTimer = () => {
-    if (!currentSessionRef.current) return;
+    if (!currentSessionRef.current?._id) return;
     
     pauseTimer();
     
@@ -87,7 +92,7 @@ const usePomodoroTimer = () => {
     resetTimer();
     setTimeLeft(settings.focusDuration * 60);
     
-    if (currentSessionRef.current) {
+    if (currentSessionRef.current?._id) {
       updateSession({
         id: currentSessionRef.current._id,
         sessionData: {
@@ -123,7 +128,7 @@ const usePomodoroTimer = () => {
 
   // Handle timer completion
   const handleTimerComplete = () => {
-    if (!settings || !currentSessionRef.current) return;
+    if (!settings || !currentSessionRef.current?._id) return;
 
     // Update the current session
     updateSession({
@@ -149,7 +154,7 @@ const usePomodoroTimer = () => {
   return {
     mode,
     isActive,
-    timeLeft: formatTime(timeLeft),
+    timeLeft: formatTime(timeLeft || 0),
     sessionCount,
     sessionsUntilLongBreak,
     settings,

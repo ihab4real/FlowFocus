@@ -1,26 +1,30 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { TIMER_MODES, BUTTON_CLASSES } from '../constants';
+import { TIMER_MODES, BUTTON_CLASSES, DEFAULT_SETTINGS } from '../constants';
 import usePomodoroStore from '@/stores/pomodoroStore';
 
 const ModeSelector = ({ isFullscreen }) => {
-  // Get values and functions from the store
+  // Get values and functions from the store with default values
   const { 
-    mode, 
-    setMode, 
-    setTimeLeft, 
-    setIsActive, 
-    settings 
+    mode = TIMER_MODES.FOCUS, 
+    setMode = () => {}, 
+    setTimeLeft = () => {}, 
+    setIsActive = () => {}, 
+    settings = { 
+      focusDuration: DEFAULT_SETTINGS.FOCUS_DURATION,
+      shortBreakDuration: DEFAULT_SETTINGS.SHORT_BREAK_DURATION,
+      longBreakDuration: DEFAULT_SETTINGS.LONG_BREAK_DURATION
+    } 
   } = usePomodoroStore();
 
   const handleModeChange = (newMode) => {
     setMode(newMode);
     if (newMode === TIMER_MODES.FOCUS) {
-      setTimeLeft(settings.focusDuration * 60);
+      setTimeLeft((settings?.focusDuration || DEFAULT_SETTINGS.FOCUS_DURATION) * 60);
     } else if (newMode === TIMER_MODES.SHORT_BREAK) {
-      setTimeLeft(settings.shortBreakDuration * 60);
+      setTimeLeft((settings?.shortBreakDuration || DEFAULT_SETTINGS.SHORT_BREAK_DURATION) * 60);
     } else {
-      setTimeLeft(settings.longBreakDuration * 60);
+      setTimeLeft((settings?.longBreakDuration || DEFAULT_SETTINGS.LONG_BREAK_DURATION) * 60);
     }
     setIsActive(false);
   };

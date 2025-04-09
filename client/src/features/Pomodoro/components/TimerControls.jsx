@@ -6,14 +6,14 @@ import { BUTTON_CLASSES, TIMER_MODES } from '../constants';
 
 const TimerControls = ({ isFullscreen }) => {
   const { 
-    isActive, 
-    mode,
-    startSession,
-    pauseTimer,
-    resetTimer: storeResetTimer, 
-    endSession,
-    switchToNextMode,
-    settings
+    isActive = false, 
+    mode = TIMER_MODES.FOCUS,
+    startSession = () => {},
+    pauseTimer = () => {},
+    resetTimer: storeResetTimer = () => {}, 
+    endSession = () => {},
+    switchToNextMode = () => {},
+    settings = {}
   } = usePomodoroStore();
 
   const toggleTimer = () => {
