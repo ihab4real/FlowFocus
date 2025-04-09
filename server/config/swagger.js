@@ -96,6 +96,109 @@ const options = {
             },
           },
         },
+        PomodoroSettings: {
+          type: "object",
+          properties: {
+            focusDuration: {
+              type: "number",
+              description: "Duration of focus sessions in minutes",
+              default: 25,
+              minimum: 1,
+              maximum: 120,
+            },
+            shortBreakDuration: {
+              type: "number",
+              description: "Duration of short breaks in minutes",
+              default: 5,
+              minimum: 1,
+              maximum: 30,
+            },
+            longBreakDuration: {
+              type: "number",
+              description: "Duration of long breaks in minutes",
+              default: 15,
+              minimum: 5,
+              maximum: 60,
+            },
+            longBreakInterval: {
+              type: "number",
+              description: "Number of focus sessions before a long break",
+              default: 4,
+              minimum: 2,
+              maximum: 10,
+            },
+            autoStartBreaks: {
+              type: "boolean",
+              description: "Whether to automatically start breaks",
+              default: true,
+            },
+            autoStartPomodoros: {
+              type: "boolean",
+              description: "Whether to automatically start pomodoros",
+              default: false,
+            },
+            soundEnabled: {
+              type: "boolean",
+              description: "Whether sound notifications are enabled",
+              default: true,
+            },
+            soundVolume: {
+              type: "number",
+              description: "Sound volume percentage",
+              default: 80,
+              minimum: 0,
+              maximum: 100,
+            },
+          },
+        },
+        PomodoroSession: {
+          type: "object",
+          required: ["startTime", "type"],
+          properties: {
+            startTime: {
+              type: "string",
+              format: "date-time",
+              description: "Session start time",
+            },
+            endTime: {
+              type: "string",
+              format: "date-time",
+              description: "Session end time",
+            },
+            type: {
+              type: "string",
+              enum: ["focus", "shortBreak", "longBreak"],
+              description: "Type of session",
+            },
+            category: {
+              type: "string",
+              description: "Session category",
+            },
+            tags: {
+              type: "array",
+              items: {
+                type: "string",
+              },
+              description: "Session tags",
+            },
+            notes: {
+              type: "string",
+              description: "Session notes",
+            },
+            interruptions: {
+              type: "number",
+              description: "Number of interruptions during session",
+              default: 0,
+              minimum: 0,
+            },
+            productivityScore: {
+              type: "number",
+              description: "Calculated productivity score",
+              minimum: 0,
+              maximum: 100,
+            }
+          },
+        },
       },
       parameters: {
         PageParam: {
