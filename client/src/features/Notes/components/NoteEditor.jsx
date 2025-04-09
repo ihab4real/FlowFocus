@@ -115,7 +115,7 @@ const NoteEditor = ({ note, onUpdateNote, isNewNote, isFullScreen: externalIsFul
 
   // Classes for the editor container based on full screen state
   const editorContainerClasses = isFullScreen
-    ? "fixed inset-0 z-50 bg-white dark:bg-gray-900 shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-300"
+    ? "fixed inset-0 z-50 bg-white dark:bg-gray-900 shadow-xl flex flex-col animate-in fade-in zoom-in-95 duration-300"
     : "flex-grow flex flex-col h-full bg-white dark:bg-gray-900 overflow-hidden";
 
   return (
@@ -155,7 +155,7 @@ const NoteEditor = ({ note, onUpdateNote, isNewNote, isFullScreen: externalIsFul
       </button>
 
       {/* Editor content */}
-      <div className="flex-grow overflow-y-auto scrollbar-hide">
+      <div className={`flex-grow overflow-auto scrollbar-hide ${isFullScreen ? 'absolute inset-0 mt-16 mb-10' : ''}`}>
         <TipTapEditor content={content} onUpdate={handleTipTapUpdate} isFullScreen={isFullScreen} />
       </div>
 
