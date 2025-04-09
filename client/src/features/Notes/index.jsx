@@ -290,10 +290,10 @@ const NotesContainer = () => {
   );
 
   return (
-    <div className="h-full overflow-hidden">
-      <PanelGroup direction="horizontal" className="h-full">
+    <div className="h-full flex flex-col overflow-hidden">
+      <PanelGroup direction="horizontal" className="flex-grow overflow-hidden">
         {/* Left sidebar with folders and search - min width 240px (15%) */}
-        <Panel defaultSize={20} minSize={15} className="h-full">
+        <Panel defaultSize={20} minSize={15} className="overflow-hidden flex flex-col">
           <NotesNavbar
             folders={folders}
             currentFolder={currentFolder}
@@ -310,7 +310,7 @@ const NotesContainer = () => {
         <PanelResizeHandle className="w-px bg-border/30 hover:bg-primary/20 transition-colors duration-200" />
 
         {/* Middle section with notes list - min width 240px (15%) */}
-        <Panel defaultSize={25} minSize={15} className="h-full">
+        <Panel defaultSize={25} minSize={15} className="overflow-hidden flex flex-col">
           <NotesList
             notes={filteredNotes}
             selectedNote={selectedNote}
@@ -326,7 +326,7 @@ const NotesContainer = () => {
         <PanelResizeHandle className="w-px bg-border/30 hover:bg-primary/20 transition-colors duration-200" />
 
         {/* Right section with note editor - takes remaining space */}
-        <Panel defaultSize={55} className="h-full">
+        <Panel defaultSize={55} className="overflow-hidden flex flex-col">
           <NoteEditor
             note={selectedNote}
             onUpdateNote={handleUpdateNote}
