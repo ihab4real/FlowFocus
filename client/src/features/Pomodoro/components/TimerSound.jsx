@@ -1,14 +1,15 @@
 import React, { useRef, useEffect } from 'react';
-import { SOUND_FILES } from '../constants';
+import { SOUND_FILES, TIMER_MODES } from '../constants';
+import usePomodoroStore from '@/stores/pomodoroStore';
 
-const TimerSound = ({ 
-  settings, 
-  mode, 
-  isActive, 
+const TimerSound = ({
   startSound = SOUND_FILES.START, 
   endSound = SOUND_FILES.END, 
   breakEndSound = SOUND_FILES.BREAK_END 
 }) => {
+  // Get data from the store
+  const { settings, mode, isActive } = usePomodoroStore();
+  
   const startSoundRef = useRef(typeof Audio !== 'undefined' ? new Audio(startSound) : null);
   const endSoundRef = useRef(typeof Audio !== 'undefined' ? new Audio(endSound) : null);
   const breakEndSoundRef = useRef(typeof Audio !== 'undefined' ? new Audio(breakEndSound) : null);
@@ -35,7 +36,7 @@ const TimerSound = ({
 
   const playEndSound = () => {
     if (settings.soundEnabled) {
-      if (mode === "focus") {
+      if (mode === TIMER_MODES.FOCUS) {
         endSoundRef.current?.play();
       } else {
         breakEndSoundRef.current?.play();

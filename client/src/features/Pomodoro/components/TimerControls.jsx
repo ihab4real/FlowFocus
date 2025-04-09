@@ -1,15 +1,46 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Play, Pause, RotateCcw, SkipForward } from "lucide-react";
+import usePomodoroStore from '@/stores/pomodoroStore';
+import { BUTTON_CLASSES, TIMER_MODES } from '../constants';
 
-const TimerControls = ({ 
-  isActive, 
-  toggleTimer, 
-  resetTimer, 
-  skipToNextSession, 
-  getButtonClass, 
-  isFullscreen 
-}) => {
+const TimerControls = ({ isFullscreen }) => {
+  const { 
+    isActive, 
+    mode,
+    startSession,
+    pauseTimer,
+    resetTimer: storeResetTimer, 
+    endSession,
+    switchToNextMode,
+    settings
+  } = usePomodoroStore();
+
+  const toggleTimer = () => {
+    if (isActive) {
+      pauseTimer();
+    } else {
+      startSession();
+    }
+  };
+
+  const resetTimer = () => {
+    storeResetTimer();
+    endSession();
+  };
+
+  const skipToNextSession = () => {
+    pauseTimer();
+    endSession();
+    switchToNextMode(settings);
+  };
+
+  const getButtonClass = () => {
+    if (mode === TIMER_MODES.FOCUS) return BUTTON_CLASSES.FOCUS;
+    if (mode === TIMER_MODES.SHORT_BREAK) return BUTTON_CLASSES.SHORT_BREAK;
+    return BUTTON_CLASSES.LONG_BREAK;
+  };
+
   return (
     <div className="flex gap-2">
       <Button

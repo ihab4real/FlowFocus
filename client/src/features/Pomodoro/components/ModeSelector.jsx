@@ -1,15 +1,18 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { TIMER_MODES, BUTTON_CLASSES } from '../constants';
+import usePomodoroStore from '@/stores/pomodoroStore';
 
-const ModeSelector = ({ 
-  mode, 
-  setMode, 
-  setTimeLeft, 
-  setIsActive, 
-  settings, 
-  isFullscreen 
-}) => {
+const ModeSelector = ({ isFullscreen }) => {
+  // Get values and functions from the store
+  const { 
+    mode, 
+    setMode, 
+    setTimeLeft, 
+    setIsActive, 
+    settings 
+  } = usePomodoroStore();
+
   const handleModeChange = (newMode) => {
     setMode(newMode);
     if (newMode === TIMER_MODES.FOCUS) {

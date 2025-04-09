@@ -1,20 +1,26 @@
 import React from "react";
+import usePomodoroStore from '@/stores/pomodoroStore';
+import { TIMER_MODES } from '../constants';
 
 /**
  * SessionCounter component
  * Displays visual indicators for completed and upcoming pomodoro sessions
  */
-const SessionCounter = ({ 
-  sessionCount, 
-  longBreakInterval, 
-  sessionsUntilLongBreak,
-  currentMode 
-}) => {
+const SessionCounter = () => {
+  const { 
+    sessionCount,
+    sessionsUntilLongBreak,
+    mode,
+    settings
+  } = usePomodoroStore();
+  
+  const longBreakInterval = settings?.longBreakInterval || 4;
+  
   // Create an array representing all sessions in the current cycle
   const totalSessionsInCycle = Array.from({ length: longBreakInterval }, (_, i) => {
     const sessionNumber = sessionCount - (sessionsUntilLongBreak - 1) + i;
     const isCompleted = i < longBreakInterval - sessionsUntilLongBreak;
-    const isCurrent = i === longBreakInterval - sessionsUntilLongBreak && currentMode === "focus";
+    const isCurrent = i === longBreakInterval - sessionsUntilLongBreak && mode === TIMER_MODES.FOCUS;
     
     return { 
       sessionNumber: sessionNumber >= 0 ? sessionNumber + 1 : 1, 
@@ -58,7 +64,7 @@ const SessionCounter = ({
           className={`
             w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium
             transition-all duration-300
-            ${currentMode === "longBreak" 
+            ${mode === TIMER_MODES.LONG_BREAK 
               ? "bg-[#FF6584] text-white"
               : "bg-[#FF6584]/20 text-[#FF6584]"}
           `}

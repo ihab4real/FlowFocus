@@ -1,11 +1,36 @@
-import React from 'react';
-import { TIMER_DIMENSIONS, TIMER_PROGRESS } from '../constants';
+import React, { useMemo } from 'react';
+import { TIMER_DIMENSIONS, TIMER_PROGRESS, TIMER_MODES, TIMER_COLORS, TIMER_COMPLETION } from '../constants';
+import usePomodoroStore from '@/stores/pomodoroStore';
 
-const TimerDisplay = ({ timeLeft, progress, isNearCompletion, isFullscreen, getTimerColor }) => {
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+const TimerDisplay = ({ isFullscreen }) => {
+  const { timeLeft, mode, isActive } = usePomodoroStore();
+  
+  // Format the time display
+  const formattedTime = useMemo(() => {
+    const mins = Math.floor(timeLeft / 60);
+    const secs = timeLeft % 60;
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  }, [timeLeft]);
+  
+  // Calculate the total time based on the current mode
+  const totalTime = useMemo(() => {
+    const { settings } = usePomodoroStore.getState();
+    if (mode === TIMER_MODES.FOCUS) return settings.focusDuration * 60;
+    if (mode === TIMER_MODES.SHORT_BREAK) return settings.shortBreakDuration * 60;
+    return settings.longBreakDuration * 60;
+  }, [mode]);
+  
+  // Calculate the progress percentage
+  const progress = (timeLeft / totalTime) * 100;
+  
+  // Determine if the timer is near completion
+  const isNearCompletion = timeLeft <= TIMER_COMPLETION.NEAR_COMPLETION_THRESHOLD && timeLeft > 0 && isActive;
+  
+  // Get the timer color based on the current mode
+  const getTimerColor = () => {
+    if (mode === TIMER_MODES.FOCUS) return TIMER_COLORS.FOCUS;
+    if (mode === TIMER_MODES.SHORT_BREAK) return TIMER_COLORS.SHORT_BREAK;
+    return TIMER_COLORS.LONG_BREAK;
   };
 
   const dimensions = isFullscreen ? TIMER_DIMENSIONS.FULLSCREEN : TIMER_DIMENSIONS.DEFAULT;
@@ -38,7 +63,7 @@ const TimerDisplay = ({ timeLeft, progress, isNearCompletion, isFullscreen, getT
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
         <div className={`${dimensions.TEXT_SIZE} font-bold ${isNearCompletion ? 'text-red-600 dark:text-red-400' : ''}`}>
-          {formatTime(timeLeft)}
+          {formattedTime}
         </div>
       </div>
     </div>
