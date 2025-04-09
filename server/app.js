@@ -10,6 +10,7 @@ import { swaggerDocs } from "./config/swagger.js";
 import authRoutes from "./routes/authRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import noteRoutes from "./routes/noteRoutes.js";
+import pomodoroRoutes from "./routes/pomodoroRoutes.js";
 
 // Load environment variables
 dotenv.config();
@@ -92,6 +93,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/notes", noteRoutes);
+app.use("/api/pomodoro", pomodoroRoutes);
 
 // Handle 404 errors for undefined routes
 app.use(notFoundHandler);
