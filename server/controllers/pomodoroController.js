@@ -61,10 +61,13 @@ export const createSession = asyncHandler(async (req, res) => {
   const { startTime, endTime, type, category, tags, notes, interruptions } =
     req.body;
 
-  // Calculate duration in minutes
-  const duration = Math.round(
-    (new Date(endTime) - new Date(startTime)) / (1000 * 60)
-  );
+  // Calculate duration in minutes only if endTime is provided
+  let duration;
+  if (endTime) {
+    duration = Math.round(
+      (new Date(endTime) - new Date(startTime)) / (1000 * 60)
+    );
+  }
 
   // Calculate productivity score based on interruptions and duration
   const productivityScore = calculateProductivityScore(duration, interruptions);
