@@ -1,11 +1,16 @@
-import { useEffect, useRef } from 'react';
-import { TIMER_MODES } from '../constants';
-import usePomodoroStore from '@/stores/pomodoroStore';
-import { usePomodoroSettings, useCreatePomodoroSession, useUpdatePomodoroSession } from './usePomodoroQueries';
+import { useEffect, useRef } from "react";
+import { TIMER_MODES } from "../constants";
+import usePomodoroStore from "@/stores/pomodoroStore";
+import {
+  usePomodoroSettings,
+  useCreatePomodoroSession,
+  useUpdatePomodoroSession,
+} from "./usePomodoroQueries";
 
 const usePomodoroTimer = () => {
   // React Query hooks for server state
-  const { data: settings, isLoading: isLoadingSettings } = usePomodoroSettings();
+  const { data: settings, isLoading: isLoadingSettings } =
+    usePomodoroSettings();
   const { mutate: createSession } = useCreatePomodoroSession();
   const { mutate: updateSession } = useUpdatePomodoroSession();
 
@@ -25,7 +30,7 @@ const usePomodoroTimer = () => {
     pauseTimer,
     resetTimer,
     switchToNextMode,
-    initializeTimer
+    initializeTimer,
   } = usePomodoroStore();
 
   const timerRef = useRef(null);
@@ -41,7 +46,7 @@ const usePomodoroTimer = () => {
   // Start the timer
   const handleStartTimer = async () => {
     if (!settings) return;
-    
+
     const success = startTimer();
     if (!success) return;
 
@@ -49,10 +54,10 @@ const usePomodoroTimer = () => {
     const sessionData = {
       startTime: new Date().toISOString(),
       type: mode,
-      category: 'default',
+      category: "default",
       tags: [],
-      notes: '',
-      interruptions: 0
+      notes: "",
+      interruptions: 0,
     };
 
     try {
@@ -61,10 +66,10 @@ const usePomodoroTimer = () => {
           if (response?.data?.session) {
             currentSessionRef.current = response.data.session;
           }
-        }
+        },
       });
     } catch (error) {
-      console.error('Failed to create session:', error);
+      console.error("Failed to create session:", error);
       pauseTimer();
     }
   };
@@ -72,33 +77,33 @@ const usePomodoroTimer = () => {
   // Pause the timer
   const handlePauseTimer = () => {
     if (!currentSessionRef.current?._id) return;
-    
+
     pauseTimer();
-    
+
     // Update the session with end time
     updateSession({
       id: currentSessionRef.current._id,
       sessionData: {
         endTime: new Date().toISOString(),
-        completed: false
-      }
+        completed: false,
+      },
     });
   };
 
   // Reset the timer
   const handleResetTimer = () => {
     if (!settings) return;
-    
+
     resetTimer();
     setTimeLeft(settings.focusDuration * 60);
-    
+
     if (currentSessionRef.current?._id) {
       updateSession({
         id: currentSessionRef.current._id,
         sessionData: {
           endTime: new Date().toISOString(),
-          completed: false
-        }
+          completed: false,
+        },
       });
       currentSessionRef.current = null;
     }
@@ -135,8 +140,8 @@ const usePomodoroTimer = () => {
       id: currentSessionRef.current._id,
       sessionData: {
         endTime: new Date().toISOString(),
-        completed: true
-      }
+        completed: true,
+      },
     });
 
     // Switch to next mode
@@ -148,7 +153,9 @@ const usePomodoroTimer = () => {
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+    return `${minutes.toString().padStart(2, "0")}:${remainingSeconds
+      .toString()
+      .padStart(2, "0")}`;
   };
 
   return {
@@ -161,8 +168,8 @@ const usePomodoroTimer = () => {
     isLoadingSettings,
     startTimer: handleStartTimer,
     pauseTimer: handlePauseTimer,
-    resetTimer: handleResetTimer
+    resetTimer: handleResetTimer,
   };
 };
 
-export default usePomodoroTimer; 
+export default usePomodoroTimer;
