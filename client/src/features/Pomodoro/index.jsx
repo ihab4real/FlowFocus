@@ -11,14 +11,17 @@ import TimerHeader from "./components/TimerHeader";
 import TimerFooter from "./components/TimerFooter";
 import TimerSound from "./components/TimerSound";
 import usePomodoroStore from "@/stores/pomodoroStore";
-import { usePomodoroSettings, useUpdatePomodoroSettings } from "./hooks/usePomodoroQueries";
+import {
+  usePomodoroSettings,
+  useUpdatePomodoroSettings,
+} from "./hooks/usePomodoroQueries";
 import { KEYBOARD_SHORTCUTS } from "./constants";
 
 const PomodoroContainer = () => {
   // React Query hooks
   const { isLoading: isLoadingSettings } = usePomodoroSettings();
   const { mutate: updateServerSettings } = useUpdatePomodoroSettings();
-  
+
   // Zustand store
   const {
     settings,
@@ -30,34 +33,34 @@ const PomodoroContainer = () => {
     startSession,
     pauseTimer,
     endSession,
-    switchToNextMode
+    switchToNextMode,
   } = usePomodoroStore();
 
   // Local UI state
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  
+
   // Navigation
   const navigate = useNavigate();
   const location = useLocation();
   const isFullscreen = location.pathname === "/dashboard/pomodoro";
-  
+
   // Sound management - using the fixed TimerSound component
   // Wrap in try/catch to handle potential errors
   let timerSoundResult = { playEndSound: () => {} };
   try {
     timerSoundResult = TimerSound() || { playEndSound: () => {} };
   } catch (error) {
-    console.error('Error initializing TimerSound:', error);
+    console.error("Error initializing TimerSound:", error);
   }
   const { playEndSound = () => {} } = timerSoundResult;
-  
+
   // Load settings from server on component mount
   useEffect(() => {
     try {
       loadSettings();
     } catch (error) {
-      console.error('Error loading settings:', error);
-      toast.error('Failed to load settings. Using defaults.');
+      console.error("Error loading settings:", error);
+      toast.error("Failed to load settings. Using defaults.");
     }
   }, []);
 
@@ -67,16 +70,16 @@ const PomodoroContainer = () => {
       try {
         initializeTimer(settings);
       } catch (error) {
-        console.error('Error initializing timer:', error);
+        console.error("Error initializing timer:", error);
       }
     }
   }, [settings, isLoadingSettings]);
-  
+
   // Set up keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.target.closest('input, textarea, [contenteditable]')) return;
-      
+      if (e.target.closest("input, textarea, [contenteditable]")) return;
+
       try {
         switch (e.code) {
           case KEYBOARD_SHORTCUTS.TOGGLE_TIMER:
@@ -106,14 +109,14 @@ const PomodoroContainer = () => {
             break;
         }
       } catch (error) {
-        console.error('Error handling keyboard shortcut:', error);
+        console.error("Error handling keyboard shortcut:", error);
       }
     };
-    
+
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isFullscreen, mode, settings, navigate, isActive]);
-  
+
   // Toggle fullscreen mode
   const toggleFullscreen = () => {
     if (isFullscreen) {
@@ -122,7 +125,7 @@ const PomodoroContainer = () => {
       navigate("/dashboard/pomodoro");
     }
   };
-  
+
   // Handle settings save
   const handleSaveSettings = (newSettings) => {
     try {
@@ -130,13 +133,13 @@ const PomodoroContainer = () => {
       setStoreSettings(newSettings);
       updateServerSettings(newSettings);
       setIsSettingsOpen(false);
-      
+
       toast.success("Settings updated", {
         icon: "⚙️",
       });
     } catch (error) {
-      console.error('Error saving settings:', error);
-      toast.error('Failed to save settings');
+      console.error("Error saving settings:", error);
+      toast.error("Failed to save settings");
     }
   };
 
@@ -150,15 +153,23 @@ const PomodoroContainer = () => {
   }
 
   return (
-    <div className={`flex flex-col items-center justify-center ${isFullscreen ? 'p-8' : ''}`}>
-      <Card className={`shadow-sm w-full ${isFullscreen ? 'max-w-lg' : ''}`}>
+    <div
+      className={`flex flex-col items-center justify-center ${
+        isFullscreen ? "p-8" : ""
+      }`}
+    >
+      <Card className={`shadow-sm w-full ${isFullscreen ? "max-w-lg" : ""}`}>
         <TimerHeader
           setIsSettingsOpen={setIsSettingsOpen}
           toggleFullscreen={toggleFullscreen}
           isFullscreen={isFullscreen}
         />
-        
-        <CardContent className={`flex flex-col items-center ${isFullscreen ? 'pt-4' : 'pt-2 pb-4'}`}>
+
+        <CardContent
+          className={`flex flex-col items-center ${
+            isFullscreen ? "pt-4" : "pt-2 pb-4"
+          }`}
+        >
           <TimerDisplay isFullscreen={isFullscreen} />
 
           {/* Session counter */}
@@ -171,11 +182,11 @@ const PomodoroContainer = () => {
           <ModeSelector isFullscreen={isFullscreen} />
 
           <TimerControls isFullscreen={isFullscreen} />
-          
+
           <TimerFooter isFullscreen={isFullscreen} />
         </CardContent>
       </Card>
-      
+
       {isSettingsOpen && (
         <PomodoroSettingsModal
           settings={settings}
@@ -187,4 +198,4 @@ const PomodoroContainer = () => {
   );
 };
 
-export default PomodoroContainer; 
+export default PomodoroContainer;
