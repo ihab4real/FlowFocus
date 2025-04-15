@@ -34,7 +34,10 @@ const TimerDisplay = ({ isFullscreen }) => {
   }, [mode]);
 
   // Calculate the progress percentage
-  const progress = (timeLeft / totalTime) * 100;
+  const progress = useMemo(() => {
+    if (!totalTime || totalTime === 0) return 100;
+    return (timeLeft / totalTime) * 100;
+  }, [timeLeft, totalTime]);
 
   // Determine if the timer is near completion
   const isNearCompletion =
