@@ -58,10 +58,13 @@ export const updateSettings = asyncHandler(async (req, res) => {
  * @route POST /api/pomodoro/sessions
  */
 export const createSession = asyncHandler(async (req, res) => {
-  const { startTime, endTime, type, category, tags, notes, interruptions } = req.body;
+  const { startTime, endTime, type, category, tags, notes, interruptions } =
+    req.body;
 
   // Calculate duration in minutes
-  const duration = Math.round((new Date(endTime) - new Date(startTime)) / (1000 * 60));
+  const duration = Math.round(
+    (new Date(endTime) - new Date(startTime)) / (1000 * 60)
+  );
 
   // Calculate productivity score based on interruptions and duration
   const productivityScore = calculateProductivityScore(duration, interruptions);
@@ -93,7 +96,7 @@ export const createSession = asyncHandler(async (req, res) => {
  */
 export const getSessions = asyncHandler(async (req, res) => {
   const { startDate, endDate, type, category, tags } = req.query;
-  
+
   const query = { user: req.user.id };
 
   if (startDate && endDate) {
@@ -131,16 +134,24 @@ export const updateSession = asyncHandler(async (req, res) => {
 
   // Check if the session belongs to the user
   if (session.user.toString() !== req.user.id) {
-    throw errorTypes.forbidden("You do not have permission to update this session");
+    throw errorTypes.forbidden(
+      "You do not have permission to update this session"
+    );
   }
 
   // If duration-related fields are updated, recalculate productivity score
   if (req.body.endTime || req.body.interruptions) {
-    const duration = req.body.endTime 
-      ? Math.round((new Date(req.body.endTime) - new Date(session.startTime)) / (1000 * 60))
+    const duration = req.body.endTime
+      ? Math.round(
+          (new Date(req.body.endTime) - new Date(session.startTime)) /
+            (1000 * 60)
+        )
       : session.duration;
     const interruptions = req.body.interruptions ?? session.interruptions;
-    req.body.productivityScore = calculateProductivityScore(duration, interruptions);
+    req.body.productivityScore = calculateProductivityScore(
+      duration,
+      interruptions
+    );
     if (req.body.endTime) req.body.duration = duration;
   }
 
@@ -174,7 +185,9 @@ export const deleteSession = asyncHandler(async (req, res) => {
 
   // Check if the session belongs to the user
   if (session.user.toString() !== req.user.id) {
-    throw errorTypes.forbidden("You do not have permission to delete this session");
+    throw errorTypes.forbidden(
+      "You do not have permission to delete this session"
+    );
   }
 
   await session.deleteOne();
@@ -191,7 +204,7 @@ export const deleteSession = asyncHandler(async (req, res) => {
  */
 export const getSessionStats = asyncHandler(async (req, res) => {
   const { startDate, endDate, groupBy = "day" } = req.query;
-  
+
   const matchStage = { user: req.user.id };
   if (startDate && endDate) {
     matchStage.startTime = {
@@ -285,11 +298,11 @@ export const getSessionStats = asyncHandler(async (req, res) => {
 const calculateProductivityScore = (duration, interruptions) => {
   // Base score is 100
   let score = 100;
-  
+
   // Deduct points for interruptions
   const interruptionPenalty = interruptions * 5;
   score -= interruptionPenalty;
-  
+
   // Ensure score stays within 0-100 range
   return Math.max(0, Math.min(100, score));
-}; 
+};
