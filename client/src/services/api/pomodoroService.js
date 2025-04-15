@@ -29,7 +29,10 @@ class PomodoroService {
    * @returns {Promise<Object>} - Response with created session data
    */
   async createSession(sessionData) {
-    const response = await apiClient.post("/api/pomodoro/sessions", sessionData);
+    const response = await apiClient.post(
+      "/api/pomodoro/sessions",
+      sessionData
+    );
     return response.data;
   }
 
@@ -50,7 +53,10 @@ class PomodoroService {
    * @returns {Promise<Object>} - Response with updated session data
    */
   async updateSession(id, sessionData) {
-    const response = await apiClient.patch(`/api/pomodoro/sessions/${id}`, sessionData);
+    const response = await apiClient.patch(
+      `/api/pomodoro/sessions/${id}`,
+      sessionData
+    );
     return response.data;
   }
 
@@ -70,9 +76,11 @@ class PomodoroService {
    * @returns {Promise<Object>} - Response with statistics data
    */
   async getSessionStats(params = {}) {
-    const response = await apiClient.get("/api/pomodoro/sessions/stats", { params });
+    const response = await apiClient.get("/api/pomodoro/sessions/stats", {
+      params,
+    });
     return response.data;
   }
 }
 
-export const pomodoroService = new PomodoroService(); 
+export const pomodoroService = new PomodoroService();
