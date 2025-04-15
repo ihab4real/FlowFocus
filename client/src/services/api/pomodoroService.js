@@ -9,8 +9,7 @@ class PomodoroService {
    * @returns {Promise<Object>} - Response with settings data
    */
   async getSettings() {
-    const response = await apiClient.get("/api/pomodoro/settings");
-    return response.data;
+    return apiClient.get("/api/pomodoro/settings");
   }
 
   /**
@@ -19,8 +18,7 @@ class PomodoroService {
    * @returns {Promise<Object>} - Response with updated settings
    */
   async updateSettings(settings) {
-    const response = await apiClient.put("/api/pomodoro/settings", settings);
-    return response.data;
+    return apiClient.put("/api/pomodoro/settings", settings);
   }
 
   /**
@@ -29,11 +27,7 @@ class PomodoroService {
    * @returns {Promise<Object>} - Response with created session data
    */
   async createSession(sessionData) {
-    const response = await apiClient.post(
-      "/api/pomodoro/sessions",
-      sessionData
-    );
-    return response.data;
+    return apiClient.post("/api/pomodoro/sessions", sessionData);
   }
 
   /**
@@ -42,8 +36,7 @@ class PomodoroService {
    * @returns {Promise<Object>} - Response with sessions data
    */
   async getSessions(params = {}) {
-    const response = await apiClient.get("/api/pomodoro/sessions", { params });
-    return response.data;
+    return apiClient.get("/api/pomodoro/sessions", { params });
   }
 
   /**
@@ -53,11 +46,7 @@ class PomodoroService {
    * @returns {Promise<Object>} - Response with updated session data
    */
   async updateSession(id, sessionData) {
-    const response = await apiClient.patch(
-      `/api/pomodoro/sessions/${id}`,
-      sessionData
-    );
-    return response.data;
+    return apiClient.patch(`/api/pomodoro/sessions/${id}`, sessionData);
   }
 
   /**
@@ -66,8 +55,7 @@ class PomodoroService {
    * @returns {Promise<Object>} - Response with success message
    */
   async deleteSession(id) {
-    const response = await apiClient.delete(`/api/pomodoro/sessions/${id}`);
-    return response.data;
+    return apiClient.delete(`/api/pomodoro/sessions/${id}`);
   }
 
   /**
@@ -76,10 +64,9 @@ class PomodoroService {
    * @returns {Promise<Object>} - Response with statistics data
    */
   async getSessionStats(params = {}) {
-    const response = await apiClient.get("/api/pomodoro/sessions/stats", {
+    return apiClient.get("/api/pomodoro/sessions/stats", {
       params,
     });
-    return response.data;
   }
 }
 
