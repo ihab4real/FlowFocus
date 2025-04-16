@@ -43,31 +43,31 @@ function TaskCard({ task, columnId, getPriorityColor }) {
 
   // Get relative time for due date - memoize to avoid recalculations
   const dueTimeString = useMemo(() => {
-    if (!task.dueDate) return '';
-    
+    if (!task.dueDate) return "";
+
     try {
       const dueDate = parseISO(task.dueDate);
       const now = new Date();
-      
+
       if (isAfter(now, dueDate) && task.status !== "Done") {
         return `Overdue by ${formatDistanceToNow(dueDate)}`;
       }
-      
+
       return `Due ${formatDistanceToNow(dueDate)} from now`;
     } catch (error) {
       console.error("Error formatting due date:", error);
-      return '';
+      return "";
     }
   }, [task.dueDate, task.status]);
 
   // Format due date for display - memoize to avoid recalculations
   const formattedDueDate = useMemo(() => {
-    if (!task.dueDate) return '';
+    if (!task.dueDate) return "";
     try {
       return format(parseISO(task.dueDate), "MMM d, yyyy");
     } catch (error) {
       console.error("Error formatting due date:", error);
-      return '';
+      return "";
     }
   }, [task.dueDate]);
 
@@ -80,7 +80,7 @@ function TaskCard({ task, columnId, getPriorityColor }) {
         p-3 
         shadow-sm 
         border 
-        ${isOverdue ? 'border-red-300 dark:border-red-800' : 'border-border'}
+        ${isOverdue ? "border-red-300 dark:border-red-800" : "border-border"}
         hover:border-[#6C63FF]/30 
         hover:shadow-md
         transition-all
@@ -98,8 +98,8 @@ function TaskCard({ task, columnId, getPriorityColor }) {
           </div>
           <h4 className="font-medium truncate">{task.title}</h4>
         </div>
-        <Badge 
-          variant="secondary" 
+        <Badge
+          variant="secondary"
           className={`${getPriorityColor(task.priority)} flex-shrink-0 whitespace-nowrap flex items-center gap-1`}
         >
           {task.priority === "High" && <AlertTriangle className="w-3 h-3" />}
@@ -114,7 +114,11 @@ function TaskCard({ task, columnId, getPriorityColor }) {
       {task.tags && task.tags.length > 0 && (
         <div className="flex gap-1 mt-2 flex-wrap ml-6">
           {task.tags.slice(0, 3).map((tag) => (
-            <Badge key={tag} variant="outline" className="text-xs truncate max-w-[100px]">
+            <Badge
+              key={tag}
+              variant="outline"
+              className="text-xs truncate max-w-[100px]"
+            >
               {tag}
             </Badge>
           ))}
@@ -126,9 +130,13 @@ function TaskCard({ task, columnId, getPriorityColor }) {
         </div>
       )}
       {task.dueDate && (
-        <div className={`flex items-center mt-2 text-xs ml-6 ${
-          isOverdue ? 'text-red-500 dark:text-red-400 font-medium' : 'text-muted-foreground'
-        }`}>
+        <div
+          className={`flex items-center mt-2 text-xs ml-6 ${
+            isOverdue
+              ? "text-red-500 dark:text-red-400 font-medium"
+              : "text-muted-foreground"
+          }`}
+        >
           {isOverdue ? (
             <>
               <Clock className="w-3 h-3 mr-1 flex-shrink-0" />

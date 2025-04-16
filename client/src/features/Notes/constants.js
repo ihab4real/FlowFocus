@@ -1,1 +1,1 @@
-export const DEFAULT_FOLDER = "General"; 
+export const DEFAULT_FOLDER = "General";

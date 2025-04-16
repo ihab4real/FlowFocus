@@ -7,10 +7,19 @@ import { X, Calendar, Loader2 } from "lucide-react";
 import taskService from "@/services/api/taskService";
 import { statusMap } from "../taskUtils";
 import { format } from "date-fns";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
-const TaskForm = ({ onSubmit, initialData = null, selectedColumnId = null, onCancel }) => {
+const TaskForm = ({
+  onSubmit,
+  initialData = null,
+  selectedColumnId = null,
+  onCancel,
+}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [availableStatuses, setAvailableStatuses] = useState([
     { value: "Todo", label: "Todo" },
@@ -18,15 +27,13 @@ const TaskForm = ({ onSubmit, initialData = null, selectedColumnId = null, onCan
     { value: "Done", label: "Done" },
   ]);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  
+
   // Initialize form data
   const [formData, setFormData] = useState({
     title: initialData?.title || "",
     description: initialData?.description || "",
     priority: initialData?.priority || "Medium",
-    dueDate: initialData?.dueDate
-      ? new Date(initialData.dueDate)
-      : "",
+    dueDate: initialData?.dueDate ? new Date(initialData.dueDate) : "",
     tags: initialData?.tags || [],
     status: initialData?.status || "Todo",
   });
@@ -36,20 +43,25 @@ const TaskForm = ({ onSubmit, initialData = null, selectedColumnId = null, onCan
     if (selectedColumnId && !initialData) {
       // For standard columns, map ID to status using statusMap
       if (statusMap[selectedColumnId]) {
-        setFormData(prev => ({ ...prev, status: statusMap[selectedColumnId] }));
-      } else if (selectedColumnId.startsWith('custom-')) {
+        setFormData((prev) => ({
+          ...prev,
+          status: statusMap[selectedColumnId],
+        }));
+      } else if (selectedColumnId.startsWith("custom-")) {
         // For custom columns, use the column ID as status
-        setFormData(prev => ({ ...prev, status: selectedColumnId }));
-        
+        setFormData((prev) => ({ ...prev, status: selectedColumnId }));
+
         // Add custom column to available statuses if not already present
-        const customStatusExists = availableStatuses.some(status => status.value === selectedColumnId);
+        const customStatusExists = availableStatuses.some(
+          (status) => status.value === selectedColumnId
+        );
         if (!customStatusExists) {
-          setAvailableStatuses(prev => [
-            ...prev, 
-            { 
-              value: selectedColumnId, 
-              label: `Custom (${selectedColumnId.split('-')[1]})` 
-            }
+          setAvailableStatuses((prev) => [
+            ...prev,
+            {
+              value: selectedColumnId,
+              label: `Custom (${selectedColumnId.split("-")[1]})`,
+            },
           ]);
         }
       }
@@ -58,31 +70,33 @@ const TaskForm = ({ onSubmit, initialData = null, selectedColumnId = null, onCan
 
   // Get all unique statuses from local storage
   useEffect(() => {
-    const savedCustomColumns = localStorage.getItem('customColumns');
+    const savedCustomColumns = localStorage.getItem("customColumns");
     if (savedCustomColumns) {
       try {
         const customCols = JSON.parse(savedCustomColumns);
-        
+
         // Create a set of all statuses (standard + custom)
         const statusSet = new Set([
-          ...availableStatuses.map(s => s.value),
-          ...customCols.map(col => col.id)
+          ...availableStatuses.map((s) => s.value),
+          ...customCols.map((col) => col.id),
         ]);
-        
+
         // Convert to array of status objects
-        const allStatuses = Array.from(statusSet).map(status => {
+        const allStatuses = Array.from(statusSet).map((status) => {
           // Check if it's a standard status
-          const stdStatus = availableStatuses.find(s => s.value === status);
+          const stdStatus = availableStatuses.find((s) => s.value === status);
           if (stdStatus) return stdStatus;
-          
+
           // Otherwise, it's a custom status
-          const customCol = customCols.find(col => col.id === status);
+          const customCol = customCols.find((col) => col.id === status);
           return {
             value: status,
-            label: customCol ? customCol.title : `Custom (${status.split('-')[1]})`
+            label: customCol
+              ? customCol.title
+              : `Custom (${status.split("-")[1]})`,
           };
         });
-        
+
         setAvailableStatuses(allStatuses);
       } catch (err) {
         console.error("Error parsing custom columns:", err);
@@ -144,7 +158,10 @@ const TaskForm = ({ onSubmit, initialData = null, selectedColumnId = null, onCan
     try {
       // If we have initialData with an ID, it's an update
       if (initialData?._id) {
-        const updatedTask = await taskService.update(initialData._id, submissionData);
+        const updatedTask = await taskService.update(
+          initialData._id,
+          submissionData
+        );
         onSubmit(updatedTask);
       } else {
         // Otherwise it's a new task
@@ -358,7 +375,11 @@ const TaskForm = ({ onSubmit, initialData = null, selectedColumnId = null, onCan
               Cancel
             </Button>
           )}
-          <Button type="submit" disabled={isLoading} className="bg-[#6C63FF] hover:bg-[#6C63FF]/90">
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="bg-[#6C63FF] hover:bg-[#6C63FF]/90"
+          >
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

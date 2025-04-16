@@ -5,7 +5,13 @@ import Underline from "@tiptap/extension-underline";
 import { useEffect } from "react";
 
 // Mini version of TipTap editor for dashboard panel
-const MiniTipTapEditor = ({ content, onUpdate, onBlur, editorRef, className = "" }) => {
+const MiniTipTapEditor = ({
+  content,
+  onUpdate,
+  onBlur,
+  editorRef,
+  className = "",
+}) => {
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -45,4 +51,4 @@ const MiniTipTapEditor = ({ content, onUpdate, onBlur, editorRef, className = ""
   return <EditorContent editor={editor} className="h-full" />;
 };
 
-export default MiniTipTapEditor; 
+export default MiniTipTapEditor;

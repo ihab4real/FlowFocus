@@ -46,8 +46,13 @@ const TimerDisplay = ({ isFullscreen }) => {
 
   // Safely calculate strokeDashoffset to avoid NaN
   const getStrokeDashoffset = () => {
-    const validProgress = Number.isFinite(progress) ? Math.max(0, Math.min(100, progress)) : 100;
-    return TIMER_PROGRESS.CIRCLE_DASHARRAY - (TIMER_PROGRESS.CIRCLE_DASHARRAY * validProgress) / 100;
+    const validProgress = Number.isFinite(progress)
+      ? Math.max(0, Math.min(100, progress))
+      : 100;
+    return (
+      TIMER_PROGRESS.CIRCLE_DASHARRAY -
+      (TIMER_PROGRESS.CIRCLE_DASHARRAY * validProgress) / 100
+    );
   };
 
   return (

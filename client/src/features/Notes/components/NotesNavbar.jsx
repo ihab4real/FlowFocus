@@ -116,7 +116,10 @@ const NotesNavbar = ({
       </div>
 
       {/* Folder list */}
-      <div className="overflow-y-auto flex-grow scrollbar-hide" onClick={handleClickOutside}>
+      <div
+        className="overflow-y-auto flex-grow scrollbar-hide"
+        onClick={handleClickOutside}
+      >
         <ul className="space-y-1">
           {folders.map((folder) => (
             <li key={folder} className="relative">

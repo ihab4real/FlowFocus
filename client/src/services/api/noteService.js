@@ -85,7 +85,9 @@ noteService.deleteFolder = async (name) => {
  * @returns {Promise<Object>} - Response with success message
  */
 noteService.renameFolder = async (oldName, newName) => {
-  return apiClient.patch(`${noteService.resourcePath}/folders/${oldName}`, { name: newName });
+  return apiClient.patch(`${noteService.resourcePath}/folders/${oldName}`, {
+    name: newName,
+  });
 };
 
-export default noteService; 
+export default noteService;

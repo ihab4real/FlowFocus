@@ -10,7 +10,7 @@ import {
   getFolders,
   createFolder,
   deleteFolder,
-  renameFolder
+  renameFolder,
 } from "../controllers/noteController.js";
 
 const router = express.Router();
@@ -71,9 +71,10 @@ router.use(protect);
  *       401:
  *         description: Unauthorized - Authentication required
  */
-router.route("/")
+router
+  .route("/")
   .get(getAllNotes)
-  .post(sanitizeBody(['content']), createNote);
+  .post(sanitizeBody(["content"]), createNote);
 
 /**
  * @swagger
@@ -169,9 +170,10 @@ router.route("/")
  *       404:
  *         description: Note not found
  */
-router.route("/:id")
+router
+  .route("/:id")
   .get(getNote)
-  .patch(sanitizeBody(['content']), updateNote)
+  .patch(sanitizeBody(["content"]), updateNote)
   .delete(deleteNote);
 
 /**
@@ -242,7 +244,7 @@ router.route("/folders").get(getFolders).post(createFolder);
  *         description: Unauthorized - Authentication required
  *       404:
  *         description: Folder not found
- * 
+ *
  *   patch:
  *     summary: Rename a folder
  *     tags: [Notes]
@@ -277,8 +279,6 @@ router.route("/folders").get(getFolders).post(createFolder);
  *       404:
  *         description: Folder not found
  */
-router.route("/folders/:name")
-  .delete(deleteFolder)
-  .patch(renameFolder);
+router.route("/folders/:name").delete(deleteFolder).patch(renameFolder);
 
-export default router; 
+export default router;

@@ -3,7 +3,13 @@ import { debounce } from "lodash";
 import TipTapEditor from "./TipTapEditor";
 import { Maximize2, Minimize2 } from "lucide-react";
 
-const NoteEditor = ({ note, onUpdateNote, isNewNote, isFullScreen: externalIsFullScreen, onToggleFullScreen }) => {
+const NoteEditor = ({
+  note,
+  onUpdateNote,
+  isNewNote,
+  isFullScreen: externalIsFullScreen,
+  onToggleFullScreen,
+}) => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -22,7 +28,7 @@ const NoteEditor = ({ note, onUpdateNote, isNewNote, isFullScreen: externalIsFul
     if (note) {
       setTitle(note.title);
       setContent(note.content);
-      
+
       // If this is a new note or editing has just begun, focus on the title
       if (isNewNote && titleInputRef.current) {
         setTimeout(() => {
@@ -30,7 +36,7 @@ const NoteEditor = ({ note, onUpdateNote, isNewNote, isFullScreen: externalIsFul
           titleInputRef.current.select();
         }, 50);
       }
-      
+
       // Show pulse animation when a new note is loaded
       setShowPulse(true);
       const timer = setTimeout(() => setShowPulse(false), 2000);
@@ -48,7 +54,7 @@ const NoteEditor = ({ note, onUpdateNote, isNewNote, isFullScreen: externalIsFul
       if (e.key === "Escape" && isFullScreen) {
         toggleFullScreen(false);
       }
-      
+
       // Enter fullscreen with Ctrl+Shift+F
       if (e.key === "f" && e.ctrlKey && e.shiftKey && note) {
         e.preventDefault(); // Prevent browser's find action
@@ -90,7 +96,7 @@ const NoteEditor = ({ note, onUpdateNote, isNewNote, isFullScreen: externalIsFul
   const toggleFullScreen = (value) => {
     const newValue = value !== undefined ? value : !isFullScreen;
     setIsFullScreen(newValue);
-    
+
     // Call external handler if provided
     if (onToggleFullScreen) {
       onToggleFullScreen(newValue);
@@ -136,31 +142,44 @@ const NoteEditor = ({ note, onUpdateNote, isNewNote, isFullScreen: externalIsFul
       <button
         onClick={() => toggleFullScreen()}
         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-all duration-200 z-10 ${
-          isFullScreen 
-            ? "absolute top-5 right-5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300" 
-            : `absolute bottom-3 right-4 bg-primary/10 hover:bg-primary/20 text-primary hover:text-primary-foreground dark:text-primary border border-primary/30 shadow-sm hover:shadow backdrop-blur-sm hover:scale-105 ${showPulse ? 'animate-pulse' : ''}`
+          isFullScreen
+            ? "absolute top-5 right-5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
+            : `absolute bottom-3 right-4 bg-primary/10 hover:bg-primary/20 text-primary hover:text-primary-foreground dark:text-primary border border-primary/30 shadow-sm hover:shadow backdrop-blur-sm hover:scale-105 ${showPulse ? "animate-pulse" : ""}`
         }`}
       >
         {isFullScreen ? (
           <>
             <Minimize2 className="h-4 w-4" />
-            <span>Exit <span className="opacity-60 text-xs">Esc</span></span>
+            <span>
+              Exit <span className="opacity-60 text-xs">Esc</span>
+            </span>
           </>
         ) : (
           <>
             <Maximize2 className="h-4 w-4" />
-            <span>Focus Mode <span className="opacity-60 text-xs ml-1">Ctrl+Shift+F</span></span>
+            <span>
+              Focus Mode{" "}
+              <span className="opacity-60 text-xs ml-1">Ctrl+Shift+F</span>
+            </span>
           </>
         )}
       </button>
 
       {/* Editor content */}
-      <div className={`flex-grow overflow-auto scrollbar-hide ${isFullScreen ? 'absolute inset-0 mt-16 mb-10' : ''}`}>
-        <TipTapEditor content={content} onUpdate={handleTipTapUpdate} isFullScreen={isFullScreen} />
+      <div
+        className={`flex-grow overflow-auto scrollbar-hide ${isFullScreen ? "absolute inset-0 mt-16 mb-10" : ""}`}
+      >
+        <TipTapEditor
+          content={content}
+          onUpdate={handleTipTapUpdate}
+          isFullScreen={isFullScreen}
+        />
       </div>
 
       {/* Footer with metadata - fixed at bottom when in fullscreen */}
-      <div className={`p-3 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ${isFullScreen ? 'absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900' : ''}`}>
+      <div
+        className={`p-3 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ${isFullScreen ? "absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900" : ""}`}
+      >
         <span>Last updated: {new Date(note.updatedAt).toLocaleString()}</span>
       </div>
     </div>

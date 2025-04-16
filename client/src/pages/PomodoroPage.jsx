@@ -77,4 +77,4 @@ const PomodoroPage = () => {
   );
 };
 
-export default PomodoroPage; 
+export default PomodoroPage;

@@ -13,7 +13,7 @@ import "./calendar.css";
 function Calendar({ className, classNames, showOutsideDays = true, ...props }) {
   // Custom formatter for weekday labels to show abbreviated day names
   const formatWeekdayName = (weekday) => {
-    const labels = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+    const labels = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
     return labels[weekday.getDay()];
   };
 
@@ -31,8 +31,8 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }) {
           buttonVariants({ variant: "outline" }),
           "h-7 w-7 bg-transparent p-0 opacity-70 hover:opacity-100"
         ),
-        nav_button_previous: "rdp-nav-prev",  // Custom class for specific styling
-        nav_button_next: "rdp-nav-next",      // Custom class for specific styling
+        nav_button_previous: "rdp-nav-prev", // Custom class for specific styling
+        nav_button_next: "rdp-nav-next", // Custom class for specific styling
         table: "w-full border-collapse",
         head_row: "flex w-full justify-between mb-2",
         head_cell:
@@ -47,8 +47,7 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }) {
         day_selected:
           "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
         day_today: "bg-accent text-accent-foreground font-bold",
-        day_outside:
-          "day-outside text-muted-foreground opacity-50",
+        day_outside: "day-outside text-muted-foreground opacity-50",
         day_disabled: "text-muted-foreground opacity-50",
         day_range_middle:
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
@@ -63,7 +62,7 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }) {
       // Ensure today's date and selected dates are styled correctly
       modifiersClassNames={{
         today: "rdp-day_today",
-        selected: "rdp-day_selected"
+        selected: "rdp-day_selected",
       }}
       {...props}
     />

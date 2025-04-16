@@ -45,7 +45,7 @@ export function NotesPanel() {
   const [newNoteTitle, setNewNoteTitle] = useState("New Note");
   const [selectedFolder, setSelectedFolder] = useState(DEFAULT_FOLDER);
   const editorRefs = useRef({});
-  
+
   const navigate = useNavigate();
 
   // Fetch notes and folders when component mounts
@@ -55,16 +55,18 @@ export function NotesPanel() {
         // Fetch notes
         const notesResponse = await noteService.getNotes({ limit: 5 });
         const fetchedNotes = notesResponse.data.notes || [];
-        
+
         // Get folders from localStorage and ensure no duplicates
-        const storedFolders = JSON.parse(localStorage.getItem('note-folders') || '[]');
-        const allFolders = storedFolders.includes(DEFAULT_FOLDER) 
-          ? storedFolders 
+        const storedFolders = JSON.parse(
+          localStorage.getItem("note-folders") || "[]"
+        );
+        const allFolders = storedFolders.includes(DEFAULT_FOLDER)
+          ? storedFolders
           : [DEFAULT_FOLDER, ...storedFolders];
-        
+
         setNotes(fetchedNotes);
         setFolders(allFolders);
-        
+
         if (fetchedNotes.length > 0) {
           setActiveNote(fetchedNotes[0]._id);
         }
@@ -110,7 +112,9 @@ export function NotesPanel() {
   // Handle fullscreen navigation
   const handleFullScreen = () => {
     if (activeNote) {
-      navigate("/dashboard/notepanel", { state: { initialNoteId: activeNote } });
+      navigate("/dashboard/notepanel", {
+        state: { initialNoteId: activeNote },
+      });
     } else {
       navigate("/dashboard/notepanel");
     }
@@ -177,21 +181,24 @@ export function NotesPanel() {
                 Create a new note and organize it in a folder
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="title">Title</Label>
-                <Input 
-                  id="title" 
-                  value={newNoteTitle} 
+                <Input
+                  id="title"
+                  value={newNoteTitle}
                   onChange={(e) => setNewNoteTitle(e.target.value)}
                   autoFocus
                 />
               </div>
-              
+
               <div className="grid gap-2">
                 <Label htmlFor="folder">Folder</Label>
-                <Select value={selectedFolder} onValueChange={setSelectedFolder}>
+                <Select
+                  value={selectedFolder}
+                  onValueChange={setSelectedFolder}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select folder" />
                   </SelectTrigger>
@@ -205,9 +212,12 @@ export function NotesPanel() {
                 </Select>
               </div>
             </div>
-            
+
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsCreateDialogOpen(false)}
+              >
                 Cancel
               </Button>
               <Button onClick={handleCreateNote}>Create</Button>
@@ -242,7 +252,11 @@ export function NotesPanel() {
         </div>
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden">
-        <Tabs value={activeNote} onValueChange={setActiveNote} className="flex flex-col h-full">
+        <Tabs
+          value={activeNote}
+          onValueChange={setActiveNote}
+          className="flex flex-col h-full"
+        >
           <div className="relative flex-shrink-0">
             <TabsList className="w-full max-w-full overflow-x-auto bg-muted [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               <div className="flex min-w-full px-1">
@@ -291,7 +305,9 @@ export function NotesPanel() {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-[#6C63FF]"
-                    onClick={() => editorRefs.current[note._id]?.commands.toggleBold()}
+                    onClick={() =>
+                      editorRefs.current[note._id]?.commands.toggleBold()
+                    }
                     title="Bold (Ctrl+B)"
                   >
                     <Bold className="h-4 w-4" />
@@ -300,7 +316,9 @@ export function NotesPanel() {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-[#6C63FF]"
-                    onClick={() => editorRefs.current[note._id]?.commands.toggleItalic()}
+                    onClick={() =>
+                      editorRefs.current[note._id]?.commands.toggleItalic()
+                    }
                     title="Italic (Ctrl+I)"
                   >
                     <Italic className="h-4 w-4" />
@@ -309,7 +327,9 @@ export function NotesPanel() {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-[#6C63FF]"
-                    onClick={() => editorRefs.current[note._id]?.commands.toggleBulletList()}
+                    onClick={() =>
+                      editorRefs.current[note._id]?.commands.toggleBulletList()
+                    }
                     title="Bullet List"
                   >
                     <List className="h-4 w-4" />
@@ -318,7 +338,9 @@ export function NotesPanel() {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-[#6C63FF]"
-                    onClick={() => editorRefs.current[note._id]?.commands.toggleOrderedList()}
+                    onClick={() =>
+                      editorRefs.current[note._id]?.commands.toggleOrderedList()
+                    }
                     title="Numbered List"
                   >
                     <ListOrdered className="h-4 w-4" />
@@ -331,7 +353,9 @@ export function NotesPanel() {
                   content={note.content}
                   onUpdate={(content) => handleUpdateNote(note._id, content)}
                   onBlur={() => handleBlur(note._id, note.content)}
-                  editorRef={(editor) => editorRefs.current[note._id] = editor}
+                  editorRef={(editor) =>
+                    (editorRefs.current[note._id] = editor)
+                  }
                   className="min-h-full"
                 />
               </div>
@@ -349,18 +373,18 @@ export function NotesPanel() {
               Create a new note and organize it in a folder
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="title">Title</Label>
-              <Input 
-                id="title" 
-                value={newNoteTitle} 
+              <Input
+                id="title"
+                value={newNoteTitle}
                 onChange={(e) => setNewNoteTitle(e.target.value)}
                 autoFocus
               />
             </div>
-            
+
             <div className="grid gap-2">
               <Label htmlFor="folder">Folder</Label>
               <Select value={selectedFolder} onValueChange={setSelectedFolder}>
@@ -377,9 +401,12 @@ export function NotesPanel() {
               </Select>
             </div>
           </div>
-          
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsCreateDialogOpen(false)}
+            >
               Cancel
             </Button>
             <Button onClick={handleCreateNote}>Create</Button>

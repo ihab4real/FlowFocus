@@ -29,10 +29,12 @@ const pomodoroSessionSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
-  tags: [{
-    type: String,
-    trim: true,
-  }],
+  tags: [
+    {
+      type: String,
+      trim: true,
+    },
+  ],
   notes: {
     type: String,
     trim: true,
@@ -59,6 +61,9 @@ pomodoroSessionSchema.index({ user: 1, type: 1 });
 pomodoroSessionSchema.index({ user: 1, category: 1 });
 pomodoroSessionSchema.index({ user: 1, tags: 1 });
 
-const PomodoroSession = mongoose.model("PomodoroSession", pomodoroSessionSchema);
+const PomodoroSession = mongoose.model(
+  "PomodoroSession",
+  pomodoroSessionSchema
+);
 
-export default PomodoroSession; 
+export default PomodoroSession;

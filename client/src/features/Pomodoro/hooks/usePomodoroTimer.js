@@ -363,7 +363,7 @@ const usePomodoroTimer = () => {
           // Clear the interval BEFORE calling handleTimerComplete to prevent race condition
           clearInterval(timerRef.current);
           timerRef.current = null;
-          
+
           // Use setTimeout to ensure state updates are processed before completion handler runs
           setTimeout(() => {
             handleTimerComplete();

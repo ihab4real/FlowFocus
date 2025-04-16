@@ -63,10 +63,7 @@ router.use(protect);
  *       404:
  *         description: Settings not found
  */
-router
-  .route("/settings")
-  .get(getOrCreateSettings)
-  .put(updateSettings);
+router.route("/settings").get(getOrCreateSettings).put(updateSettings);
 
 /**
  * @swagger
@@ -131,10 +128,7 @@ router
  *       401:
  *         description: Unauthorized - Authentication required
  */
-router
-  .route("/sessions")
-  .post(createSession)
-  .get(getSessions);
+router.route("/sessions").post(createSession).get(getSessions);
 
 /**
  * @swagger
@@ -192,10 +186,7 @@ router
  *       404:
  *         description: Session not found
  */
-router
-  .route("/sessions/:id")
-  .patch(updateSession)
-  .delete(deleteSession);
+router.route("/sessions/:id").patch(updateSession).delete(deleteSession);
 
 /**
  * @swagger
@@ -275,4 +266,4 @@ router
  */
 router.get("/sessions/stats", getSessionStats);
 
-export default router; 
+export default router;

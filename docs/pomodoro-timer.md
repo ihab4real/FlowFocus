@@ -199,7 +199,7 @@ PomodoroContainer/
 ### Client
 
 - Existing React ecosystem
-- Existing UI components 
+- Existing UI components
 - `use-sound` library for sound effects (optional)
 - `tailwindcss` for styling
 - `lucide-react` for icons
@@ -211,13 +211,13 @@ PomodoroContainer/
 
 ## Keyboard Shortcuts
 
-| Key           | Action              |
-|---------------|---------------------|
-| Space         | Start/Pause timer   |
-| Esc           | Exit fullscreen     |
-| R             | Reset current timer |
-| S             | Skip to next session|
-| F             | Enter fullscreen    |
+| Key   | Action               |
+| ----- | -------------------- |
+| Space | Start/Pause timer    |
+| Esc   | Exit fullscreen      |
+| R     | Reset current timer  |
+| S     | Skip to next session |
+| F     | Enter fullscreen     |
 
 ## Sound Notifications
 
@@ -232,4 +232,4 @@ PomodoroContainer/
 2. Optimize timer accuracy
 3. Handle background tab behavior appropriately
 4. Ensure smooth animations even on lower-end devices
-5. Use lazy loading for sound assets 
+5. Use lazy loading for sound assets

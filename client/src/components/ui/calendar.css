@@ -109,4 +109,4 @@
 /* Style for hover state */
 .rdp-day:hover:not(.rdp-day_outside):not(.rdp-day_selected) {
   background-color: hsl(var(--accent) / 0.5);
-} 
+}

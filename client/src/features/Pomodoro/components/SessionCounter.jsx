@@ -51,16 +51,16 @@ const SessionCounter = () => {
                 session.isCompleted
                   ? "bg-[#6C63FF] text-white"
                   : session.isCurrent
-                  ? "bg-[#6C63FF]/20 border-2 border-[#6C63FF] text-[#6C63FF]"
-                  : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
+                    ? "bg-[#6C63FF]/20 border-2 border-[#6C63FF] text-[#6C63FF]"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
               }
             `}
             title={
               session.isCompleted
                 ? `Session ${session.sessionNumber} (Completed)`
                 : session.isCurrent
-                ? `Session ${session.sessionNumber} (Current)`
-                : `Session ${session.sessionNumber} (Upcoming)`
+                  ? `Session ${session.sessionNumber} (Current)`
+                  : `Session ${session.sessionNumber} (Upcoming)`
             }
           >
             {session.sessionNumber}

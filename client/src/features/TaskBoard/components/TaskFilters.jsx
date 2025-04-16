@@ -7,7 +7,7 @@ import {
   Calendar,
   Tag,
   AlertTriangle,
-  X
+  X,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -44,7 +44,14 @@ function TaskFilters({ onFilter, availableTags = [], onShowOverdue }) {
       tags: selectedTags,
       sort: sortBy ? { field: sortBy, order: sortOrder } : null,
     });
-  }, [searchText, selectedPriorities, selectedTags, sortBy, sortOrder, onFilter]);
+  }, [
+    searchText,
+    selectedPriorities,
+    selectedTags,
+    sortBy,
+    sortOrder,
+    onFilter,
+  ]);
 
   // Update filters when any filter changes
   useEffect(() => {

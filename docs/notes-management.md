@@ -71,16 +71,16 @@ const folderSchema = new Schema({
 
 ### Base URL: `/api/notes`
 
-| Method | Endpoint    | Description             | Request Body                           | Response                |
-| ------ | ----------- | ----------------------- | -------------------------------------- | ----------------------- |
-| POST   | /           | Create new note         | `{ title, content, folder, tags }`     | Created note object     |
-| GET    | /           | Get all user's notes    | -                                      | Array of notes          |
-| GET    | /:id        | Get single note         | -                                      | Note object             |
-| PATCH  | /:id        | Update note             | `{ title?, content?, folder?, tags? }` | Updated note object     |
-| DELETE | /:id        | Delete note             | -                                      | Success message         |
-| GET    | /folders    | Get all folders         | -                                      | Array of folder strings |
-| POST   | /folders    | Create folder           | `{ name }`                             | Created folder object   |
-| DELETE | /folders/:id| Delete folder           | -                                      | Success message         |
+| Method | Endpoint     | Description          | Request Body                           | Response                |
+| ------ | ------------ | -------------------- | -------------------------------------- | ----------------------- |
+| POST   | /            | Create new note      | `{ title, content, folder, tags }`     | Created note object     |
+| GET    | /            | Get all user's notes | -                                      | Array of notes          |
+| GET    | /:id         | Get single note      | -                                      | Note object             |
+| PATCH  | /:id         | Update note          | `{ title?, content?, folder?, tags? }` | Updated note object     |
+| DELETE | /:id         | Delete note          | -                                      | Success message         |
+| GET    | /folders     | Get all folders      | -                                      | Array of folder strings |
+| POST   | /folders     | Create folder        | `{ name }`                             | Created folder object   |
+| DELETE | /folders/:id | Delete folder        | -                                      | Success message         |
 
 ## Frontend Components
 
@@ -99,7 +99,7 @@ NotesContainer/
 └── NoteEditor/
     ├── NoteHeader/
     │   ├── TitleInput
-    │   ├── FolderSelect 
+    │   ├── FolderSelect
     │   └── TagInput
     ├── EditorToolbar/
     │   └── FormatButtons
@@ -249,4 +249,4 @@ NotesContainer/
 2. Optimize editor initialization
 3. Throttle auto-save function
 4. Use proper database indexes
-5. Lazy load notes content 
+5. Lazy load notes content

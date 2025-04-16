@@ -196,7 +196,7 @@ const options = {
               description: "Calculated productivity score",
               minimum: 0,
               maximum: 100,
-            }
+            },
           },
         },
       },

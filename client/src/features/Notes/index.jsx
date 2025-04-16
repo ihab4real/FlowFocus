@@ -22,7 +22,7 @@ const NotesContainer = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isNewNote, setIsNewNote] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
-  
+
   // Get location to check for initial state passed from dashboard
   const location = useLocation();
 
@@ -30,7 +30,7 @@ const NotesContainer = () => {
   useEffect(() => {
     if (location.state) {
       const { initialNoteId } = location.state;
-      
+
       if (initialNoteId) {
         // Find the note by ID and select it
         const fetchInitialNote = async () => {
@@ -45,7 +45,7 @@ const NotesContainer = () => {
             console.error("Error fetching initial note:", error);
           }
         };
-        
+
         fetchInitialNote();
       }
     }
@@ -293,7 +293,11 @@ const NotesContainer = () => {
     <div className="h-full flex flex-col overflow-hidden">
       <PanelGroup direction="horizontal" className="flex-grow overflow-hidden">
         {/* Left sidebar with folders and search - min width 240px (15%) */}
-        <Panel defaultSize={20} minSize={15} className="overflow-hidden flex flex-col">
+        <Panel
+          defaultSize={20}
+          minSize={15}
+          className="overflow-hidden flex flex-col"
+        >
           <NotesNavbar
             folders={folders}
             currentFolder={currentFolder}
@@ -310,7 +314,11 @@ const NotesContainer = () => {
         <PanelResizeHandle className="w-px bg-border/30 hover:bg-primary/20 transition-colors duration-200" />
 
         {/* Middle section with notes list - min width 240px (15%) */}
-        <Panel defaultSize={25} minSize={15} className="overflow-hidden flex flex-col">
+        <Panel
+          defaultSize={25}
+          minSize={15}
+          className="overflow-hidden flex flex-col"
+        >
           <NotesList
             notes={filteredNotes}
             selectedNote={selectedNote}
