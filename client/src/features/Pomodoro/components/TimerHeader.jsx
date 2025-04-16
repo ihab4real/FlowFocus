@@ -1,13 +1,19 @@
 import React from "react";
 import { CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Settings, Volume2, VolumeX, Maximize2 } from "lucide-react";
+import { Settings, Volume2, VolumeX, Maximize2, Square } from "lucide-react";
 import usePomodoroStore from "@/stores/pomodoroStore";
 import { useUpdatePomodoroSettings } from "../hooks/usePomodoroQueries";
 import { TIMER_MODES, TIMER_TITLES, TIMER_COMPLETION } from "../constants";
 import { toast } from "react-hot-toast";
 
-const TimerHeader = ({ setIsSettingsOpen, toggleFullscreen, isFullscreen }) => {
+const TimerHeader = ({
+  setIsSettingsOpen,
+  toggleFullscreen,
+  isFullscreen,
+  isPlaying,
+  stopSound,
+}) => {
   const {
     mode = TIMER_MODES.FOCUS,
     settings = {},
@@ -56,6 +62,17 @@ const TimerHeader = ({ setIsSettingsOpen, toggleFullscreen, isFullscreen }) => {
     <CardHeader className="flex flex-row items-center justify-between pb-2">
       <CardTitle className={getTitleClass()}>{getTitle()}</CardTitle>
       <div className="flex space-x-1">
+        {isPlaying && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={stopSound}
+            title="Stop sound"
+            className="h-8 w-8 text-red-500"
+          >
+            <Square className="h-4 w-4" />
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="icon"

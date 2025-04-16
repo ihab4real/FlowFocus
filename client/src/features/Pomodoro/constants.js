@@ -40,9 +40,7 @@ export const BUTTON_CLASSES = {
 
 // Sound files
 export const SOUND_FILES = {
-  START: "/sounds/start.mp3",
   END: "/sounds/complete.mp3",
-  BREAK_END: "/sounds/break-end.mp3",
 };
 
 // Timer dimensions

@@ -1,58 +1,66 @@
-import React, { useRef, useEffect } from "react";
-import { SOUND_FILES, TIMER_MODES } from "../constants";
+import React, { useRef, useEffect, useState } from "react";
+import { SOUND_FILES } from "../constants";
 import usePomodoroStore from "@/stores/pomodoroStore";
 
 const TimerSound = () => {
   // Get data from the store
-  const { settings, mode, isActive } = usePomodoroStore();
+  const { settings } = usePomodoroStore();
+  const [isPlaying, setIsPlaying] = useState(false);
 
-  const startSoundRef = useRef(
-    typeof Audio !== "undefined" ? new Audio(SOUND_FILES.START) : null
-  );
-  const endSoundRef = useRef(
+  // Use only one sound reference
+  const soundRef = useRef(
     typeof Audio !== "undefined" ? new Audio(SOUND_FILES.END) : null
-  );
-  const breakEndSoundRef = useRef(
-    typeof Audio !== "undefined" ? new Audio(SOUND_FILES.BREAK_END) : null
   );
 
   // Update volume when settings change
   useEffect(() => {
-    if (startSoundRef.current) {
-      startSoundRef.current.volume = settings?.soundVolume / 100 || 0.8;
-    }
-    if (endSoundRef.current) {
-      endSoundRef.current.volume = settings?.soundVolume / 100 || 0.8;
-    }
-    if (breakEndSoundRef.current) {
-      breakEndSoundRef.current.volume = settings?.soundVolume / 100 || 0.8;
+    if (soundRef.current) {
+      soundRef.current.volume = settings?.soundVolume / 100 || 0.8;
     }
   }, [settings?.soundVolume]);
 
-  // Play start sound when timer starts
+  // Add event listener to handle when audio finishes playing
   useEffect(() => {
-    if (isActive && settings?.soundEnabled) {
-      startSoundRef.current
-        ?.play()
-        .catch((err) => console.log("Sound play error:", err));
+    const handleEnded = () => {
+      setIsPlaying(false);
+    };
+
+    if (soundRef.current) {
+      soundRef.current.addEventListener("ended", handleEnded);
     }
-  }, [isActive, settings?.soundEnabled]);
+
+    return () => {
+      if (soundRef.current) {
+        soundRef.current.removeEventListener("ended", handleEnded);
+      }
+    };
+  }, []);
 
   const playEndSound = () => {
-    if (settings?.soundEnabled) {
-      if (mode === TIMER_MODES.FOCUS) {
-        endSoundRef.current
-          ?.play()
-          .catch((err) => console.log("Sound play error:", err));
-      } else {
-        breakEndSoundRef.current
-          ?.play()
-          .catch((err) => console.log("Sound play error:", err));
+    if (settings?.soundEnabled && soundRef.current) {
+      // Reset the sound to the beginning if it's already playing
+      if (isPlaying) {
+        soundRef.current.currentTime = 0;
       }
+
+      soundRef.current
+        .play()
+        .then(() => {
+          setIsPlaying(true);
+        })
+        .catch((err) => console.log("Sound play error:", err));
     }
   };
 
-  return { playEndSound };
+  const stopSound = () => {
+    if (soundRef.current && isPlaying) {
+      soundRef.current.pause();
+      soundRef.current.currentTime = 0;
+      setIsPlaying(false);
+    }
+  };
+
+  return { playEndSound, stopSound, isPlaying };
 };
 
 export default TimerSound;

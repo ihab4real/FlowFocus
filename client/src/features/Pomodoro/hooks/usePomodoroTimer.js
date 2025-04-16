@@ -314,6 +314,11 @@ const usePomodoroTimer = () => {
       setCurrentSession(null);
     }
 
+    // Play end sound
+    // We're not calling a local function to play sound here
+    // because the TimerSound component is initialized in the PomodoroContainer
+    // and will be called from there
+
     // Switch to next mode
     switchToNextMode(settings);
 

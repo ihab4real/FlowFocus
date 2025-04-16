@@ -26,6 +26,7 @@ const PomodoroContainer = () => {
     isActive,
     settings,
     isLoadingSettings,
+    timeLeft,
     startTimer,
     pauseTimer,
     resetTimer,
@@ -37,6 +38,7 @@ const PomodoroContainer = () => {
 
   // Local UI state
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [prevTimeLeft, setPrevTimeLeft] = useState(null);
 
   // Navigation
   const navigate = useNavigate();
@@ -48,13 +50,42 @@ const PomodoroContainer = () => {
 
   // Sound management - using the fixed TimerSound component
   // Wrap in try/catch to handle potential errors
-  let timerSoundResult = { playEndSound: () => {} };
+  let timerSoundResult = {
+    playEndSound: () => {},
+    stopSound: () => {},
+    isPlaying: false,
+  };
   try {
-    timerSoundResult = TimerSound() || { playEndSound: () => {} };
+    timerSoundResult = TimerSound() || {
+      playEndSound: () => {},
+      stopSound: () => {},
+      isPlaying: false,
+    };
   } catch (error) {
     console.error("Error initializing TimerSound:", error);
   }
-  const { playEndSound = () => {} } = timerSoundResult;
+  const {
+    playEndSound = () => {},
+    stopSound = () => {},
+    isPlaying = false,
+  } = timerSoundResult;
+
+  // Play sound when timer reaches 0
+  useEffect(() => {
+    // Skip on initial render
+    if (prevTimeLeft === null) {
+      setPrevTimeLeft(timeLeft);
+      return;
+    }
+
+    // Play sound when timer reaches exactly 0 from a positive value
+    if (timeLeft === 0 && prevTimeLeft > 0) {
+      playEndSound();
+    }
+
+    // Update previous time
+    setPrevTimeLeft(timeLeft);
+  }, [timeLeft, prevTimeLeft, playEndSound]);
 
   // Toggle fullscreen mode
   const toggleFullscreen = useCallback(() => {
@@ -154,6 +185,8 @@ const PomodoroContainer = () => {
           setIsSettingsOpen={setIsSettingsOpen}
           toggleFullscreen={toggleFullscreen}
           isFullscreen={isFullscreen}
+          isPlaying={isPlaying}
+          stopSound={stopSound}
         />
 
         <CardContent
