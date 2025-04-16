@@ -295,6 +295,12 @@ const usePomodoroTimer = () => {
   const handleTimerComplete = useCallback(() => {
     if (!settings) return;
 
+    // Ensure timer is stopped
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
     // Update the current session
     if (currentSessionRef.current?._id) {
       updateSession({
@@ -354,8 +360,14 @@ const usePomodoroTimer = () => {
             : 0;
 
         if (currentTime <= 1) {
+          // Clear the interval BEFORE calling handleTimerComplete to prevent race condition
           clearInterval(timerRef.current);
-          handleTimerComplete();
+          timerRef.current = null;
+          
+          // Use setTimeout to ensure state updates are processed before completion handler runs
+          setTimeout(() => {
+            handleTimerComplete();
+          }, 0);
           return 0;
         }
         return currentTime - 1;
@@ -365,6 +377,7 @@ const usePomodoroTimer = () => {
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
+        timerRef.current = null;
       }
     };
   }, [isActive, settings, setTimeLeft, handleTimerComplete]);
