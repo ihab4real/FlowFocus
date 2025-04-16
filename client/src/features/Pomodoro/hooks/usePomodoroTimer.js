@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from "react";
-import { TIMER_MODES } from "../constants";
+import { TIMER_MODES, DEFAULT_SETTINGS } from "../constants";
 import usePomodoroStore from "@/stores/pomodoroStore";
 import {
   usePomodoroSettings,
@@ -50,6 +50,9 @@ const usePomodoroTimer = () => {
     loadSettings,
   } = usePomodoroStore();
 
+  // Ref to track if initial load has occurred to prevent multiple initializations
+  const initialLoadComplete = useRef(false);
+
   // Format time for display
   const formatTime = useCallback((seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -59,6 +62,45 @@ const usePomodoroTimer = () => {
       .padStart(2, "0")}`;
   }, []);
 
+  // Initialize timer based on settings and current mode
+  const initializeTimer = useCallback(
+    (newSettings) => {
+      if (!newSettings) {
+        console.warn("initializeTimer called with invalid settings");
+        return; // Prevent NaN if settings are somehow invalid
+      }
+
+      // Determine duration based on the CURRENT mode
+      let duration;
+      if (mode === TIMER_MODES.FOCUS) {
+        duration = newSettings.focusDuration * 60;
+      } else if (mode === TIMER_MODES.SHORT_BREAK) {
+        duration = newSettings.shortBreakDuration * 60;
+      } else if (mode === TIMER_MODES.LONG_BREAK) {
+        duration = newSettings.longBreakDuration * 60;
+      } else {
+        // Default to focus duration if mode is unknown (should not happen)
+        console.warn(
+          `Unknown timer mode: ${mode}, defaulting to focus duration`
+        );
+        duration = newSettings.focusDuration * 60;
+      }
+
+      // Ensure duration is a non-negative number
+      duration = Math.max(0, duration || 0);
+
+      // Update total time based on the mode's duration
+      setTotalTime(duration);
+      // Only set time left if timer is not currently active
+      if (!isActive) {
+        setTimeLeft(duration);
+      }
+      // Update sessionsUntilLongBreak based on the interval setting
+      setSessionsUntilLongBreak(newSettings.longBreakInterval);
+    },
+    [mode, isActive, setTimeLeft, setTotalTime, setSessionsUntilLongBreak]
+  );
+
   // Update formatted time whenever timeLeft changes
   useEffect(() => {
     if (typeof timeLeft === "number") {
@@ -66,46 +108,57 @@ const usePomodoroTimer = () => {
     }
   }, [timeLeft, formatTime, setFormattedTime]);
 
-  // Initialize timer with settings
-  const initializeTimer = useCallback(
-    (settings) => {
-      if (!settings) return;
-
-      const duration = settings.focusDuration * 6;
-      setTimeLeft(duration);
-      setTotalTime(duration);
-      setSessionsUntilLongBreak(settings.longBreakInterval);
-    },
-    [setTimeLeft, setTotalTime, setSessionsUntilLongBreak]
-  );
-
-  // Load settings from server and initialize timer
+  // Effect 1: Sync settings from React Query to Zustand store
   useEffect(() => {
-    const initialize = async () => {
-      try {
-        // If we already have the settings from React Query
-        if (serverSettings && !isLoadingServerSettings) {
-          setSettings(serverSettings);
-          initializeTimer(serverSettings);
-          return;
-        }
+    if (serverSettings?.data?.settings && !isLoadingServerSettings) {
+      // Check if the settings from the server are actually different from the store
+      // to avoid unnecessary updates and potential loops.
+      // This requires a deep comparison or comparing a key property like updatedAt if available.
+      // For simplicity now, we'll just set it, assuming React Query handles staleness well.
+      setSettings(serverSettings.data.settings);
+    }
+  }, [serverSettings, isLoadingServerSettings, setSettings]);
 
-        // Otherwise load settings from API through the store
-        const loadedSettings = await loadSettings();
-        if (loadedSettings) {
-          initializeTimer(loadedSettings);
-        }
-      } catch (error) {
-        console.error("Failed to initialize timer:", error);
-      }
-    };
+  // Effect 2: Initialize timer state when settings are loaded for the first time
+  useEffect(() => {
+    // Ensure settings are loaded (not default/empty) and initial load hasn't happened yet
+    const settingsAreLoaded =
+      settings &&
+      Object.keys(settings).length > 0 &&
+      settings !== DEFAULT_SETTINGS;
 
-    initialize();
+    if (settingsAreLoaded && !initialLoadComplete.current) {
+      // Call initializeTimer with the loaded settings
+      initializeTimer(settings);
+      // Mark initial load as complete
+      initialLoadComplete.current = true;
+    }
+  }, [settings, initializeTimer]); // Run when settings change
+
+  // Effect 3: Handle initial fetch if settings aren't available from cache/persistence
+  useEffect(() => {
+    const needsFetching =
+      (!settings ||
+        Object.keys(settings).length === 0 ||
+        settings === DEFAULT_SETTINGS) &&
+      !serverSettings?.data?.settings;
+
+    if (needsFetching && !isLoadingServerSettings) {
+      loadSettings().catch((error) => {
+        console.error("Initial settings load failed:", error);
+        // If loading fails, initialize with defaults to ensure timer is usable
+        if (!initialLoadComplete.current) {
+          initializeTimer(DEFAULT_SETTINGS);
+          initialLoadComplete.current = true;
+        }
+      });
+    }
+    // This effect should run primarily once on mount or if dependencies indicate a need to fetch.
   }, [
+    settings,
     serverSettings,
     isLoadingServerSettings,
     loadSettings,
-    setSettings,
     initializeTimer,
   ]);
 
