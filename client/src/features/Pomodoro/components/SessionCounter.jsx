@@ -8,7 +8,6 @@ import { DEFAULT_SETTINGS, TIMER_MODES } from "../constants";
  */
 const SessionCounter = () => {
   const {
-    sessionCount = 0,
     sessionsUntilLongBreak = DEFAULT_SETTINGS.LONG_BREAK_INTERVAL,
     mode = TIMER_MODES.FOCUS,
     settings,
@@ -20,14 +19,14 @@ const SessionCounter = () => {
   const totalSessionsInCycle = Array.from(
     { length: longBreakInterval },
     (_, i) => {
-      const sessionNumber = sessionCount - (sessionsUntilLongBreak - 1) + i;
+      const sessionNumber = i + 1;
       const isCompleted = i < longBreakInterval - sessionsUntilLongBreak;
       const isCurrent =
         i === longBreakInterval - sessionsUntilLongBreak &&
         mode === TIMER_MODES.FOCUS;
 
       return {
-        sessionNumber: sessionNumber >= 0 ? sessionNumber + 1 : 1,
+        sessionNumber,
         isCompleted,
         isCurrent,
       };
