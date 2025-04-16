@@ -49,7 +49,6 @@ const TimerHeader = ({
       soundEnabled: !settings.soundEnabled,
     };
 
-    setStoreSettings(newSettings);
     updateServerSettings(newSettings);
 
     toast.success(settings.soundEnabled ? "Sound disabled" : "Sound enabled", {
