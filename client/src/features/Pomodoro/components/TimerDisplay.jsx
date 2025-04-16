@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import {
   TIMER_DIMENSIONS,
   TIMER_PROGRESS,
@@ -8,38 +8,25 @@ import {
 } from "../constants";
 import usePomodoroStore from "@/stores/pomodoroStore";
 
+/**
+ * TimerDisplay component
+ * Handles only the display of timer information
+ * All calculations are done in the store/hook
+ */
 const TimerDisplay = ({ isFullscreen }) => {
+  // Get all necessary state from the store
   const {
     timeLeft = 0,
+    totalTime = 1, // Avoid division by zero
+    formattedTime = "00:00",
     mode = TIMER_MODES.FOCUS,
     isActive = false,
   } = usePomodoroStore();
 
-  // Format the time display
-  const formattedTime = useMemo(() => {
-    const mins = Math.floor(timeLeft / 60);
-    const secs = timeLeft % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs
-      .toString()
-      .padStart(2, "0")}`;
-  }, [timeLeft]);
+  // Calculate progress percentage for the SVG circle
+  const progress = totalTime > 0 ? (timeLeft / totalTime) * 100 : 100;
 
-  // Calculate the total time based on the current mode
-  const totalTime = useMemo(() => {
-    const { settings } = usePomodoroStore.getState();
-    if (mode === TIMER_MODES.FOCUS) return settings.focusDuration * 60;
-    if (mode === TIMER_MODES.SHORT_BREAK)
-      return settings.shortBreakDuration * 60;
-    return settings.longBreakDuration * 60;
-  }, [mode]);
-
-  // Calculate the progress percentage
-  const progress = useMemo(() => {
-    if (!totalTime || totalTime === 0) return 100;
-    return (timeLeft / totalTime) * 100;
-  }, [timeLeft, totalTime]);
-
-  // Determine if the timer is near completion
+  // Determine if the timer is near completion for visual feedback
   const isNearCompletion =
     timeLeft <= TIMER_COMPLETION.NEAR_COMPLETION_THRESHOLD &&
     timeLeft > 0 &&
@@ -52,9 +39,16 @@ const TimerDisplay = ({ isFullscreen }) => {
     return TIMER_COLORS.LONG_BREAK;
   };
 
+  // Get size dimensions based on fullscreen state
   const dimensions = isFullscreen
     ? TIMER_DIMENSIONS.FULLSCREEN
     : TIMER_DIMENSIONS.DEFAULT;
+
+  // Safely calculate strokeDashoffset to avoid NaN
+  const getStrokeDashoffset = () => {
+    const validProgress = Number.isFinite(progress) ? Math.max(0, Math.min(100, progress)) : 100;
+    return TIMER_PROGRESS.CIRCLE_DASHARRAY - (TIMER_PROGRESS.CIRCLE_DASHARRAY * validProgress) / 100;
+  };
 
   return (
     <div
@@ -81,10 +75,7 @@ const TimerDisplay = ({ isFullscreen }) => {
           stroke={getTimerColor()}
           strokeWidth={TIMER_PROGRESS.CIRCLE_STROKE_WIDTH}
           strokeDasharray={TIMER_PROGRESS.CIRCLE_DASHARRAY}
-          strokeDashoffset={
-            TIMER_PROGRESS.CIRCLE_DASHARRAY -
-            (TIMER_PROGRESS.CIRCLE_DASHARRAY * progress) / 100
-          }
+          strokeDashoffset={getStrokeDashoffset()}
           strokeLinecap="round"
           transform={`rotate(${TIMER_PROGRESS.CIRCLE_ROTATION} 50 50)`}
         />

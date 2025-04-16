@@ -1,40 +1,44 @@
-import React from 'react';
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, RotateCcw, SkipForward } from "lucide-react";
-import usePomodoroStore from '@/stores/pomodoroStore';
-import { BUTTON_CLASSES, TIMER_MODES } from '../constants';
+import usePomodoroStore from "@/stores/pomodoroStore";
+import { BUTTON_CLASSES, TIMER_MODES } from "../constants";
 
-const TimerControls = ({ isFullscreen }) => {
-  const { 
-    isActive = false, 
-    mode = TIMER_MODES.FOCUS,
-    startSession = () => {},
-    pauseTimer = () => {},
-    resetTimer: storeResetTimer = () => {}, 
-    endSession = () => {},
-    switchToNextMode = () => {},
-    settings = {}
-  } = usePomodoroStore();
+/**
+ * Timer Controls component
+ * Shows timer control buttons (start, pause, reset, skip)
+ * Gets timer actions from props and display state from store
+ */
+const TimerControls = ({
+  isFullscreen,
+  startTimer,
+  pauseTimer,
+  resetTimer,
+  skipToNextMode,
+}) => {
+  // Get display state from store
+  const { isActive = false, mode = TIMER_MODES.FOCUS } = usePomodoroStore();
 
+  // Toggle between start and pause
   const toggleTimer = () => {
     if (isActive) {
       pauseTimer();
     } else {
-      startSession();
+      startTimer();
     }
   };
 
-  const resetTimer = () => {
-    storeResetTimer();
-    endSession();
+  // Handle reset button click
+  const handleReset = () => {
+    resetTimer();
   };
 
-  const skipToNextSession = () => {
-    pauseTimer();
-    endSession();
-    switchToNextMode(settings);
+  // Handle skip button click
+  const handleSkip = () => {
+    skipToNextMode();
   };
 
+  // Get the appropriate button class based on current mode
   const getButtonClass = () => {
     if (mode === TIMER_MODES.FOCUS) return BUTTON_CLASSES.FOCUS;
     if (mode === TIMER_MODES.SHORT_BREAK) return BUTTON_CLASSES.SHORT_BREAK;
@@ -60,17 +64,17 @@ const TimerControls = ({ isFullscreen }) => {
           </>
         )}
       </Button>
-      <Button 
-        variant="outline" 
-        onClick={resetTimer}
+      <Button
+        variant="outline"
+        onClick={handleReset}
         size={isFullscreen ? "default" : "sm"}
       >
         <RotateCcw className="mr-1 h-4 w-4" />
         Reset
       </Button>
-      <Button 
-        variant="outline" 
-        onClick={skipToNextSession}
+      <Button
+        variant="outline"
+        onClick={handleSkip}
         size={isFullscreen ? "default" : "sm"}
       >
         <SkipForward className="mr-1 h-4 w-4" />
@@ -80,4 +84,4 @@ const TimerControls = ({ isFullscreen }) => {
   );
 };
 
-export default TimerControls; 
+export default TimerControls;

@@ -11,30 +11,29 @@ import TimerHeader from "./components/TimerHeader";
 import TimerFooter from "./components/TimerFooter";
 import TimerSound from "./components/TimerSound";
 import usePomodoroStore from "@/stores/pomodoroStore";
-import {
-  usePomodoroSettings,
-  useUpdatePomodoroSettings,
-} from "./hooks/usePomodoroQueries";
+import usePomodoroTimer from "./hooks/usePomodoroTimer";
+import { useUpdatePomodoroSettings } from "./hooks/usePomodoroQueries";
 import { KEYBOARD_SHORTCUTS } from "./constants";
+import { useCallback } from "react";
 
+/**
+ * Main container for the Pomodoro feature
+ * Uses the usePomodoroTimer hook for all timer logic
+ */
 const PomodoroContainer = () => {
-  // React Query hooks
-  const { isLoading: isLoadingSettings } = usePomodoroSettings();
-  const { mutate: updateServerSettings } = useUpdatePomodoroSettings();
-
-  // Zustand store
+  // Get all timer logic and state from the hook
   const {
-    settings,
     isActive,
-    mode,
-    loadSettings,
-    initializeTimer,
-    setSettings: setStoreSettings,
-    startSession,
+    settings,
+    isLoadingSettings,
+    startTimer,
     pauseTimer,
-    endSession,
-    switchToNextMode,
-  } = usePomodoroStore();
+    resetTimer,
+    skipToNextMode,
+  } = usePomodoroTimer();
+
+  // React Query hooks
+  const { mutate: updateServerSettings } = useUpdatePomodoroSettings();
 
   // Local UI state
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -43,6 +42,9 @@ const PomodoroContainer = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isFullscreen = location.pathname === "/dashboard/pomodoro";
+
+  // Get the store's setSettings function for updating settings
+  const { setSettings: setStoreSettings } = usePomodoroStore();
 
   // Sound management - using the fixed TimerSound component
   // Wrap in try/catch to handle potential errors
@@ -54,26 +56,14 @@ const PomodoroContainer = () => {
   }
   const { playEndSound = () => {} } = timerSoundResult;
 
-  // Load settings from server on component mount
-  useEffect(() => {
-    try {
-      loadSettings();
-    } catch (error) {
-      console.error("Error loading settings:", error);
-      toast.error("Failed to load settings. Using defaults.");
+  // Toggle fullscreen mode
+  const toggleFullscreen = useCallback(() => {
+    if (isFullscreen) {
+      navigate("/dashboard");
+    } else {
+      navigate("/dashboard/pomodoro");
     }
-  }, []);
-
-  // Initialize timer with settings when they're loaded
-  useEffect(() => {
-    if (settings && !isLoadingSettings) {
-      try {
-        initializeTimer(settings);
-      } catch (error) {
-        console.error("Error initializing timer:", error);
-      }
-    }
-  }, [settings, isLoadingSettings]);
+  }, [isFullscreen, navigate]);
 
   // Set up keyboard shortcuts
   useEffect(() => {
@@ -87,19 +77,16 @@ const PomodoroContainer = () => {
             if (isActive) {
               pauseTimer();
             } else {
-              startSession();
+              startTimer();
             }
             break;
           case KEYBOARD_SHORTCUTS.RESET_TIMER:
             if (isActive) {
-              pauseTimer();
-              endSession();
+              resetTimer();
             }
             break;
           case KEYBOARD_SHORTCUTS.SKIP_SESSION:
-            pauseTimer();
-            endSession();
-            switchToNextMode(settings);
+            skipToNextMode();
             break;
           case KEYBOARD_SHORTCUTS.TOGGLE_FULLSCREEN:
             toggleFullscreen();
@@ -115,23 +102,27 @@ const PomodoroContainer = () => {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isFullscreen, mode, settings, navigate, isActive]);
-
-  // Toggle fullscreen mode
-  const toggleFullscreen = () => {
-    if (isFullscreen) {
-      navigate("/dashboard");
-    } else {
-      navigate("/dashboard/pomodoro");
-    }
-  };
+  }, [
+    isFullscreen,
+    toggleFullscreen,
+    isActive,
+    navigate,
+    startTimer,
+    pauseTimer,
+    resetTimer,
+    skipToNextMode,
+  ]);
 
   // Handle settings save
   const handleSaveSettings = (newSettings) => {
     try {
-      // Update settings in store and on server
+      // Update settings in store
       setStoreSettings(newSettings);
+
+      // Update settings on server
       updateServerSettings(newSettings);
+
+      // Close settings modal
       setIsSettingsOpen(false);
 
       toast.success("Settings updated", {
@@ -181,7 +172,13 @@ const PomodoroContainer = () => {
 
           <ModeSelector isFullscreen={isFullscreen} />
 
-          <TimerControls isFullscreen={isFullscreen} />
+          <TimerControls
+            isFullscreen={isFullscreen}
+            startTimer={startTimer}
+            pauseTimer={pauseTimer}
+            resetTimer={resetTimer}
+            skipToNextMode={skipToNextMode}
+          />
 
           <TimerFooter isFullscreen={isFullscreen} />
         </CardContent>
