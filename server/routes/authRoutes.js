@@ -7,6 +7,8 @@ import {
   getMe,
   updateProfile,
   changePassword,
+  refreshAccessToken,
+  logout,
 } from "../controllers/authController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
@@ -140,6 +142,32 @@ router.post("/forgot-password", forgotPassword);
  *         description: Token invalid or expired
  */
 router.patch("/reset-password/:token", resetPassword);
+
+/**
+ * @swagger
+ * /api/auth/refresh:
+ *   post:
+ *     summary: Refresh access token using refresh token from cookie
+ *     tags: [Authentication]
+ *     responses:
+ *       200:
+ *         description: Access token refreshed successfully
+ *       401:
+ *         description: Unauthorized - Invalid or missing refresh token
+ */
+router.post("/refresh", refreshAccessToken);
+
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Logout user by clearing refresh token cookie
+ *     tags: [Authentication]
+ *     responses:
+ *       200:
+ *         description: Logged out successfully
+ */
+router.post("/logout", logout);
 
 // Protected routes - require authentication
 router.use(protect);

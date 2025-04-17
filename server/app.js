@@ -11,6 +11,8 @@ import authRoutes from "./routes/authRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import noteRoutes from "./routes/noteRoutes.js";
 import pomodoroRoutes from "./routes/pomodoroRoutes.js";
+import cookieParser from "cookie-parser";
+import mongoSanitize from "express-mongo-sanitize";
 
 // Load environment variables
 dotenv.config();
@@ -72,6 +74,12 @@ if (process.env.NODE_ENV === "development") {
 if (process.env.NODE_ENV !== "production") {
   app.use(morgan("dev"));
 }
+
+// Cookie parser
+app.use(cookieParser());
+
+// Data sanitization against NoSQL query injection
+app.use(mongoSanitize());
 
 // Connect to MongoDB
 const connectDB = async () => {
