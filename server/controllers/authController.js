@@ -17,6 +17,7 @@ import {
   resetUserPassword,
 } from "../services/authService.js";
 import { updateUserProfile } from "../services/userService.js";
+import { sendPasswordResetEmail } from "../services/emailService.js";
 
 // Helper function to set refresh token cookie
 const sendRefreshTokenCookie = (res, refreshToken) => {
@@ -172,28 +173,38 @@ export const forgotPassword = asyncHandler(async (req, res) => {
   }
 
   try {
-    const resetToken = await requestPasswordReset(email);
+    // 1. Request password reset token from authService
+    // This returns the unhashed token if user exists, throws error otherwise
+    const user = await User.findOne({ email }); // Need user object for name
+    if (!user) {
+       // User not found, log and send generic response
+       logDebug("Password reset request for non-existent user", { email });
+    } else {
+        // User found, proceed to generate token and send email
+        const resetToken = await requestPasswordReset(email);
 
-    // TODO: Implement actual email sending here
-    // In a real app, send the resetToken via email
-    logInfo("Password reset token requested, sending email (simulation)", {
-      email,
-    });
+        // 2. Send the email using emailService
+        await sendPasswordResetEmail(user.email, user.name, resetToken);
 
-    // Send a generic success response regardless of whether the user exists
-    // This prevents email enumeration attacks
+        logInfo("Password reset email initiated successfully", { email });
+    }
+
+    // 3. Always send a generic success response
     res.status(200).json({
       status: "success",
-      message: "If an account with that email exists, a password reset token has been sent.",
-      // TEMP: Include token in dev response for easier testing
-      ...(process.env.NODE_ENV === "development" && { _resetToken: resetToken }),
+      message:
+        "If an account with that email exists, a password reset link has been sent.",
     });
+
   } catch (error) {
-    // Log the error, but still send a generic success response to the client
-    logError("Error during password reset request", { email, error: error.message });
+    // Log errors from requestPasswordReset or sendPasswordResetEmail
+    logError("Error during password reset process", { email, error: error.message });
+
+    // Still send a generic success response to prevent enumeration
     res.status(200).json({
       status: "success",
-      message: "If an account with that email exists, a password reset token has been sent.",
+      message:
+        "If an account with that email exists, a password reset link has been sent.",
     });
   }
 });
