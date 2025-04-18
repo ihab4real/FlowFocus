@@ -20,7 +20,7 @@ describe("Authentication API Endpoints", () => {
 
   // Clear mocks before each test in this suite
   beforeEach(() => {
-     sendPasswordResetEmailMock.mockClear();
+    sendPasswordResetEmailMock.mockClear();
   });
 
   describe("POST /api/auth/register", () => {
@@ -51,7 +51,9 @@ describe("Authentication API Endpoints", () => {
       expect(response.body.data.user.password).toBeUndefined(); // Ensure password is not returned
 
       // 2. Database state
-      const dbUser = await User.findOne({ email: newUser.email }).select("+password");
+      const dbUser = await User.findOne({ email: newUser.email }).select(
+        "+password"
+      );
       expect(dbUser).not.toBeNull();
       expect(dbUser.name).toBe(newUser.name);
       // Optionally check if password hash exists and is different from plain password
@@ -247,7 +249,9 @@ describe("Authentication API Endpoints", () => {
 
       // Assert
       expect(response.body.status).toBe("fail");
-      expect(response.body.message).toMatch(/please provide email and password/i);
+      expect(response.body.message).toMatch(
+        /please provide email and password/i
+      );
       expect(response.headers["set-cookie"]).toBeUndefined();
     });
 
@@ -261,7 +265,9 @@ describe("Authentication API Endpoints", () => {
 
       // Assert
       expect(response.body.status).toBe("fail");
-      expect(response.body.message).toMatch(/please provide email and password/i);
+      expect(response.body.message).toMatch(
+        /please provide email and password/i
+      );
       expect(response.headers["set-cookie"]).toBeUndefined();
     });
   });
@@ -354,8 +360,9 @@ describe("Authentication API Endpoints", () => {
         .send(loginCredentials);
 
       // Store the original refresh token if needed for specific assertions
-      originalRefreshToken = loginRes.headers["set-cookie"]
-          .find(cookie => cookie.startsWith("refreshToken="));
+      originalRefreshToken = loginRes.headers["set-cookie"].find((cookie) =>
+        cookie.startsWith("refreshToken=")
+      );
     });
 
     it("should refresh the access token successfully with a valid refresh token cookie", async () => {
@@ -538,8 +545,8 @@ describe("Authentication API Endpoints", () => {
 
     // Mock implementation for successful email sending
     beforeEach(() => {
-         sendPasswordResetEmailMock.mockClear();
-         sendPasswordResetEmailMock.mockResolvedValue(); // Simulate successful send
+      sendPasswordResetEmailMock.mockClear();
+      sendPasswordResetEmailMock.mockResolvedValue(); // Simulate successful send
     });
 
     it("should return 200 and trigger email sending if user exists", async () => {
@@ -583,12 +590,12 @@ describe("Authentication API Endpoints", () => {
       expect(response.body.status).toBe("success");
       expect(response.body.message).toMatch(/link has been sent/i);
 
-       // Assert Email Service Interaction
+      // Assert Email Service Interaction
       expect(sendPasswordResetEmailMock).not.toHaveBeenCalled();
     });
 
     it("should return 400 if email field is missing", async () => {
-       // Act
+      // Act
       const response = await request(app)
         .post("/api/auth/forgot-password")
         .send({}) // Missing email
@@ -601,9 +608,9 @@ describe("Authentication API Endpoints", () => {
       expect(sendPasswordResetEmailMock).not.toHaveBeenCalled();
     });
 
-     it("should still return 200 even if email sending fails internally", async () => {
+    it("should still return 200 even if email sending fails internally", async () => {
       // Arrange: Mock email sending to fail
-       sendPasswordResetEmailMock.mockRejectedValue(new Error("SMTP Error"));
+      sendPasswordResetEmailMock.mockRejectedValue(new Error("SMTP Error"));
 
       // Act
       const response = await request(app)
@@ -618,7 +625,7 @@ describe("Authentication API Endpoints", () => {
 
       // Assert Email Service Interaction (it was called, but failed)
       expect(sendPasswordResetEmailMock).toHaveBeenCalledTimes(1);
-       expect(sendPasswordResetEmailMock).toHaveBeenCalledWith(
+      expect(sendPasswordResetEmailMock).toHaveBeenCalledWith(
         testUser.email,
         testUser.name,
         expect.any(String)
@@ -665,16 +672,21 @@ describe("Authentication API Endpoints", () => {
       expect(response.body.data.user.email).toBe(testUser.email);
 
       // Assert Cookie (new refresh token)
-       const cookies = response.headers["set-cookie"];
+      const cookies = response.headers["set-cookie"];
       expect(cookies).toBeDefined();
-      expect(cookies.find(c => c.startsWith("refreshToken="))).toBeDefined();
+      expect(cookies.find((c) => c.startsWith("refreshToken="))).toBeDefined();
 
       // Assert DB state
-      const dbUser = await User.findOne({ email: testUser.email }).select("+password");
+      const dbUser = await User.findOne({ email: testUser.email }).select(
+        "+password"
+      );
       expect(dbUser.passwordResetToken).toBeUndefined();
       expect(dbUser.passwordResetExpires).toBeUndefined();
       // Check that the password was actually changed and hashed
-      const isMatch = await dbUser.correctPassword(newPassword, dbUser.password);
+      const isMatch = await dbUser.correctPassword(
+        newPassword,
+        dbUser.password
+      );
       expect(isMatch).toBe(true);
     });
 
@@ -696,32 +708,32 @@ describe("Authentication API Endpoints", () => {
       expect(response.body.message).toMatch(/token is invalid or has expired/i);
     });
 
-     it("should return 400 if token has expired (simulate expiry)", async () => {
-        // Arrange: Manually set the expiry in the past for the user
-        const user = await User.findOne({ email: testUser.email });
-        user.passwordResetExpires = new Date(Date.now() - 10 * 60 * 1000); // Expired 10 mins ago
-        await user.save({ validateBeforeSave: false });
+    it("should return 400 if token has expired (simulate expiry)", async () => {
+      // Arrange: Manually set the expiry in the past for the user
+      const user = await User.findOne({ email: testUser.email });
+      user.passwordResetExpires = new Date(Date.now() - 10 * 60 * 1000); // Expired 10 mins ago
+      await user.save({ validateBeforeSave: false });
 
-        const newPassword = "newStrongPassword456";
+      const newPassword = "newStrongPassword456";
 
-        // Act
-        const response = await request(app)
-            .patch(`/api/auth/reset-password/${resetToken}`)
-            .send({
-                password: newPassword,
-                passwordConfirm: newPassword,
-            })
-            .expect("Content-Type", /json/)
-            .expect(400);
+      // Act
+      const response = await request(app)
+        .patch(`/api/auth/reset-password/${resetToken}`)
+        .send({
+          password: newPassword,
+          passwordConfirm: newPassword,
+        })
+        .expect("Content-Type", /json/)
+        .expect(400);
 
-        // Assert
-        expect(response.body.status).toBe("fail");
-        expect(response.body.message).toMatch(/token is invalid or has expired/i);
+      // Assert
+      expect(response.body.status).toBe("fail");
+      expect(response.body.message).toMatch(/token is invalid or has expired/i);
 
-         // Cleanup: Optionally reset expiry for other tests or rely on global cleanup
-         user.passwordResetExpires = undefined;
-         user.passwordResetToken = undefined; // Reset token too as it was consumed
-         await user.save({ validateBeforeSave: false });
+      // Cleanup: Optionally reset expiry for other tests or rely on global cleanup
+      user.passwordResetExpires = undefined;
+      user.passwordResetToken = undefined; // Reset token too as it was consumed
+      await user.save({ validateBeforeSave: false });
     });
 
     it("should return 400 if passwords do not match", async () => {
@@ -741,7 +753,7 @@ describe("Authentication API Endpoints", () => {
     });
 
     it("should return 400 if new password is too short", async () => {
-        // Act
+      // Act
       const response = await request(app)
         .patch(`/api/auth/reset-password/${resetToken}`)
         .send({
@@ -753,11 +765,13 @@ describe("Authentication API Endpoints", () => {
 
       // Assert
       expect(response.body.status).toBe("fail");
-      expect(response.body.message).toMatch(/password must be at least 8 characters/i);
+      expect(response.body.message).toMatch(
+        /password must be at least 8 characters/i
+      );
     });
 
-      it("should return 400 if password fields are missing", async () => {
-        // Act
+    it("should return 400 if password fields are missing", async () => {
+      // Act
       const response = await request(app)
         .patch(`/api/auth/reset-password/${resetToken}`)
         .send({}) // Missing passwords
@@ -766,7 +780,9 @@ describe("Authentication API Endpoints", () => {
 
       // Assert
       expect(response.body.status).toBe("fail");
-      expect(response.body.message).toMatch(/provide new password and confirmation/i);
+      expect(response.body.message).toMatch(
+        /provide new password and confirmation/i
+      );
     });
   });
 
@@ -809,20 +825,25 @@ describe("Authentication API Endpoints", () => {
       expect(response.body.token).toBeDefined(); // New access token issued
       expect(response.body.data.user.email).toBe(testUser.email);
 
-       // Assert Cookie (new refresh token)
+      // Assert Cookie (new refresh token)
       const cookies = response.headers["set-cookie"];
       expect(cookies).toBeDefined();
-      expect(cookies.find(c => c.startsWith("refreshToken="))).toBeDefined();
+      expect(cookies.find((c) => c.startsWith("refreshToken="))).toBeDefined();
 
       // Assert DB state
-      const dbUser = await User.findOne({ email: testUser.email }).select("+password");
-      const isMatch = await dbUser.correctPassword(changePayload.password, dbUser.password);
+      const dbUser = await User.findOne({ email: testUser.email }).select(
+        "+password"
+      );
+      const isMatch = await dbUser.correctPassword(
+        changePayload.password,
+        dbUser.password
+      );
       expect(isMatch).toBe(true);
       expect(dbUser.passwordChangedAt).toBeDefined();
     });
 
     it("should return 400 if current password is incorrect", async () => {
-       const changePayload = {
+      const changePayload = {
         currentPassword: "wrongOldPassword",
         password: "newStrongPassword789",
         passwordConfirm: "newStrongPassword789",
@@ -837,7 +858,7 @@ describe("Authentication API Endpoints", () => {
         .expect(400);
 
       // Assert
-       expect(response.body.status).toBe("fail");
+      expect(response.body.status).toBe("fail");
       expect(response.body.message).toMatch(/current password is incorrect/i);
     });
 
@@ -847,7 +868,7 @@ describe("Authentication API Endpoints", () => {
         password: "newStrongPassword789",
         passwordConfirm: "mismatchingNewPassword",
       };
-       // Act
+      // Act
       const response = await agent
         .patch("/api/auth/change-password")
         .set("Authorization", `Bearer ${accessToken}`)
@@ -861,12 +882,12 @@ describe("Authentication API Endpoints", () => {
     });
 
     it("should return 400 if new password is too short", async () => {
-       const changePayload = {
+      const changePayload = {
         currentPassword: testUser.password,
         password: "short",
         passwordConfirm: "short",
       };
-       // Act
+      // Act
       const response = await agent
         .patch("/api/auth/change-password")
         .set("Authorization", `Bearer ${accessToken}`)
@@ -876,11 +897,13 @@ describe("Authentication API Endpoints", () => {
 
       // Assert
       expect(response.body.status).toBe("fail");
-      expect(response.body.message).toMatch(/password must be at least 8 characters/i);
+      expect(response.body.message).toMatch(
+        /password must be at least 8 characters/i
+      );
     });
 
     it("should return 401 if access token is missing/invalid", async () => {
-       const changePayload = {
+      const changePayload = {
         currentPassword: testUser.password,
         password: "newStrongPassword789",
         passwordConfirm: "newStrongPassword789",
@@ -892,7 +915,7 @@ describe("Authentication API Endpoints", () => {
         .expect("Content-Type", /json/)
         .expect(401);
 
-       // Assert
+      // Assert
       expect(response.body.status).toBe("fail");
       expect(response.body.message).toMatch(/you are not logged in/i);
     });
@@ -919,7 +942,10 @@ describe("Authentication API Endpoints", () => {
       agent = request.agent(app);
       const loginRes = await agent
         .post("/api/auth/login")
-        .send({ email: originalUserData.email, password: originalUserData.password });
+        .send({
+          email: originalUserData.email,
+          password: originalUserData.password,
+        });
       accessToken = loginRes.body.token;
     });
 
@@ -949,7 +975,7 @@ describe("Authentication API Endpoints", () => {
       expect(dbUser.email).toBe(updatePayload.email);
     });
 
-     it("should only update provided allowed fields", async () => {
+    it("should only update provided allowed fields", async () => {
       const updatePayload = {
         name: "Only Name Updated",
         role: "admin", // Attempt to update disallowed field
@@ -980,7 +1006,7 @@ describe("Authentication API Endpoints", () => {
         password: "newpassword123",
       };
 
-       // Act
+      // Act
       const response = await agent
         .patch("/api/auth/update-profile")
         .set("Authorization", `Bearer ${accessToken}`)
@@ -1012,7 +1038,7 @@ describe("Authentication API Endpoints", () => {
     it("should return 400 if no valid fields are provided", async () => {
       const updatePayload = { role: "admin", unknownField: "abc" }; // Only invalid/disallowed fields
 
-       // Act
+      // Act
       const response = await agent
         .patch("/api/auth/update-profile")
         .set("Authorization", `Bearer ${accessToken}`)
@@ -1020,7 +1046,7 @@ describe("Authentication API Endpoints", () => {
         .expect("Content-Type", /json/)
         .expect(400);
 
-        // Assert
+      // Assert
       expect(response.body.status).toBe("fail");
       expect(response.body.message).toMatch(/no valid fields provided/i);
     });
@@ -1040,7 +1066,7 @@ describe("Authentication API Endpoints", () => {
       expect(response.body.message).toMatch(/you are not logged in/i);
     });
 
-     // Restore original email after tests in this block if needed for subsequent blocks
+    // Restore original email after tests in this block if needed for subsequent blocks
     // afterAll(async () => { ... });
   });
 });

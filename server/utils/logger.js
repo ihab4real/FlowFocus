@@ -36,9 +36,9 @@ const consoleTransport = new transports.Console({
 
 // Define transports based on NODE_ENV
 const activeTransports = [];
-if (process.env.NODE_ENV === 'production') {
+if (process.env.NODE_ENV === "production") {
   activeTransports.push(fileRotateTransport);
-} else if (process.env.NODE_ENV !== 'test') {
+} else if (process.env.NODE_ENV !== "test") {
   // Add console transport only if not in production AND not in test
   activeTransports.push(consoleTransport);
 }
@@ -46,37 +46,45 @@ if (process.env.NODE_ENV === 'production') {
 
 // Define exception/rejection handlers similarly
 const exceptionHandlers = [];
-if (process.env.NODE_ENV === 'production') {
-  exceptionHandlers.push(new transports.DailyRotateFile({
-    filename: path.join(logsDir, "exceptions-%DATE%.log"),
-    datePattern: "YYYY-MM-DD",
-    maxFiles: "14d",
-    format: combine(timestamp(), json()),
-  }));
-} else if (process.env.NODE_ENV !== 'test') {
-  exceptionHandlers.push(new transports.Console({
-    format: combine(colorize(), timestamp(), devLogFormat),
-  }));
+if (process.env.NODE_ENV === "production") {
+  exceptionHandlers.push(
+    new transports.DailyRotateFile({
+      filename: path.join(logsDir, "exceptions-%DATE%.log"),
+      datePattern: "YYYY-MM-DD",
+      maxFiles: "14d",
+      format: combine(timestamp(), json()),
+    })
+  );
+} else if (process.env.NODE_ENV !== "test") {
+  exceptionHandlers.push(
+    new transports.Console({
+      format: combine(colorize(), timestamp(), devLogFormat),
+    })
+  );
 }
 
 const rejectionHandlers = [];
-if (process.env.NODE_ENV === 'production') {
-  rejectionHandlers.push(new transports.DailyRotateFile({
-    filename: path.join(logsDir, "rejections-%DATE%.log"),
-    datePattern: "YYYY-MM-DD",
-    maxFiles: "14d",
-    format: combine(timestamp(), json()),
-  }));
-} else if (process.env.NODE_ENV !== 'test') {
-  rejectionHandlers.push(new transports.Console({
-    format: combine(colorize(), timestamp(), devLogFormat),
-  }));
+if (process.env.NODE_ENV === "production") {
+  rejectionHandlers.push(
+    new transports.DailyRotateFile({
+      filename: path.join(logsDir, "rejections-%DATE%.log"),
+      datePattern: "YYYY-MM-DD",
+      maxFiles: "14d",
+      format: combine(timestamp(), json()),
+    })
+  );
+} else if (process.env.NODE_ENV !== "test") {
+  rejectionHandlers.push(
+    new transports.Console({
+      format: combine(colorize(), timestamp(), devLogFormat),
+    })
+  );
 }
 
 // Create the logger instance
 const logger = createLogger({
   level: process.env.NODE_ENV === "production" ? "info" : "debug",
-  silent: process.env.NODE_ENV === 'test',
+  silent: process.env.NODE_ENV === "test",
   transports: activeTransports, // Use the conditional transports
   exceptionHandlers: exceptionHandlers, // Use the conditional handlers
   rejectionHandlers: rejectionHandlers, // Use the conditional handlers

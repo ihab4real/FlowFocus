@@ -204,4 +204,4 @@ export const sendPasswordResetEmail = async (toEmail, name, resetToken) => {
     // Propagate a generic error to the calling service.
     throw new Error("Could not send password reset email.");
   }
-}; 
+};

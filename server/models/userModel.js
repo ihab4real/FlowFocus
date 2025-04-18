@@ -87,7 +87,7 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// --- Hooks --- 
+// --- Hooks ---
 // Middleware to hash password before saving
 userSchema.pre("save", async function (next) {
   // Call helper, passing the current document (`this`) and next
@@ -96,8 +96,8 @@ userSchema.pre("save", async function (next) {
 
 // Update passwordChangedAt property when password is changed
 userSchema.pre("save", function (next) {
-   // Call helper, passing the current document (`this`) and next
-   _updatePasswordChangedAt(this, next);
+  // Call helper, passing the current document (`this`) and next
+  _updatePasswordChangedAt(this, next);
 });
 
 // Only find active users
@@ -124,7 +124,7 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
       10
     );
     // Check if JWT timestamp is strictly less than the changed timestamp
-    return JWTTimestamp < changedTimestamp; 
+    return JWTTimestamp < changedTimestamp;
   }
   // False means NOT changed
   return false;

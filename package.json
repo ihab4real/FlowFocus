@@ -8,7 +8,7 @@
     "client": "cd client && npm run dev",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "format": "prettier --write .",
-    "test": "cd server && npm test && cd ../client && npm test" 
+    "test": "cd server && npm test && cd ../client && npm test"
   },
   "keywords": [],
   "author": "",

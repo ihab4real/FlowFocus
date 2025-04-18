@@ -42,9 +42,15 @@ export const protect = asyncHandler(async (req, res, next) => {
     next();
   } catch (error) {
     // Handle specific JWT errors forwarded from verifyAccessToken
-    if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
+    if (
+      error.name === "JsonWebTokenError" ||
+      error.name === "TokenExpiredError"
+    ) {
       logDebug("Access token verification failed", { error: error.message });
-      const message = error.name === "TokenExpiredError" ? "Your session has expired. Please log in again." : "Invalid session. Please log in again.";
+      const message =
+        error.name === "TokenExpiredError"
+          ? "Your session has expired. Please log in again."
+          : "Invalid session. Please log in again.";
       throw errorTypes.unauthorized(message);
     }
     // Re-throw other errors

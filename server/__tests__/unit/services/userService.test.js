@@ -1,7 +1,7 @@
-import { jest } from '@jest/globals';
+import { jest } from "@jest/globals";
 
-// --- Mock Dependencies --- 
-jest.unstable_mockModule('../../../models/userModel.js', () => ({
+// --- Mock Dependencies ---
+jest.unstable_mockModule("../../../models/userModel.js", () => ({
   __esModule: true,
   default: {
     findByIdAndUpdate: jest.fn(),
@@ -9,7 +9,7 @@ jest.unstable_mockModule('../../../models/userModel.js', () => ({
   },
 }));
 
-jest.unstable_mockModule('../../../utils/AppError.js', () => ({
+jest.unstable_mockModule("../../../utils/AppError.js", () => ({
   __esModule: true,
   errorTypes: {
     badRequest: jest.fn((msg) => new Error(msg)),
@@ -17,28 +17,31 @@ jest.unstable_mockModule('../../../utils/AppError.js', () => ({
   },
 }));
 
-jest.unstable_mockModule('../../../utils/logger.js', () => ({
+jest.unstable_mockModule("../../../utils/logger.js", () => ({
   __esModule: true,
   logInfo: jest.fn(),
   // Add other log levels if needed
 }));
 
-// --- Import Modules Under Test & Mocks --- 
-const { updateUserProfile } = await import('../../../services/userService.js');
-const User = (await import('../../../models/userModel.js')).default;
-const { errorTypes } = (await import('../../../utils/AppError.js'));
+// --- Import Modules Under Test & Mocks ---
+const { updateUserProfile } = await import("../../../services/userService.js");
+const User = (await import("../../../models/userModel.js")).default;
+const { errorTypes } = await import("../../../utils/AppError.js");
 
-describe('User Service - Unit Tests', () => {
+describe("User Service - Unit Tests", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('updateUserProfile', () => {
-    const userId = 'userToUpdate';
-    const validUpdateData = { name: 'New Name', email: 'new.email@example.com' };
+  describe("updateUserProfile", () => {
+    const userId = "userToUpdate";
+    const validUpdateData = {
+      name: "New Name",
+      email: "new.email@example.com",
+    };
     const mockUpdatedUser = { _id: userId, ...validUpdateData };
 
-    it('should update user profile successfully with allowed fields', async () => {
+    it("should update user profile successfully with allowed fields", async () => {
       // Arrange
       User.findByIdAndUpdate.mockResolvedValue(mockUpdatedUser);
 
@@ -55,14 +58,14 @@ describe('User Service - Unit Tests', () => {
       // expect(logInfo).toHaveBeenCalled(); // Optional
     });
 
-    it('should filter out disallowed fields before updating', async () => {
+    it("should filter out disallowed fields before updating", async () => {
       // Arrange
       const updateDataWithDisallowed = {
-        name: 'Another New Name',
-        role: 'admin', // Disallowed
+        name: "Another New Name",
+        role: "admin", // Disallowed
       };
-      const expectedFilteredData = { name: 'Another New Name' }; // Only name should remain
-      const mockFilteredUser = { _id: userId, ...expectedFilteredData }; 
+      const expectedFilteredData = { name: "Another New Name" }; // Only name should remain
+      const mockFilteredUser = { _id: userId, ...expectedFilteredData };
       User.findByIdAndUpdate.mockResolvedValue(mockFilteredUser);
 
       // Act
@@ -77,36 +80,45 @@ describe('User Service - Unit Tests', () => {
       expect(result).toEqual(mockFilteredUser);
     });
 
-    it('should throw badRequest if password fields are included', async () => {
+    it("should throw badRequest if password fields are included", async () => {
       // Arrange
-      const updateDataWithPassword = { name: 'Test', password: 'newpass' };
+      const updateDataWithPassword = { name: "Test", password: "newpass" };
 
       // Act & Assert
-      await expect(updateUserProfile(userId, updateDataWithPassword))
-        .rejects.toThrow('This route is not for password updates');
-      expect(errorTypes.badRequest).toHaveBeenCalledWith(expect.stringContaining('not for password updates'));
+      await expect(
+        updateUserProfile(userId, updateDataWithPassword)
+      ).rejects.toThrow("This route is not for password updates");
+      expect(errorTypes.badRequest).toHaveBeenCalledWith(
+        expect.stringContaining("not for password updates")
+      );
       expect(User.findByIdAndUpdate).not.toHaveBeenCalled();
     });
-    
-    it('should throw badRequest if only disallowed fields are provided', async () => {
-        // Arrange
-        const updateDataOnlyDisallowed = { role: 'admin', unknownField: 'test' }; 
 
-        // Act & Assert
-        await expect(updateUserProfile(userId, updateDataOnlyDisallowed))
-            .rejects.toThrow('No valid fields provided for update');
-        expect(errorTypes.badRequest).toHaveBeenCalledWith('No valid fields provided for update.');
-        expect(User.findByIdAndUpdate).not.toHaveBeenCalled();
+    it("should throw badRequest if only disallowed fields are provided", async () => {
+      // Arrange
+      const updateDataOnlyDisallowed = { role: "admin", unknownField: "test" };
+
+      // Act & Assert
+      await expect(
+        updateUserProfile(userId, updateDataOnlyDisallowed)
+      ).rejects.toThrow("No valid fields provided for update");
+      expect(errorTypes.badRequest).toHaveBeenCalledWith(
+        "No valid fields provided for update."
+      );
+      expect(User.findByIdAndUpdate).not.toHaveBeenCalled();
     });
 
-    it('should throw notFound if user is not found by ID', async () => {
+    it("should throw notFound if user is not found by ID", async () => {
       // Arrange
       User.findByIdAndUpdate.mockResolvedValue(null); // User not found
 
       // Act & Assert
-      await expect(updateUserProfile(userId, validUpdateData))
-        .rejects.toThrow('User not found for update.');
-      expect(errorTypes.notFound).toHaveBeenCalledWith('User not found for update.');
+      await expect(updateUserProfile(userId, validUpdateData)).rejects.toThrow(
+        "User not found for update."
+      );
+      expect(errorTypes.notFound).toHaveBeenCalledWith(
+        "User not found for update."
+      );
       expect(User.findByIdAndUpdate).toHaveBeenCalledWith(
         userId,
         validUpdateData,
@@ -114,16 +126,19 @@ describe('User Service - Unit Tests', () => {
       );
     });
 
-    it('should throw badRequest on validation error during update', async () => {
+    it("should throw badRequest on validation error during update", async () => {
       // Arrange
-      const validationError = new Error('Invalid email format');
-      validationError.name = 'ValidationError';
+      const validationError = new Error("Invalid email format");
+      validationError.name = "ValidationError";
       User.findByIdAndUpdate.mockRejectedValue(validationError);
 
       // Act & Assert
-      await expect(updateUserProfile(userId, validUpdateData))
-        .rejects.toThrow('Invalid email format');
-      expect(errorTypes.badRequest).toHaveBeenCalledWith('Invalid email format');
+      await expect(updateUserProfile(userId, validUpdateData)).rejects.toThrow(
+        "Invalid email format"
+      );
+      expect(errorTypes.badRequest).toHaveBeenCalledWith(
+        "Invalid email format"
+      );
       expect(User.findByIdAndUpdate).toHaveBeenCalledWith(
         userId,
         validUpdateData,
@@ -131,23 +146,24 @@ describe('User Service - Unit Tests', () => {
       );
     });
 
-    it('should re-throw other errors during update', async () => {
-        // Arrange
-        const genericError = new Error('DB connection failed');
-        User.findByIdAndUpdate.mockRejectedValue(genericError);
+    it("should re-throw other errors during update", async () => {
+      // Arrange
+      const genericError = new Error("DB connection failed");
+      User.findByIdAndUpdate.mockRejectedValue(genericError);
 
-        // Act & Assert
-        await expect(updateUserProfile(userId, validUpdateData))
-            .rejects.toThrow('DB connection failed');
-        expect(errorTypes.badRequest).not.toHaveBeenCalled();
-        expect(errorTypes.notFound).not.toHaveBeenCalled();
-        expect(User.findByIdAndUpdate).toHaveBeenCalledWith(
-            userId,
-            validUpdateData,
-            { new: true, runValidators: true }
-        );
+      // Act & Assert
+      await expect(updateUserProfile(userId, validUpdateData)).rejects.toThrow(
+        "DB connection failed"
+      );
+      expect(errorTypes.badRequest).not.toHaveBeenCalled();
+      expect(errorTypes.notFound).not.toHaveBeenCalled();
+      expect(User.findByIdAndUpdate).toHaveBeenCalledWith(
+        userId,
+        validUpdateData,
+        { new: true, runValidators: true }
+      );
     });
   });
 
-  // --- Add tests for other userService functions if they exist --- 
-}); 
+  // --- Add tests for other userService functions if they exist ---
+});

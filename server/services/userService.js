@@ -28,7 +28,7 @@ export const updateUserProfile = async (userId, updateData) => {
   });
 
   if (Object.keys(filteredBody).length === 0) {
-     throw errorTypes.badRequest("No valid fields provided for update.");
+    throw errorTypes.badRequest("No valid fields provided for update.");
   }
 
   // 3) Update user document
@@ -45,9 +45,11 @@ export const updateUserProfile = async (userId, updateData) => {
     logInfo("User profile updated via UserService", { userId });
     return updatedUser;
   } catch (error) {
-     // Handle Mongoose validation errors
+    // Handle Mongoose validation errors
     if (error.name === "ValidationError") {
-      throw errorTypes.badRequest(error.message || "Invalid profile data provided");
+      throw errorTypes.badRequest(
+        error.message || "Invalid profile data provided"
+      );
     }
     // Re-throw other errors (like DB connection issues)
     throw error;

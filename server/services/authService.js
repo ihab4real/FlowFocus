@@ -69,7 +69,10 @@ export const loginUser = async (credentials) => {
     throw errorTypes.unauthorized("Incorrect email or password");
   }
 
-  logInfo("User logged in via AuthService", { userId: user._id, email: user.email });
+  logInfo("User logged in via AuthService", {
+    userId: user._id,
+    email: user.email,
+  });
 
   return user;
 };
@@ -106,11 +109,17 @@ export const requestPasswordReset = async (email) => {
     user.passwordResetExpires = undefined;
     // Attempt to save again to clear fields, ignore secondary error if it occurs
     try {
-        await user.save({ validateBeforeSave: false });
+      await user.save({ validateBeforeSave: false });
     } catch (secondaryError) {
-        logError("Failed to clear reset token after initial save error", { userId: user._id, error: secondaryError });
+      logError("Failed to clear reset token after initial save error", {
+        userId: user._id,
+        error: secondaryError,
+      });
     }
-    logError("Database error saving password reset token", { userId: user._id, error: dbError });
+    logError("Database error saving password reset token", {
+      userId: user._id,
+      error: dbError,
+    });
     throw errorTypes.internal("Failed to process password reset request.");
   }
 };
@@ -129,10 +138,7 @@ export const resetUserPassword = async (
   passwordConfirm
 ) => {
   // 1) Get user based on the hashed token and expiry
-  const hashedToken = crypto
-    .createHash("sha256")
-    .update(token)
-    .digest("hex");
+  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
   const user = await User.findOne({
     passwordResetToken: hashedToken,
@@ -205,7 +211,8 @@ export const changeUserPassword = async (
     // For now, just return the user object we have (without password field).
     user.password = undefined; // Explicitly remove before returning
     return user;
-  } catch (error) { // Handle Mongoose validation errors
+  } catch (error) {
+    // Handle Mongoose validation errors
     if (error.name === "ValidationError") {
       throw errorTypes.badRequest(error.message || "Invalid password data");
     }

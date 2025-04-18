@@ -136,8 +136,7 @@ export const updateProfile = asyncHandler(async (req, res) => {
  */
 export const changePassword = asyncHandler(async (req, res) => {
   const userId = req.user.id;
-  const { currentPassword, password, passwordConfirm } =
-    req.body;
+  const { currentPassword, password, passwordConfirm } = req.body;
 
   // Call service to handle password change logic
   const updatedUser = await changeUserPassword(
@@ -177,16 +176,16 @@ export const forgotPassword = asyncHandler(async (req, res) => {
     // This returns the unhashed token if user exists, throws error otherwise
     const user = await User.findOne({ email }); // Need user object for name
     if (!user) {
-       // User not found, log and send generic response
-       logDebug("Password reset request for non-existent user", { email });
+      // User not found, log and send generic response
+      logDebug("Password reset request for non-existent user", { email });
     } else {
-        // User found, proceed to generate token and send email
-        const resetToken = await requestPasswordReset(email);
+      // User found, proceed to generate token and send email
+      const resetToken = await requestPasswordReset(email);
 
-        // 2. Send the email using emailService
-        await sendPasswordResetEmail(user.email, user.name, resetToken);
+      // 2. Send the email using emailService
+      await sendPasswordResetEmail(user.email, user.name, resetToken);
 
-        logInfo("Password reset email initiated successfully", { email });
+      logInfo("Password reset email initiated successfully", { email });
     }
 
     // 3. Always send a generic success response
@@ -195,10 +194,12 @@ export const forgotPassword = asyncHandler(async (req, res) => {
       message:
         "If an account with that email exists, a password reset link has been sent.",
     });
-
   } catch (error) {
     // Log errors from requestPasswordReset or sendPasswordResetEmail
-    logError("Error during password reset process", { email, error: error.message });
+    logError("Error during password reset process", {
+      email,
+      error: error.message,
+    });
 
     // Still send a generic success response to prevent enumeration
     res.status(200).json({
@@ -218,7 +219,9 @@ export const resetPassword = asyncHandler(async (req, res) => {
   const { password, passwordConfirm } = req.body;
 
   if (!password || !passwordConfirm) {
-    throw errorTypes.badRequest("Please provide new password and confirmation.");
+    throw errorTypes.badRequest(
+      "Please provide new password and confirmation."
+    );
   }
 
   // Call service to handle password reset logic
@@ -260,7 +263,9 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
     // 3. Check if user exists and is active
     // Note: User model's pre-find middleware already filters for active: true
     if (!user) {
-      throw errorTypes.unauthorized("User belonging to this token no longer exists");
+      throw errorTypes.unauthorized(
+        "User belonging to this token no longer exists"
+      );
     }
 
     // Optional: Add check for password change after refresh token issued if needed
@@ -277,7 +282,10 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
     });
   } catch (error) {
     // Handle specific JWT errors (expired, invalid signature)
-    if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
+    if (
+      error.name === "JsonWebTokenError" ||
+      error.name === "TokenExpiredError"
+    ) {
       logDebug("Refresh token verification failed", { error: error.message });
       // Clear potentially invalid cookie
       res.cookie("refreshToken", "", { httpOnly: true, expires: new Date(0) });
@@ -301,5 +309,7 @@ export const logout = asyncHandler(async (req, res) => {
     expires: new Date(0), // Set expiry to past date
   });
 
-  res.status(200).json({ status: "success", message: "Logged out successfully" });
+  res
+    .status(200)
+    .json({ status: "success", message: "Logged out successfully" });
 });
