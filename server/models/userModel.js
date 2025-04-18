@@ -2,6 +2,33 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
+// --- Helper Functions for Hooks ---
+// Moved logic from pre-save hooks to testable helper functions
+async function _hashPassword(userInstance, next) {
+  // Only run this function if password was modified
+  if (!userInstance.isModified("password")) return next();
+
+  try {
+    // Hash the password with cost of 12
+    userInstance.password = await bcrypt.hash(userInstance.password, 12);
+    // Delete passwordConfirm field
+    userInstance.passwordConfirm = undefined;
+    next();
+  } catch (error) {
+    next(error); // Pass errors to Mongoose
+  }
+}
+
+function _updatePasswordChangedAt(userInstance, next) {
+  if (!userInstance.isModified("password") || userInstance.isNew) return next();
+
+  // Set passwordChangedAt to current time minus 1 second
+  // This ensures the token is created after the password has been changed
+  userInstance.passwordChangedAt = Date.now() - 1000;
+  next();
+}
+
+// --- Schema Definition ---
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -60,27 +87,17 @@ const userSchema = new mongoose.Schema(
   }
 );
 
+// --- Hooks --- 
 // Middleware to hash password before saving
 userSchema.pre("save", async function (next) {
-  // Only run this function if password was modified
-  if (!this.isModified("password")) return next();
-
-  // Hash the password with cost of 12
-  this.password = await bcrypt.hash(this.password, 12);
-
-  // Delete passwordConfirm field
-  this.passwordConfirm = undefined;
-  next();
+  // Call helper, passing the current document (`this`) and next
+  await _hashPassword(this, next);
 });
 
 // Update passwordChangedAt property when password is changed
 userSchema.pre("save", function (next) {
-  if (!this.isModified("password") || this.isNew) return next();
-
-  // Set passwordChangedAt to current time minus 1 second
-  // This ensures the token is created after the password has been changed
-  this.passwordChangedAt = Date.now() - 1000;
-  next();
+   // Call helper, passing the current document (`this`) and next
+   _updatePasswordChangedAt(this, next);
 });
 
 // Only find active users
@@ -90,6 +107,7 @@ userSchema.pre(/^find/, function (next) {
   next();
 });
 
+// --- Instance Methods ---
 // Instance method to check if password is correct
 userSchema.methods.correctPassword = async function (
   candidatePassword,
@@ -105,7 +123,8 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
       this.passwordChangedAt.getTime() / 1000,
       10
     );
-    return JWTTimestamp < changedTimestamp;
+    // Check if JWT timestamp is strictly less than the changed timestamp
+    return JWTTimestamp < changedTimestamp; 
   }
   // False means NOT changed
   return false;
