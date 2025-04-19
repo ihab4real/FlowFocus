@@ -1,26 +1,40 @@
 import request from "supertest";
-import { app } from "../../../app.js"; // Adjust path based on actual app export location
 import User from "../../../models/userModel.js";
 import jwt from "jsonwebtoken";
-import * as emailService from "../../../services/emailService.js"; // Import to mock
 import * as authService from "../../../services/authService.js";
+import { describe, it, expect, beforeEach, beforeAll, jest } from '@jest/globals';
+
+// Use the unstable API for mocking ESM
+jest.unstable_mockModule('../../../services/emailService.js', () => ({
+  sendPasswordResetEmail: jest.fn(), // Provide a mock implementation
+}));
+
+// --- Test Setup ---
+
+// Dynamically import the mocked service *after* the mock is defined
+const { sendPasswordResetEmail } = await import('../../../services/emailService.js');
+
+// Declare app variable, to be initialized after mocks are set up
+let app;
 
 // Use an agent to persist cookies between requests in the same test suite if needed
-// const agent = request.agent(app);
-
-// Mock the email service
-// jest.mock('../../../services/emailService.js'); // Alternative way to mock
-const sendPasswordResetEmailMock = jest.spyOn(
-  emailService,
-  "sendPasswordResetEmail"
-);
+// let agent; // Initialize agent later if needed
 
 describe("Authentication API Endpoints", () => {
-  // Setup: Ensure the database is clean before each test (likely handled by global setup)
+
+  // Initialize app and agent *after* mocks are configured
+  beforeAll(async () => {
+    // Dynamically import app *after* mocks are set up
+    app = (await import('../../../app.js')).app;
+    // agent = request.agent(app); // Initialize agent here if using it across describe blocks
+  });
+
+  // Setup: Ensure the database is clean before each test (handled by global setup)
 
   // Clear mocks before each test in this suite
   beforeEach(() => {
-    sendPasswordResetEmailMock.mockClear();
+    // Clear the mock function imported from the mocked module
+    sendPasswordResetEmail.mockClear();
   });
 
   describe("POST /api/auth/register", () => {
@@ -545,8 +559,8 @@ describe("Authentication API Endpoints", () => {
 
     // Mock implementation for successful email sending
     beforeEach(() => {
-      sendPasswordResetEmailMock.mockClear();
-      sendPasswordResetEmailMock.mockResolvedValue(); // Simulate successful send
+      sendPasswordResetEmail.mockClear();
+      sendPasswordResetEmail.mockResolvedValue(); // Simulate successful send
     });
 
     it("should return 200 and trigger email sending if user exists", async () => {
@@ -568,8 +582,8 @@ describe("Authentication API Endpoints", () => {
       expect(dbUser.passwordResetExpires.getTime()).toBeGreaterThan(Date.now());
 
       // Assert Email Service Interaction
-      expect(sendPasswordResetEmailMock).toHaveBeenCalledTimes(1);
-      expect(sendPasswordResetEmailMock).toHaveBeenCalledWith(
+      expect(sendPasswordResetEmail).toHaveBeenCalledTimes(1);
+      expect(sendPasswordResetEmail).toHaveBeenCalledWith(
         testUser.email,
         testUser.name,
         expect.any(String) // Check that a reset token string was passed
@@ -591,7 +605,7 @@ describe("Authentication API Endpoints", () => {
       expect(response.body.message).toMatch(/link has been sent/i);
 
       // Assert Email Service Interaction
-      expect(sendPasswordResetEmailMock).not.toHaveBeenCalled();
+      expect(sendPasswordResetEmail).not.toHaveBeenCalled();
     });
 
     it("should return 400 if email field is missing", async () => {
@@ -605,12 +619,12 @@ describe("Authentication API Endpoints", () => {
       // Assert
       expect(response.body.status).toBe("fail");
       expect(response.body.message).toMatch(/please provide an email/i);
-      expect(sendPasswordResetEmailMock).not.toHaveBeenCalled();
+      expect(sendPasswordResetEmail).not.toHaveBeenCalled();
     });
 
     it("should still return 200 even if email sending fails internally", async () => {
       // Arrange: Mock email sending to fail
-      sendPasswordResetEmailMock.mockRejectedValue(new Error("SMTP Error"));
+      sendPasswordResetEmail.mockRejectedValue(new Error("SMTP Error"));
 
       // Act
       const response = await request(app)
@@ -624,8 +638,8 @@ describe("Authentication API Endpoints", () => {
       expect(response.body.message).toMatch(/link has been sent/i);
 
       // Assert Email Service Interaction (it was called, but failed)
-      expect(sendPasswordResetEmailMock).toHaveBeenCalledTimes(1);
-      expect(sendPasswordResetEmailMock).toHaveBeenCalledWith(
+      expect(sendPasswordResetEmail).toHaveBeenCalledTimes(1);
+      expect(sendPasswordResetEmail).toHaveBeenCalledWith(
         testUser.email,
         testUser.name,
         expect.any(String)
@@ -650,7 +664,8 @@ describe("Authentication API Endpoints", () => {
       });
       // Generate a fresh token for this user instance
       resetToken = await authService.requestPasswordReset(testUser.email);
-      sendPasswordResetEmailMock.mockClear(); // Clear mock calls from token generation
+      // Clear mock calls from token generation if the mocked function was called during it
+      sendPasswordResetEmail.mockClear();
     });
 
     it("should reset password successfully with a valid token", async () => {
