@@ -5,7 +5,12 @@ import ErrorBoundary from "../components/ErrorBoundary";
 import Dashboard from "../pages/Dashboard";
 import NotFound from "../pages/NotFound";
 import LandingPage from "../pages/LandingPage";
-import { Login, Register } from "../features/authentication/pages";
+import {
+  Login,
+  Register,
+  ForgotPassword,
+  ResetPassword,
+} from "../features/authentication/pages";
 import { ProtectedRoute } from "../features/authentication/components";
 import Profile from "../pages/Profile";
 import FullScreenTaskBoard from "../pages/FullScreenTaskBoard";
@@ -39,6 +44,14 @@ export const router = createBrowserRouter([
           {
             path: "register",
             element: <Register />,
+          },
+          {
+            path: "forgot-password",
+            element: <ForgotPassword />,
+          },
+          {
+            path: "reset-password/:token",
+            element: <ResetPassword />,
           },
           {
             path: "dashboard",

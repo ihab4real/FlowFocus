@@ -107,9 +107,30 @@ export const useAuthStore = create(
             });
             return true;
           } catch (error) {
-            // If token is invalid, clear auth state
-            useAuthStore.getState().logout();
-            return false;
+            // If error is 401 Unauthorized, try refreshing the token
+            if (error.response && error.response.status === 401) {
+              try {
+                // Attempt to refresh the token
+                const refreshResponse = await authService.refreshToken();
+
+                // If successful, update the token and user state
+                if (refreshResponse && refreshResponse.token) {
+                  useAuthStore.setState({
+                    token: refreshResponse.token,
+                    isAuthenticated: true,
+                  });
+                  return true;
+                }
+              } catch (refreshError) {
+                // If refresh fails, clear auth state
+                useAuthStore.getState().logout();
+                return false;
+              }
+            } else {
+              // For other errors, clear auth state
+              useAuthStore.getState().logout();
+              return false;
+            }
           }
         }
         return false;

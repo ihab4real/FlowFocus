@@ -10,6 +10,23 @@ const apiClient = axios.create({
   timeout: 10000, // 10 seconds
 });
 
+// Flag to track if a token refresh is in progress
+let isRefreshing = false;
+// Queue of failed requests to retry after token refresh
+let failedQueue = [];
+
+// Process the queue of failed requests
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
 // Request interceptor
 apiClient.interceptors.request.use(
   (config) => {
@@ -30,28 +47,92 @@ apiClient.interceptors.request.use(
 // Response interceptor
 apiClient.interceptors.response.use(
   (response) => response.data,
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
     const { response } = error;
 
-    // Handle different error scenarios
+    // Handle token expiration (401 Unauthorized)
+    if (response && response.status === 401 && !originalRequest._retry) {
+      // If we're not already refreshing the token
+      if (!isRefreshing) {
+        originalRequest._retry = true;
+        isRefreshing = true;
+
+        try {
+          // Call the refresh token endpoint
+          const refreshResponse = await axios.post(
+            `${originalRequest.baseURL}/api/auth/refresh`,
+            {},
+            { withCredentials: true } // Include cookies
+          );
+
+          const { token } = refreshResponse.data;
+
+          // If we got a new token, update it in localStorage
+          if (token) {
+            // Update token in localStorage
+            const authStorage = JSON.parse(
+              localStorage.getItem("auth-storage")
+            );
+            if (authStorage && authStorage.state) {
+              authStorage.state.token = token;
+              localStorage.setItem("auth-storage", JSON.stringify(authStorage));
+            }
+
+            // Process the queue with the new token
+            processQueue(null, token);
+
+            // Retry the original request with the new token
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return axios(originalRequest);
+          }
+        } catch (refreshError) {
+          // If refresh token fails, process the queue with error
+          processQueue(refreshError, null);
+
+          // If we can't refresh, log out the user by clearing auth state
+          localStorage.removeItem("auth-storage");
+
+          // Redirect to login (optional - can be handled by the component)
+          window.location.href = "/login";
+
+          return Promise.reject(refreshError);
+        } finally {
+          isRefreshing = false;
+        }
+      } else {
+        // If we're already refreshing, add the request to the queue
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return axios(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
+      }
+    }
+
+    // Handle other error scenarios
     if (response) {
       switch (response.status) {
-        case 401:
-          // Let the auth store handle unauthorized access
-          // We'll clear the auth state in the store instead of redirecting here
-          // This allows for better error handling and user experience
-          break;
         case 403:
           // Handle forbidden access
+          console.error("Forbidden access:", response.data);
           break;
         case 404:
           // Handle not found
+          console.error("Resource not found:", response.data);
           break;
         case 500:
           // Handle server error
+          console.error("Server error:", response.data);
           break;
         default:
           // Handle other errors
+          console.error(`Error ${response.status}:`, response.data);
           break;
       }
     } else if (error.request) {
