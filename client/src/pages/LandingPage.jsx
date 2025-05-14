@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Logo } from "../components/Logo";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { CheckCircle, Github, User } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/features/authentication/hooks/useAuth";
 import { Button } from "@/components/ui/Button";
 import dashboardIllustration from "@/assets/dashboard-illustration.svg";
 import rocketAnimation from "@/assets/rocket-animation.svg";

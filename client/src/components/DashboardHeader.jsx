@@ -2,7 +2,7 @@ import React from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "@/features/authentication/hooks/useAuth";
 import { UserProfileMenu } from "./UserProfileMenu";
 
 export function DashboardHeader() {

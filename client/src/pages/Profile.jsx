@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import { authService } from "@/services/api/authService";
+import { useAuth } from "@/features/authentication/hooks/useAuth";
+import { authService } from "@/features/authentication/services/authService";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

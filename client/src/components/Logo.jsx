@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/features/authentication/hooks/useAuth";
 
 export function Logo({ collapsed = false }) {
   const { isAuthenticated } = useAuth();

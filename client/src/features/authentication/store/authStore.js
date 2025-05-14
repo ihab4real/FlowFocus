@@ -4,6 +4,7 @@ import { authService } from "../services/authService";
 
 /**
  * Authentication store using Zustand
+ * Central state management for authentication
  * Manages user authentication state, login, registration, and logout functionality
  */
 export const useAuthStore = create(

@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { AuthProvider } from "@/contexts/AuthProvider";
 
 function RootLayout() {
   useEffect(() => {
@@ -11,9 +10,7 @@ function RootLayout() {
   return (
     <div className="min-h-screen bg-background">
       <ThemeProvider>
-        <AuthProvider>
-          <Outlet />
-        </AuthProvider>
+        <Outlet />
       </ThemeProvider>
     </div>
   );
