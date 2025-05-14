@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { authService } from "@/services/api/authService";
+import { authService } from "../services/authService";
 
 /**
  * Authentication store using Zustand
@@ -73,15 +73,23 @@ export const useAuthStore = create(
       },
 
       // Logout action
-      logout: () => {
-        // No need to call API for logout as we're using JWT
-        // Just clear the state
-        set({
-          user: null,
-          token: null,
-          isAuthenticated: false,
-          error: null,
-        });
+      logout: async () => {
+        set({ isLoading: true });
+        try {
+          // Call the logout API to clear refresh token cookie
+          await authService.logout();
+        } catch (error) {
+          console.error("Error during logout:", error);
+        } finally {
+          // Clear auth state regardless of API call success
+          set({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+            error: null,
+            isLoading: false,
+          });
+        }
       },
 
       // Check if user is authenticated (will be used for protected routes)
@@ -104,6 +112,53 @@ export const useAuthStore = create(
           }
         }
         return false;
+      },
+
+      // Update profile action
+      updateProfile: async (profileData) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await authService.updateProfile(profileData);
+          set({
+            user: response.data.user,
+            isLoading: false,
+          });
+          return { success: true };
+        } catch (error) {
+          const errorMessage =
+            error.response?.data?.message ||
+            error.message ||
+            "Failed to update profile";
+          set({
+            error: errorMessage,
+            isLoading: false,
+          });
+          return { success: false, error: errorMessage };
+        }
+      },
+
+      // Change password action
+      changePassword: async (passwordData) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await authService.changePassword(passwordData);
+          set({
+            user: response.data.user,
+            token: response.token,
+            isLoading: false,
+          });
+          return { success: true };
+        } catch (error) {
+          const errorMessage =
+            error.response?.data?.message ||
+            error.message ||
+            "Failed to change password";
+          set({
+            error: errorMessage,
+            isLoading: false,
+          });
+          return { success: false, error: errorMessage };
+        }
       },
     }),
     {

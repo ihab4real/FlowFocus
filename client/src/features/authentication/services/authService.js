@@ -1,4 +1,4 @@
-import apiClient from "./apiClient";
+import apiClient from "@/services/api/apiClient";
 
 /**
  * Authentication service for handling auth-related API requests
@@ -75,6 +75,23 @@ class AuthService {
    */
   async resetPassword(token, passwordData) {
     return apiClient.patch(`/api/auth/reset-password/${token}`, passwordData);
+  }
+
+  /**
+   * Logout user (client-side only)
+   * Clears HTTP-only cookie containing refresh token on the server
+   * @returns {Promise<Object>} - Response with success message
+   */
+  async logout() {
+    return apiClient.post("/api/auth/logout");
+  }
+
+  /**
+   * Refresh the access token using the refresh token cookie
+   * @returns {Promise<Object>} - Response with new access token
+   */
+  async refreshToken() {
+    return apiClient.post("/api/auth/refresh");
   }
 }
 
