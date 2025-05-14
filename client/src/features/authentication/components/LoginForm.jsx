@@ -56,7 +56,10 @@ export default function LoginForm({ onSuccess }) {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm">
+            <div
+              className="p-3 rounded-md bg-destructive/10 text-destructive text-sm"
+              role="alert"
+            >
               {error}
             </div>
           )}
