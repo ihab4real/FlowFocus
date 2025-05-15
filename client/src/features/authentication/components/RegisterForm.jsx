@@ -107,7 +107,7 @@ export default function RegisterForm({ onSuccess }) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           {error && (
             <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm">
               {error}
