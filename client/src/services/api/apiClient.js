@@ -51,8 +51,32 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config;
     const { response } = error;
 
-    // Handle token expiration (401 Unauthorized)
-    if (response && response.status === 401 && !originalRequest._retry) {
+    // Define auth endpoints that should not trigger token refresh
+    const authEndpoints = [
+      "/api/auth/login",
+      "/api/auth/register",
+      "/api/auth/forgot-password",
+      "/api/auth/reset-password",
+    ];
+
+    // Extract the endpoint path from the full URL
+    const requestPath = originalRequest.url.replace(
+      originalRequest.baseURL,
+      ""
+    );
+
+    // Check if the request is to an auth endpoint that shouldn't trigger refresh
+    const isAuthEndpoint = authEndpoints.some((endpoint) =>
+      requestPath.includes(endpoint)
+    );
+
+    // Handle token expiration (401 Unauthorized) for non-auth endpoints
+    if (
+      response &&
+      response.status === 401 &&
+      !originalRequest._retry &&
+      !isAuthEndpoint
+    ) {
       // If we're not already refreshing the token
       if (!isRefreshing) {
         originalRequest._retry = true;
@@ -84,7 +108,7 @@ apiClient.interceptors.response.use(
 
             // Retry the original request with the new token
             originalRequest.headers.Authorization = `Bearer ${token}`;
-            return axios(originalRequest);
+            return apiClient(originalRequest);
           }
         } catch (refreshError) {
           // If refresh token fails, process the queue with error
@@ -107,7 +131,7 @@ apiClient.interceptors.response.use(
         })
           .then((token) => {
             originalRequest.headers.Authorization = `Bearer ${token}`;
-            return axios(originalRequest);
+            return apiClient(originalRequest);
           })
           .catch((err) => {
             return Promise.reject(err);
