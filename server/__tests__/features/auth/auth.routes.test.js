@@ -2,17 +2,26 @@ import request from "supertest";
 import User from "../../../models/userModel.js";
 import jwt from "jsonwebtoken";
 import * as authService from "../../../services/authService.js";
-import { describe, it, expect, beforeEach, beforeAll, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  beforeAll,
+  jest,
+} from "@jest/globals";
 
 // Use the unstable API for mocking ESM
-jest.unstable_mockModule('../../../services/emailService.js', () => ({
+jest.unstable_mockModule("../../../services/emailService.js", () => ({
   sendPasswordResetEmail: jest.fn(), // Provide a mock implementation
 }));
 
 // --- Test Setup ---
 
 // Dynamically import the mocked service *after* the mock is defined
-const { sendPasswordResetEmail } = await import('../../../services/emailService.js');
+const { sendPasswordResetEmail } = await import(
+  "../../../services/emailService.js"
+);
 
 // Declare app variable, to be initialized after mocks are set up
 let app;
@@ -21,11 +30,10 @@ let app;
 // let agent; // Initialize agent later if needed
 
 describe("Authentication API Endpoints", () => {
-
   // Initialize app and agent *after* mocks are configured
   beforeAll(async () => {
     // Dynamically import app *after* mocks are set up
-    app = (await import('../../../app.js')).app;
+    app = (await import("../../../app.js")).app;
     // agent = request.agent(app); // Initialize agent here if using it across describe blocks
   });
 
@@ -955,12 +963,10 @@ describe("Authentication API Endpoints", () => {
       userId = user._id;
 
       agent = request.agent(app);
-      const loginRes = await agent
-        .post("/api/auth/login")
-        .send({
-          email: originalUserData.email,
-          password: originalUserData.password,
-        });
+      const loginRes = await agent.post("/api/auth/login").send({
+        email: originalUserData.email,
+        password: originalUserData.password,
+      });
       accessToken = loginRes.body.token;
     });
 
