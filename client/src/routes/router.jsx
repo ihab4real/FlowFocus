@@ -10,6 +10,7 @@ import {
   Register,
   ForgotPassword,
   ResetPassword,
+  OAuthCallback,
 } from "../features/authentication/pages";
 import { ProtectedRoute } from "../features/authentication/components";
 import Profile from "../pages/Profile";
@@ -52,6 +53,10 @@ export const router = createBrowserRouter([
           {
             path: "reset-password/:token",
             element: <ResetPassword />,
+          },
+          {
+            path: "auth/callback",
+            element: <OAuthCallback />,
           },
           {
             path: "dashboard",
