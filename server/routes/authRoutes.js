@@ -9,8 +9,11 @@ import {
   changePassword,
   refreshAccessToken,
   logout,
+  googleCallback,
+  githubCallback,
 } from "../controllers/authController.js";
 import { protect } from "../middleware/authMiddleware.js";
+import passport from "passport";
 
 const router = express.Router();
 
@@ -168,6 +171,90 @@ router.post("/refresh", refreshAccessToken);
  *         description: Logged out successfully
  */
 router.post("/logout", logout);
+
+/**
+ * @swagger
+ * /api/auth/google:
+ *   get:
+ *     summary: Initiate Google OAuth authentication
+ *     tags: [Authentication]
+ *     responses:
+ *       302:
+ *         description: Redirects to Google authentication page
+ */
+router.get(
+  "/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
+
+/**
+ * @swagger
+ * /api/auth/google/callback:
+ *   get:
+ *     summary: Handle Google OAuth callback
+ *     tags: [Authentication]
+ *     parameters:
+ *       - in: query
+ *         name: code
+ *         schema:
+ *           type: string
+ *         description: OAuth authorization code
+ *     responses:
+ *       302:
+ *         description: Redirects to client app with authentication token
+ *       401:
+ *         description: Authentication failed
+ */
+router.get(
+  "/google/callback",
+  passport.authenticate("google", {
+    session: false,
+    failureRedirect: `${process.env.CLIENT_URL}/login?error=google_auth_failed`,
+  }),
+  googleCallback
+);
+
+/**
+ * @swagger
+ * /api/auth/github:
+ *   get:
+ *     summary: Initiate GitHub OAuth authentication
+ *     tags: [Authentication]
+ *     responses:
+ *       302:
+ *         description: Redirects to GitHub authentication page
+ */
+router.get(
+  "/github",
+  passport.authenticate("github", { scope: ["user:email"] })
+);
+
+/**
+ * @swagger
+ * /api/auth/github/callback:
+ *   get:
+ *     summary: Handle GitHub OAuth callback
+ *     tags: [Authentication]
+ *     parameters:
+ *       - in: query
+ *         name: code
+ *         schema:
+ *           type: string
+ *         description: OAuth authorization code
+ *     responses:
+ *       302:
+ *         description: Redirects to client app with authentication token
+ *       401:
+ *         description: Authentication failed
+ */
+router.get(
+  "/github/callback",
+  passport.authenticate("github", {
+    session: false,
+    failureRedirect: `${process.env.CLIENT_URL}/login?error=github_auth_failed`,
+  }),
+  githubCallback
+);
 
 // Protected routes - require authentication
 router.use(protect);

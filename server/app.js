@@ -13,6 +13,8 @@ import noteRoutes from "./routes/noteRoutes.js";
 import pomodoroRoutes from "./routes/pomodoroRoutes.js";
 import cookieParser from "cookie-parser";
 import mongoSanitize from "express-mongo-sanitize";
+import passport from "passport";
+import { configurePassport } from "./config/passport.js";
 
 // Load environment variables
 dotenv.config();
@@ -80,6 +82,10 @@ app.use(cookieParser());
 
 // Data sanitization against NoSQL query injection
 app.use(mongoSanitize());
+
+// Initialize and configure Passport
+const passportInstance = configurePassport();
+app.use(passport.initialize());
 
 // Connect to MongoDB
 const connectDB = async () => {
