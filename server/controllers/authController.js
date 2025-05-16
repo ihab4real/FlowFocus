@@ -16,6 +16,7 @@ import {
   requestPasswordReset,
   resetUserPassword,
 } from "../services/authService.js";
+import { handleOAuthSuccess } from "../services/oauthService.js";
 import { updateUserProfile } from "../services/userService.js";
 import { sendPasswordResetEmail } from "../services/emailService.js";
 
@@ -312,4 +313,70 @@ export const logout = asyncHandler(async (req, res) => {
   res
     .status(200)
     .json({ status: "success", message: "Logged out successfully" });
+});
+
+/**
+ * Start OAuth process with Google
+ * @route GET /api/auth/google
+ * Handled by Passport.js, no need for controller logic
+ */
+
+/**
+ * Google OAuth callback
+ * @route GET /api/auth/google/callback
+ */
+export const googleCallback = asyncHandler(async (req, res) => {
+  // req.user is populated by Passport.js
+  if (!req.user) {
+    throw errorTypes.unauthorized("Authentication failed");
+  }
+
+  // Handle successful authentication
+  const { accessToken, refreshToken, user } = await handleOAuthSuccess(
+    req.user
+  );
+
+  // Set refresh token in HTTP-only cookie
+  sendRefreshTokenCookie(res, refreshToken);
+
+  // Prepare user data for response (remove sensitive data)
+  user.password = undefined;
+
+  // Redirect to frontend with access token
+  // If format needs to be changed for your frontend, adjust this URL structure
+  const clientRedirectUrl = `${process.env.CLIENT_URL}/auth/callback?token=${accessToken}`;
+  res.redirect(clientRedirectUrl);
+});
+
+/**
+ * Start OAuth process with GitHub
+ * @route GET /api/auth/github
+ * Handled by Passport.js, no need for controller logic
+ */
+
+/**
+ * GitHub OAuth callback
+ * @route GET /api/auth/github/callback
+ */
+export const githubCallback = asyncHandler(async (req, res) => {
+  // req.user is populated by Passport.js
+  if (!req.user) {
+    throw errorTypes.unauthorized("Authentication failed");
+  }
+
+  // Handle successful authentication
+  const { accessToken, refreshToken, user } = await handleOAuthSuccess(
+    req.user
+  );
+
+  // Set refresh token in HTTP-only cookie
+  sendRefreshTokenCookie(res, refreshToken);
+
+  // Prepare user data for response (remove sensitive data)
+  user.password = undefined;
+
+  // Redirect to frontend with access token
+  // If format needs to be changed for your frontend, adjust this URL structure
+  const clientRedirectUrl = `${process.env.CLIENT_URL}/auth/callback?token=${accessToken}`;
+  res.redirect(clientRedirectUrl);
 });

@@ -49,19 +49,42 @@ const userSchema = new mongoose.Schema(
         message: "Please provide a valid email address",
       },
     },
+    // OAuth provider fields
+    provider: {
+      type: String,
+      enum: ["local", "google", "github"],
+      default: "local",
+    },
+    providerId: {
+      type: String,
+      select: false,
+    },
     password: {
       type: String,
-      required: [true, "Please provide a password"],
+      required: [
+        function () {
+          // Only required for local accounts
+          return this.provider === "local";
+        },
+        "Please provide a password",
+      ],
       minlength: [8, "Password must be at least 8 characters long"],
       select: false, // Don't include password in query results by default
     },
     passwordConfirm: {
       type: String,
-      required: [true, "Please confirm your password"],
+      required: [
+        function () {
+          // Only required for local accounts
+          return this.provider === "local";
+        },
+        "Please confirm your password",
+      ],
       validate: {
         // This only works on CREATE and SAVE
         validator: function (el) {
-          return el === this.password;
+          // Only validate for local accounts or if password is being set
+          return !this.password || el === this.password;
         },
         message: "Passwords do not match",
       },
