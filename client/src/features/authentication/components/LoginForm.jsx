@@ -43,6 +43,17 @@ export default function LoginForm({ onSuccess }) {
     setShowPassword(!showPassword);
   };
 
+  // Handle OAuth login redirects
+  const handleGoogleLogin = () => {
+    // Redirect to our backend's Google OAuth route
+    window.location.href = `${import.meta.env.VITE_API_URL}/api/auth/google`;
+  };
+
+  const handleGithubLogin = () => {
+    // Redirect to our backend's GitHub OAuth route
+    window.location.href = `${import.meta.env.VITE_API_URL}/api/auth/github`;
+  };
+
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="space-y-1">
@@ -152,6 +163,7 @@ export default function LoginForm({ onSuccess }) {
             variant="outline"
             className="w-full"
             type="button"
+            onClick={handleGoogleLogin}
             disabled={isLoading}
           >
             <svg
@@ -183,6 +195,7 @@ export default function LoginForm({ onSuccess }) {
             variant="outline"
             className="w-full"
             type="button"
+            onClick={handleGithubLogin}
             disabled={isLoading}
           >
             <svg
