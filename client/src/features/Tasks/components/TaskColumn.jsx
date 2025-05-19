@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { MoreHorizontal, Plus, Pencil, Trash2 } from "lucide-react";
 import { useDrop } from "react-dnd";
 import TaskCard from "./TaskCard";
-import { ItemTypes } from "../constants";
+import { ItemTypes } from "@/features/Tasks/utils/constants";
 import { useLocation } from "react-router-dom";
 import {
   DropdownMenu,

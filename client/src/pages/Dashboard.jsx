@@ -1,7 +1,7 @@
 import React from "react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Sidebar } from "@/components/Sidebar";
-import { TaskBoard } from "@/components/TaskBoard";
+import { MiniScreenTaskBoard } from "@/features/Tasks/pages/MiniScreenTaskBoard";
 import { NotesPanel } from "@/components/NotesPanel";
 import PomodoroContainer from "@/features/Pomodoro";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -14,7 +14,7 @@ function Dashboard() {
         <DashboardHeader />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
           <div className="lg:col-span-2">
-            <TaskBoard />
+            <MiniScreenTaskBoard />
           </div>
           <div className="space-y-4">
             <PomodoroContainer />

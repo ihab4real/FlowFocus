@@ -1,4 +1,4 @@
-import { ApiService } from "./apiService";
+import { ApiService } from "../../../services/api/apiService";
 
 /**
  * Task service for handling task-related API requests

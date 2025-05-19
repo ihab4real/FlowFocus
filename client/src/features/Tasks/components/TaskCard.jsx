@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, GripVertical, AlertTriangle, Clock } from "lucide-react";
 import { format, isAfter, parseISO, formatDistanceToNow } from "date-fns";
 import { useDrag } from "react-dnd";
-import { ItemTypes } from "../constants";
+import { ItemTypes } from "@/features/Tasks/utils/constants";
 
 // TaskCard component - draggable task item
 function TaskCard({ task, columnId, getPriorityColor }) {

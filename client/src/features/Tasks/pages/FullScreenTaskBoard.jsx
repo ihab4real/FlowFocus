@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import TaskBoard from "../features/TaskBoard/index";
+import TaskBoard from "@/features/Tasks/components/TaskBoard";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Sidebar } from "@/components/Sidebar";
 

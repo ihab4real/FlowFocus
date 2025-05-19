@@ -14,7 +14,7 @@ import {
 } from "../features/authentication/pages";
 import { ProtectedRoute } from "../features/authentication/components";
 import Profile from "../pages/Profile";
-import FullScreenTaskBoard from "../pages/FullScreenTaskBoard";
+import FullScreenTaskBoard from "@/features/Tasks/pages/FullScreenTaskBoard";
 import NotesPage from "../pages/NotesPage";
 import PomodoroPage from "../pages/PomodoroPage";
 

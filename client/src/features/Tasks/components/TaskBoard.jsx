@@ -1,22 +1,20 @@
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-  useMemo,
-} from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Maximize2, Minimize2 } from "lucide-react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import TaskModal from "./components/TaskModal";
-import TaskFilters from "./components/TaskFilters";
-import taskService from "@/services/api/taskService";
-import TaskColumn from "./components/TaskColumn";
-import { getPriorityColor, groupTasksByStatus, statusMap } from "./taskUtils";
+import TaskModal from "@/features/Tasks/components/TaskModal";
+import TaskFilters from "@/features/Tasks/components/TaskFilters";
+import taskService from "@/features/Tasks/services/taskService";
+import TaskColumn from "@/features/Tasks/components/TaskColumn";
+import {
+  getPriorityColor,
+  groupTasksByStatus,
+  statusMap,
+} from "@/features/Tasks/utils/taskUtils";
 import { useNavigate, useLocation } from "react-router-dom";
-import { formatDistanceToNow, isAfter, parseISO } from "date-fns";
+import { isAfter, parseISO } from "date-fns";
 import {
   Tooltip,
   TooltipContent,
