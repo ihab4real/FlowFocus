@@ -8,6 +8,11 @@ import {
   deleteTask,
   moveTask,
 } from "../controllers/taskController.js";
+import {
+  validateCreateTask,
+  validateUpdateTask,
+  validateMoveTask,
+} from "../middleware/taskValidation.js";
 
 const router = express.Router();
 
@@ -90,7 +95,7 @@ router.use(protect);
  *       401:
  *         $ref: '#/components/responses/UnauthorizedError'
  */
-router.route("/").get(getTasks).post(createTask);
+router.route("/").get(getTasks).post(validateCreateTask, createTask);
 
 /**
  * @swagger
@@ -202,11 +207,11 @@ router.route("/").get(getTasks).post(createTask);
 router
   .route("/:id")
   .get(getTask)
-  .patch(updateTask)
-  .put(updateTask)
+  .patch(validateUpdateTask, updateTask)
+  .put(validateUpdateTask, updateTask)
   .delete(deleteTask);
 
 // Route for moving a task between columns
-router.route("/:id/move").post(moveTask);
+router.route("/:id/move").post(validateMoveTask, moveTask);
 
 export default router;
