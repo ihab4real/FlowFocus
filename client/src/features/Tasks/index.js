@@ -5,4 +5,15 @@ export * from "./components";
 export * from "./pages";
 
 // Export services
-export { taskService } from "./services/taskService";
+export { default as taskService } from "./services/taskService";
+
+// Export hooks
+export {
+  useTasksQuery,
+  useTaskQuery,
+  useCreateTaskMutation,
+  useUpdateTaskMutation,
+  useDeleteTaskMutation,
+  useMoveTaskMutation,
+  taskKeys,
+} from "./hooks/useTaskQueries";

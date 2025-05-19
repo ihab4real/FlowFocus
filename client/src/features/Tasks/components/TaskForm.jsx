@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { X, Calendar, Loader2 } from "lucide-react";
-import taskService from "@/features/tasks/services/taskService";
 import { statusMap } from "@/features/tasks/utils/taskUtils";
 import { format } from "date-fns";
 import {
@@ -13,6 +12,10 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import {
+  useCreateTaskMutation,
+  useUpdateTaskMutation,
+} from "@/features/Tasks/hooks/useTaskQueries";
 
 const TaskForm = ({
   onSubmit,
@@ -20,7 +23,6 @@ const TaskForm = ({
   selectedColumnId = null,
   onCancel,
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
   const [availableStatuses, setAvailableStatuses] = useState([
     { value: "Todo", label: "Todo" },
     { value: "Doing", label: "Doing" },
@@ -37,6 +39,14 @@ const TaskForm = ({
     tags: initialData?.tags || [],
     status: initialData?.status || "Todo",
   });
+
+  // Use React Query mutations
+  const createTaskMutation = useCreateTaskMutation();
+  const updateTaskMutation = useUpdateTaskMutation();
+
+  // Derived loading state from mutations
+  const isLoading =
+    createTaskMutation.isPending || updateTaskMutation.isPending;
 
   // Set initial status based on selected column
   useEffect(() => {
@@ -107,6 +117,17 @@ const TaskForm = ({
   const [tagInput, setTagInput] = useState("");
   const [error, setError] = useState("");
 
+  // Get combined error from mutations
+  const mutationError = createTaskMutation.error || updateTaskMutation.error;
+
+  useEffect(() => {
+    if (mutationError) {
+      setError(
+        mutationError.message || "Failed to save task. Please try again."
+      );
+    }
+  }, [mutationError]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -154,27 +175,22 @@ const TaskForm = ({
       dueDate: formData.dueDate ? formData.dueDate : undefined,
     };
 
-    setIsLoading(true);
     try {
       // If we have initialData with an ID, it's an update
       if (initialData?._id) {
-        const updatedTask = await taskService.update(
-          initialData._id,
-          submissionData
-        );
+        const updatedTask = await updateTaskMutation.mutateAsync({
+          id: initialData._id,
+          data: submissionData,
+        });
         onSubmit(updatedTask);
       } else {
         // Otherwise it's a new task
-        const newTask = await taskService.create(submissionData);
+        const newTask = await createTaskMutation.mutateAsync(submissionData);
         onSubmit(newTask);
       }
     } catch (err) {
+      // Error is handled by the mutation and displayed via the useEffect above
       console.error("Error saving task:", err);
-      setError(
-        err.response?.data?.message || "Failed to save task. Please try again."
-      );
-    } finally {
-      setIsLoading(false);
     }
   };
 

@@ -6,7 +6,6 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import TaskModal from "@/features/Tasks/components/TaskModal";
 import TaskFilters from "@/features/Tasks/components/TaskFilters";
-import taskService from "@/features/Tasks/services/taskService";
 import TaskColumn from "@/features/Tasks/components/TaskColumn";
 import {
   getPriorityColor,
@@ -21,13 +20,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  useTasksQuery,
+  useMoveTaskMutation,
+} from "@/features/Tasks/hooks/useTaskQueries";
 
 function TaskBoard() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
-  const [tasks, setTasks] = useState([]); // Store all tasks
   const [filteredTasks, setFilteredTasks] = useState([]); // Store filtered tasks
   const [columns, setColumns] = useState([]);
   const [selectedColumnId, setSelectedColumnId] = useState(null);
@@ -43,6 +43,13 @@ function TaskBoard() {
   const [showOverdueTasks, setShowOverdueTasks] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Use React Query to fetch tasks
+  const { data: tasksResponse, isLoading, error: tasksError } = useTasksQuery();
+  const moveTaskMutation = useMoveTaskMutation();
+
+  // Extract tasks from the query response
+  const tasks = useMemo(() => tasksResponse || [], [tasksResponse]);
 
   // Check if we're in fullscreen mode
   const isFullscreen = location.pathname === "/dashboard/taskboard";
@@ -202,26 +209,6 @@ function TaskBoard() {
     setCustomColumnCount(customCols.length);
   }, [generateColumns]);
 
-  // Fetch tasks from API
-  const fetchTasks = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const response = await taskService.getTasks();
-      const fetchedTasks = response.data;
-      setTasks(fetchedTasks); // Store all tasks
-      setFilteredTasks(fetchedTasks); // Initialize filtered tasks with all tasks
-    } catch (err) {
-      console.error("Error fetching tasks:", err);
-      setError("Failed to load tasks. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchTasks();
-  }, [fetchTasks]);
-
   const handleAddTask = (columnId = null) => {
     setSelectedTask(null);
     setSelectedColumnId(columnId);
@@ -243,6 +230,22 @@ function TaskBoard() {
   const handleOverdueToggle = useCallback((showOverdue) => {
     setShowOverdueTasks(showOverdue);
   }, []);
+
+  // Handle moving a task to a different column
+  const handleMoveTask = useCallback(
+    async (taskId, newStatus) => {
+      try {
+        // Use the mutation hook to update task status
+        await moveTaskMutation.mutateAsync({
+          id: taskId,
+          status: statusMap[newStatus] || newStatus,
+        });
+      } catch (err) {
+        console.error("Error moving task:", err);
+      }
+    },
+    [moveTaskMutation]
+  );
 
   // Add a new column
   const handleAddColumn = () => {
@@ -286,7 +289,7 @@ function TaskBoard() {
     // Check if it's a standard column
     const isStandardColumn = ["todo", "in-progress", "done"].includes(columnId);
     if (isStandardColumn) {
-      setError("Cannot delete standard columns");
+      console.error("Cannot delete standard columns");
       return;
     }
 
@@ -322,24 +325,8 @@ function TaskBoard() {
 
   const handleTaskSubmit = () => {
     // Refresh task list after adding/editing
-    fetchTasks();
+    // This is handled by the mutation hook
   };
-
-  // Handle moving a task to a different column
-  const handleMoveTask = useCallback(
-    async (taskId, newStatus) => {
-      try {
-        // Call API to update task status
-        await taskService.moveTask(taskId, statusMap[newStatus] || newStatus);
-        // Refresh tasks after moving
-        fetchTasks();
-      } catch (err) {
-        console.error("Error moving task:", err);
-        setError("Failed to move task. Please try again.");
-      }
-    },
-    [fetchTasks]
-  );
 
   // Calculate column layout classes based on number of columns and fullscreen mode
   const getColumnLayoutClasses = () => {
@@ -534,9 +521,9 @@ function TaskBoard() {
         <CardContent
           className={`p-4 ${isFullscreen ? "h-[calc(100vh-13rem)] overflow-hidden" : ""}`}
         >
-          {error && (
+          {tasksError && (
             <div className="mb-4 p-3 text-sm bg-red-100 text-red-800 rounded-md">
-              {error}
+              {tasksError.message}
             </div>
           )}
 
