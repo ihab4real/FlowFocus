@@ -1,13 +1,17 @@
-import Task from "../models/taskModel.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import { AppError } from "../utils/AppError.js";
+import {
+  createUserTask,
+  getUserTasks,
+  getUserTaskById,
+  updateUserTask,
+  deleteUserTask,
+  moveUserTask,
+} from "../services/taskService.js";
 
 // Create a new task
 const createTask = asyncHandler(async (req, res) => {
-  const task = await Task.create({
-    ...req.body,
-    user: req.user._id, // Add the authenticated user's ID
-  });
+  const task = await createUserTask(req.body, req.user._id);
 
   res.status(201).json({
     status: "success",
@@ -17,7 +21,7 @@ const createTask = asyncHandler(async (req, res) => {
 
 // Get all tasks for the authenticated user
 const getTasks = asyncHandler(async (req, res) => {
-  const tasks = await Task.find({ user: req.user._id });
+  const tasks = await getUserTasks(req.user._id);
 
   res.status(200).json({
     status: "success",
@@ -28,14 +32,7 @@ const getTasks = asyncHandler(async (req, res) => {
 
 // Get a single task
 const getTask = asyncHandler(async (req, res) => {
-  const task = await Task.findOne({
-    _id: req.params.id,
-    user: req.user._id,
-  });
-
-  if (!task) {
-    throw new AppError("No task found with that ID", 404);
-  }
+  const task = await getUserTaskById(req.params.id, req.user._id);
 
   res.status(200).json({
     status: "success",
@@ -45,21 +42,7 @@ const getTask = asyncHandler(async (req, res) => {
 
 // Update a task
 const updateTask = asyncHandler(async (req, res) => {
-  const task = await Task.findOneAndUpdate(
-    {
-      _id: req.params.id,
-      user: req.user._id,
-    },
-    req.body,
-    {
-      new: true,
-      runValidators: true,
-    }
-  );
-
-  if (!task) {
-    throw new AppError("No task found with that ID", 404);
-  }
+  const task = await updateUserTask(req.params.id, req.user._id, req.body);
 
   res.status(200).json({
     status: "success",
@@ -69,14 +52,7 @@ const updateTask = asyncHandler(async (req, res) => {
 
 // Delete a task
 const deleteTask = asyncHandler(async (req, res) => {
-  const task = await Task.findOneAndDelete({
-    _id: req.params.id,
-    user: req.user._id,
-  });
-
-  if (!task) {
-    throw new AppError("No task found with that ID", 404);
-  }
+  await deleteUserTask(req.params.id, req.user._id);
 
   res.status(204).json({
     status: "success",
@@ -87,27 +63,7 @@ const deleteTask = asyncHandler(async (req, res) => {
 // Move a task to a different status
 const moveTask = asyncHandler(async (req, res) => {
   const { status } = req.body;
-
-  // Validate status
-  if (!status || !["Todo", "Doing", "Done"].includes(status)) {
-    throw new AppError("Invalid status value", 400);
-  }
-
-  const task = await Task.findOneAndUpdate(
-    {
-      _id: req.params.id,
-      user: req.user._id,
-    },
-    { status, updatedAt: Date.now() },
-    {
-      new: true,
-      runValidators: true,
-    }
-  );
-
-  if (!task) {
-    throw new AppError("No task found with that ID", 404);
-  }
+  const task = await moveUserTask(req.params.id, req.user._id, status);
 
   res.status(200).json({
     status: "success",
