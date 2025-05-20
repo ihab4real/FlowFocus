@@ -171,9 +171,7 @@ function TaskBoard() {
 
   // Memoize column generation to avoid unnecessary recalculations
   const generateColumns = useCallback(() => {
-    if (filteredTasks.length === 0 && tasks.length === 0) return [];
-
-    // Get standard columns with filtered tasks
+    // Always generate standard columns even if there are no tasks
     const standardColumns = groupTasksByStatus(filteredTasks);
 
     // Add any custom columns from state if they exist
@@ -197,7 +195,7 @@ function TaskBoard() {
     }
 
     return mergedColumns;
-  }, [filteredTasks, tasks]);
+  }, [filteredTasks]);
 
   // Update columns when filtered tasks change
   useEffect(() => {
