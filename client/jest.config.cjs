@@ -8,21 +8,22 @@ module.exports = {
     "^.+\.(js|jsx|ts|tsx)$": "babel-jest",
   },
   moduleNameMapper: {
-    // Handle CSS module mocks (if you were to use them)
-    // "\\.module\\.css$": "identity-obj-proxy",
+    // Handle CSS imports by mocking them
+    "\\.(css|less|scss|sass)$": "<rootDir>/__mocks__/styleMock.js",
     // Mock file assets like images or svgs
     "\\.(jpg|jpeg|png|gif|webp|svg)$": "<rootDir>/__mocks__/fileMock.js",
     // Handle path aliases
     "^@/(.*)$": "<rootDir>/src/$1",
   },
-  // Default is ["/node_modules/"], meaning files in src/ ARE transformed.
-  // If specific node_modules are ESM and need transformation, adjust this.
-  // e.g., transformIgnorePatterns: ['/node_modules/(?!some-es-module-package).+\.js$'],
-  transformIgnorePatterns: ["/node_modules/"],
+  // Updated to exclude react-dnd and related packages that use ES modules
+  transformIgnorePatterns: [
+    "/node_modules/(?!(react-dnd|react-dnd-html5-backend|dnd-core|@react-dnd)/).*/",
+  ],
   // Ignore utility files in __tests__ that are not actual tests
   testPathIgnorePatterns: [
     "/node_modules/",
     "<rootDir>/src/features/authentication/__tests__/setup/testUtils.jsx",
+    "<rootDir>/src/features/Tasks/__tests__/setup/testUtils.jsx",
   ],
   // If your package.json has "type": "module", Jest's ESM support via --experimental-vm-modules
   // might require specific handling or ensuring Babel outputs compatible code.
