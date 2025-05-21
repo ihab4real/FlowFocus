@@ -7,6 +7,7 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import TaskModal from "@/features/Tasks/components/TaskModal";
 import TaskFilters from "@/features/Tasks/components/TaskFilters";
 import TaskColumn from "@/features/Tasks/components/TaskColumn";
+import MirroredTaskCard from "@/features/Tasks/components/MirroredTaskCard";
 import {
   getPriorityColor,
   groupTasksByStatus,
@@ -23,7 +24,16 @@ import {
 import {
   useTasksQuery,
   useMoveTaskMutation,
+  taskKeys,
 } from "@/features/Tasks/hooks/useTaskQueries";
+import {
+  onTaskEvent,
+  offTaskEvent,
+  emitTaskDragStart,
+  emitTaskDragMove,
+  emitTaskDragEnd,
+} from "@/services/socketService";
+import { useQueryClient } from "@tanstack/react-query";
 
 function TaskBoard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -34,6 +44,7 @@ function TaskBoard() {
   const [customColumnCount, setCustomColumnCount] = useState(0);
   const [newColumnId, setNewColumnId] = useState(null);
   const [availableTags, setAvailableTags] = useState([]);
+  const [mirroredDrag, setMirroredDrag] = useState(null); // For mirroring drag across instances
   const [filters, setFilters] = useState({
     searchText: "",
     priorities: [],
@@ -43,6 +54,7 @@ function TaskBoard() {
   const [showOverdueTasks, setShowOverdueTasks] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
 
   // Use React Query to fetch tasks
   const { data: tasksResponse, isLoading, error: tasksError } = useTasksQuery();
@@ -53,6 +65,75 @@ function TaskBoard() {
 
   // Check if we're in fullscreen mode
   const isFullscreen = location.pathname === "/dashboard/taskboard";
+
+  // Setup WebSocket listeners for task updates
+  useEffect(() => {
+    // Task updated event handler
+    const handleTaskUpdated = (taskId) => {
+      // Invalidate the specific task
+      queryClient.invalidateQueries({
+        queryKey: taskKeys.detail(taskId),
+      });
+      // Invalidate all task lists
+      queryClient.invalidateQueries({ queryKey: taskKeys.lists() });
+    };
+
+    // Listen for task:updated events
+    onTaskEvent("task:updated", handleTaskUpdated);
+
+    // Cleanup
+    return () => {
+      offTaskEvent("task:updated", handleTaskUpdated);
+    };
+  }, [queryClient]);
+
+  // Setup WebSocket listeners for drag mirroring
+  useEffect(() => {
+    // Task drag event handlers
+    const handleDragStart = (data) => {
+      setMirroredDrag({
+        taskId: data.task.id,
+        position: data.absolute, // Keep for potential fallback, though relative is preferred
+        relativePosition: data.relative,
+        dimensions: data.dimensions,
+        taskInfo: data.task, // Ensure taskInfo is captured
+        isDragging: true,
+      });
+    };
+
+    const handleDragMove = (data) => {
+      // Ensure we're updating the state correctly for the moving task
+      setMirroredDrag(
+        (prev) =>
+          prev && prev.taskId === data.task.id
+            ? {
+                ...prev, // Keep previous state like taskId
+                position: data.absolute,
+                relativePosition: data.relative,
+                dimensions: data.dimensions,
+                taskInfo: data.task, // Crucially, update taskInfo if it can change (e.g., columnId if that's part of taskInfo)
+                isDragging: true, // Ensure isDragging remains true
+              }
+            : prev // If it's not the task we're tracking, don't change state
+      );
+    };
+
+    const handleDragEnd = () => {
+      setMirroredDrag(null); // Clear mirror data
+    };
+
+    // Listen for drag events
+    onTaskEvent("task:drag-start", handleDragStart);
+    onTaskEvent("task:drag-move", handleDragMove);
+    onTaskEvent("task:drag-end", handleDragEnd);
+
+    // Cleanup
+    return () => {
+      offTaskEvent("task:drag-start", handleDragStart);
+      offTaskEvent("task:drag-move", handleDragMove);
+      offTaskEvent("task:drag-end", handleDragEnd);
+    };
+  }, []);
 
   // Reset new column ID after a delay to avoid keeping columns in edit mode
   useEffect(() => {
@@ -244,6 +325,22 @@ function TaskBoard() {
     },
     [moveTaskMutation]
   );
+
+  // Handlers for drag operations with WebSocket broadcasting
+  const handleTaskDragStart = useCallback((taskId, dragData) => {
+    // Emit drag start event
+    emitTaskDragStart(dragData);
+  }, []);
+
+  const handleTaskDragMove = useCallback((taskId, dragData) => {
+    // Emit drag move event
+    emitTaskDragMove(dragData);
+  }, []);
+
+  const handleTaskDragEnd = useCallback((taskId) => {
+    // Emit drag end event
+    emitTaskDragEnd({ taskId });
+  }, []);
 
   // Add a new column
   const handleAddColumn = () => {
@@ -517,6 +614,7 @@ function TaskBoard() {
           />
         </CardHeader>
         <CardContent
+          id="task-board-container"
           className={`p-4 ${isFullscreen ? "h-[calc(100vh-13rem)] overflow-hidden" : ""}`}
         >
           {tasksError && (
@@ -564,9 +662,20 @@ function TaskBoard() {
                   onDeleteColumn={handleDeleteColumn}
                   onEditColumn={handleEditColumn}
                   isNewColumn={column.id === newColumnId}
+                  onDragStart={handleTaskDragStart}
+                  onDragMove={handleTaskDragMove}
+                  onDragEnd={handleTaskDragEnd}
                 />
               ))}
             </div>
+          )}
+
+          {/* Render mirrored task if being dragged in another window */}
+          {mirroredDrag && mirroredDrag.isDragging && (
+            <MirroredTaskCard
+              mirroredDragData={mirroredDrag}
+              getPriorityColor={getPriorityColor}
+            />
           )}
         </CardContent>
       </Card>

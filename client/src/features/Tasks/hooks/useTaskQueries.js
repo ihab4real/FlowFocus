@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import taskService from "../services/taskService";
+import { emitTaskUpdated } from "../../../services/socketService";
 
 /**
  * Task query keys for proper cache management
@@ -22,6 +23,7 @@ export const useTasksQuery = (filters = {}) => {
       const response = await taskService.getTasks(filters);
       return response.data;
     },
+    networkMode: "online",
   });
 };
 
@@ -50,9 +52,14 @@ export const useCreateTaskMutation = () => {
       const response = await taskService.create(data);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       // Invalidate all task lists to refresh data
       queryClient.invalidateQueries({ queryKey: taskKeys.lists() });
+
+      // Emit socket event to notify other instances
+      if (data && data._id) {
+        emitTaskUpdated(data._id);
+      }
     },
   });
 };
@@ -74,6 +81,9 @@ export const useUpdateTaskMutation = () => {
         queryKey: taskKeys.detail(variables.id),
       });
       queryClient.invalidateQueries({ queryKey: taskKeys.lists() });
+
+      // Emit socket event to notify other instances
+      emitTaskUpdated(variables.id);
     },
   });
 };
@@ -93,6 +103,9 @@ export const useDeleteTaskMutation = () => {
       // Invalidate the specific task and all task lists
       queryClient.invalidateQueries({ queryKey: taskKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: taskKeys.lists() });
+
+      // Emit socket event to notify other instances
+      emitTaskUpdated(id);
     },
   });
 };
@@ -114,6 +127,9 @@ export const useMoveTaskMutation = () => {
         queryKey: taskKeys.detail(variables.id),
       });
       queryClient.invalidateQueries({ queryKey: taskKeys.lists() });
+
+      // Emit socket event to notify other instances
+      emitTaskUpdated(variables.id);
     },
   });
 };
