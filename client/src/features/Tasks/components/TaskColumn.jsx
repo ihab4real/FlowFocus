@@ -34,6 +34,9 @@ function TaskColumn({
   onDeleteColumn,
   onEditColumn,
   isNewColumn,
+  onDragStart,
+  onDragMove,
+  onDragEnd,
 }) {
   const location = useLocation();
   const isFullscreen = location.pathname === "/dashboard/taskboard";
@@ -124,6 +127,7 @@ function TaskColumn({
   return (
     <div
       ref={drop}
+      data-column-id={id}
       className={`
         flex-shrink-0 
         rounded-lg 
@@ -213,6 +217,9 @@ function TaskColumn({
               task={task}
               columnId={id}
               getPriorityColor={getPriorityColor}
+              onDragStart={onDragStart}
+              onDragMove={onDragMove}
+              onDragEnd={onDragEnd}
             />
           ))
         ) : (
