@@ -1,6 +1,10 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { authService } from "../services/authService";
+import {
+  initializeSocket,
+  disconnectSocket,
+} from "../../../services/socketService";
 
 /**
  * Authentication store using Zustand
@@ -29,6 +33,9 @@ export const useAuthStore = create(
         try {
           const response = await authService.login(credentials);
 
+          // Initialize socket connection with the new token
+          initializeSocket(response.token);
+
           set({
             user: response.data.user,
             token: response.token,
@@ -52,6 +59,9 @@ export const useAuthStore = create(
         set({ isLoading: true, error: null });
         try {
           const response = await authService.register(userData);
+
+          // Initialize socket connection with the new token
+          initializeSocket(response.token);
 
           set({
             user: response.data.user,
@@ -77,6 +87,9 @@ export const useAuthStore = create(
       logout: async () => {
         set({ isLoading: true });
         try {
+          // Disconnect socket
+          disconnectSocket();
+
           // Call the logout API to clear refresh token cookie
           await authService.logout();
         } catch (error) {
@@ -98,6 +111,9 @@ export const useAuthStore = create(
         const state = useAuthStore.getState();
         if (state.isAuthenticated && state.token) {
           try {
+            // Initialize socket with existing token if authenticated
+            initializeSocket(state.token);
+
             // Verify token validity with the server
             const response = await authService.getCurrentUser();
             // Update user data with the latest from server
@@ -115,6 +131,9 @@ export const useAuthStore = create(
 
                 // If successful, update the token and user state
                 if (refreshResponse && refreshResponse.token) {
+                  // Reinitialize socket with new token
+                  initializeSocket(refreshResponse.token);
+
                   useAuthStore.setState({
                     token: refreshResponse.token,
                     isAuthenticated: true,
@@ -132,6 +151,9 @@ export const useAuthStore = create(
               return false;
             }
           }
+        } else {
+          // Ensure socket is disconnected if not authenticated
+          disconnectSocket();
         }
         return false;
       },
@@ -164,6 +186,12 @@ export const useAuthStore = create(
         set({ isLoading: true, error: null });
         try {
           const response = await authService.changePassword(passwordData);
+
+          // Reinitialize socket with new token if password was changed
+          if (response.token) {
+            initializeSocket(response.token);
+          }
+
           set({
             user: response.data.user,
             token: response.token,
