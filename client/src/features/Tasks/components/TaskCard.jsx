@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useRef, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, GripVertical, AlertTriangle, Clock } from "lucide-react";
 import { format, isAfter, parseISO, formatDistanceToNow } from "date-fns";
@@ -6,27 +6,18 @@ import { useDrag } from "react-dnd";
 import { ItemTypes } from "@/features/Tasks/utils/constants";
 
 // TaskCard component - draggable task item
-function TaskCard({ task, columnId, getPriorityColor }) {
-  // Set up drag source
-  const [{ isDragging }, drag, preview] = useDrag({
-    type: ItemTypes.TASK,
-    item: { id: task._id || task.id, columnId },
-    collect: (monitor) => ({
-      isDragging: !!monitor.isDragging(),
-    }),
-  });
-
-  const handleClick = useCallback(() => {
-    // Prevent click when dragging
-    if (isDragging) return;
-
-    // This function would be passed down from TaskBoard
-    // to handle editing the task
-    if (typeof window !== "undefined") {
-      const event = new CustomEvent("editTask", { detail: task });
-      window.dispatchEvent(event);
-    }
-  }, [isDragging, task]);
+function TaskCard({
+  task,
+  columnId,
+  getPriorityColor,
+  onDragStart,
+  onDragMove,
+  onDragEnd,
+}) {
+  const cardRef = useRef(null);
+  const animationFrameRef = useRef(null);
+  const lastPositionRef = useRef(null);
+  const taskId = task._id || task.id;
 
   // Check if task is overdue - memoize to avoid recalculations
   const isOverdue = useMemo(() => {
@@ -44,15 +35,12 @@ function TaskCard({ task, columnId, getPriorityColor }) {
   // Get relative time for due date - memoize to avoid recalculations
   const dueTimeString = useMemo(() => {
     if (!task.dueDate) return "";
-
     try {
       const dueDate = parseISO(task.dueDate);
       const now = new Date();
-
       if (isAfter(now, dueDate) && task.status !== "Done") {
         return `Overdue by ${formatDistanceToNow(dueDate)}`;
       }
-
       return `Due ${formatDistanceToNow(dueDate)} from now`;
     } catch (error) {
       console.error("Error formatting due date:", error);
@@ -71,9 +59,184 @@ function TaskCard({ task, columnId, getPriorityColor }) {
     }
   }, [task.dueDate]);
 
+  // Set up drag source
+  const [{ isDragging }, drag, preview] = useDrag({
+    type: ItemTypes.TASK,
+    item: (monitor) => {
+      // When drag starts, emit the event with initial position and task details
+      if (onDragStart && cardRef.current) {
+        const rect = cardRef.current.getBoundingClientRect();
+        const boardRect =
+          document
+            .querySelector(".task-column-content")
+            ?.getBoundingClientRect() ||
+          document
+            .querySelector("#task-board-container")
+            ?.getBoundingClientRect();
+
+        // Calculate both absolute and relative positions
+        const absolutePosition = {
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height / 2,
+        };
+
+        // Calculate relative position (as percentage of board dimensions)
+        const relativePosition = boardRect
+          ? {
+              x: (absolutePosition.x - boardRect.left) / boardRect.width,
+              y: (absolutePosition.y - boardRect.top) / boardRect.height,
+            }
+          : { x: 0.5, y: 0.5 };
+
+        lastPositionRef.current = absolutePosition;
+
+        // Include task details for better mirroring
+        onDragStart(taskId, {
+          absolute: absolutePosition,
+          relative: relativePosition,
+          task: {
+            id: taskId,
+            title: task.title,
+            priority: task.priority,
+            description: task.description,
+            tags: task.tags,
+            dueDate: task.dueDate,
+            isOverdue: isOverdue,
+            dueTimeString: dueTimeString,
+            formattedDueDate: formattedDueDate,
+            columnId,
+          },
+          dimensions: {
+            width: rect.width,
+            height: rect.height,
+          },
+        });
+      }
+      return { id: taskId, columnId };
+    },
+    collect: (monitor) => ({
+      isDragging: !!monitor.isDragging(),
+    }),
+    end: (item, monitor) => {
+      // When drag ends, cancel the animation frame and emit the end event
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+
+      if (onDragEnd) {
+        onDragEnd(taskId);
+      }
+    },
+  });
+
+  // Track position during drag using requestAnimationFrame for smooth updates
+  const trackPosition = useCallback(() => {
+    if (isDragging && onDragMove && cardRef.current) {
+      const rect = cardRef.current.getBoundingClientRect();
+      const boardRect =
+        document
+          .querySelector(".task-column-content")
+          ?.getBoundingClientRect() ||
+        document
+          .querySelector("#task-board-container")
+          ?.getBoundingClientRect();
+
+      const absolutePosition = {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+      };
+
+      // Calculate relative position
+      const relativePosition = boardRect
+        ? {
+            x: (absolutePosition.x - boardRect.left) / boardRect.width,
+            y: (absolutePosition.y - boardRect.top) / boardRect.height,
+          }
+        : { x: 0.5, y: 0.5 };
+
+      // Always update position for smooth mirroring
+      lastPositionRef.current = absolutePosition;
+
+      // Send all necessary data for accurate mirroring
+      onDragMove(taskId, {
+        absolute: absolutePosition,
+        relative: relativePosition,
+        task: {
+          id: taskId,
+          title: task.title,
+          priority: task.priority,
+          description: task.description,
+          tags: task.tags,
+          dueDate: task.dueDate,
+          isOverdue: isOverdue,
+          dueTimeString: dueTimeString,
+          formattedDueDate: formattedDueDate,
+          columnId,
+        },
+        dimensions: {
+          width: rect.width,
+          height: rect.height,
+        },
+      });
+
+      // Continue tracking in the next animation frame
+      animationFrameRef.current = requestAnimationFrame(trackPosition);
+    }
+  }, [
+    isDragging,
+    onDragMove,
+    taskId,
+    task.title,
+    task.priority,
+    columnId,
+    task.description,
+    task.tags,
+    task.dueDate,
+    isOverdue,
+    dueTimeString,
+    formattedDueDate,
+  ]);
+
+  // Set up position tracking during drag
+  useEffect(() => {
+    if (isDragging && onDragMove) {
+      // Start tracking position with requestAnimationFrame
+      animationFrameRef.current = requestAnimationFrame(trackPosition);
+    } else if (animationFrameRef.current) {
+      // Stop tracking if not dragging
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+    };
+  }, [isDragging, onDragMove, trackPosition]);
+
+  const handleClick = useCallback(() => {
+    // Prevent click when dragging
+    if (isDragging) return;
+
+    // This function would be passed down from TaskBoard
+    // to handle editing the task
+    if (typeof window !== "undefined") {
+      const event = new CustomEvent("editTask", { detail: task });
+      window.dispatchEvent(event);
+    }
+  }, [isDragging, task]);
+
   return (
     <div
-      ref={preview}
+      ref={(el) => {
+        preview(el);
+        cardRef.current = el;
+      }}
+      data-task-id={taskId}
+      data-column-id={columnId}
       className={`
         bg-card 
         rounded-md 
