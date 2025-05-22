@@ -4,6 +4,7 @@ import {
   login,
   forgotPassword,
   resetPassword,
+  validateResetPasswordToken,
   getMe,
   updateProfile,
   changePassword,
@@ -145,6 +146,26 @@ router.post("/forgot-password", forgotPassword);
  *         description: Token invalid or expired
  */
 router.patch("/reset-password/:token", resetPassword);
+
+/**
+ * @swagger
+ * /api/auth/validate-reset-token/{token}:
+ *   get:
+ *     summary: Validate password reset token without performing reset
+ *     tags: [Authentication]
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Token is valid
+ *       400:
+ *         description: Token invalid or expired
+ */
+router.get("/validate-reset-token/:token", validateResetPasswordToken);
 
 /**
  * @swagger
