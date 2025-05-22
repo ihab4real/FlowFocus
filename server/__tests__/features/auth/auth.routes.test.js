@@ -809,6 +809,98 @@ describe("Authentication API Endpoints", () => {
     });
   });
 
+  describe("GET /api/auth/validate-reset-token/:token", () => {
+    let resetToken; // Unhashed token
+    const testUser = {
+      name: "Validate Token User",
+      email: "validate@example.com",
+      password: "password123",
+    };
+
+    // Arrange: Create user and generate token before each test
+    beforeEach(async () => {
+      // Create user
+      await User.create({
+        ...testUser,
+        passwordConfirm: testUser.password,
+      });
+      // Generate a fresh token for this user instance
+      resetToken = await authService.requestPasswordReset(testUser.email);
+      // Clear mock calls from token generation if the mocked function was called during it
+      sendPasswordResetEmail.mockClear();
+    });
+
+    it("should return 200 for valid, non-expired token", async () => {
+      // Act
+      const response = await request(app)
+        .get(`/api/auth/validate-reset-token/${resetToken}`)
+        .expect("Content-Type", /json/)
+        .expect(200);
+
+      // Assert
+      expect(response.body.status).toBe("success");
+      expect(response.body.message).toBe("Reset token is valid");
+    });
+
+    it("should return 400 for invalid token", async () => {
+      // Act
+      const response = await request(app)
+        .get(`/api/auth/validate-reset-token/invalidToken123`)
+        .expect("Content-Type", /json/)
+        .expect(400);
+
+      // Assert
+      expect(response.body.status).toBe("fail");
+      expect(response.body.message).toMatch(/token is invalid or has expired/i);
+    });
+
+    it("should return 400 for expired token", async () => {
+      // Arrange: Manually set the expiry in the past for the user
+      const user = await User.findOne({ email: testUser.email });
+      user.passwordResetExpires = new Date(Date.now() - 10 * 60 * 1000); // Expired 10 mins ago
+      await user.save({ validateBeforeSave: false });
+
+      // Act
+      const response = await request(app)
+        .get(`/api/auth/validate-reset-token/${resetToken}`)
+        .expect("Content-Type", /json/)
+        .expect(400);
+
+      // Assert
+      expect(response.body.status).toBe("fail");
+      expect(response.body.message).toMatch(/token is invalid or has expired/i);
+    });
+
+    it("should return 401 when no token is provided", async () => {
+      // Act
+      const response = await request(app)
+        .get(`/api/auth/validate-reset-token/`)
+        .expect(401); // Unauthorized due to middleware or route handling
+
+      // Assert - 401 is expected when hitting auth route without proper path
+      expect(response.status).toBe(401);
+    });
+
+    it("should not consume the token when validating", async () => {
+      // Act - Validate token
+      await request(app)
+        .get(`/api/auth/validate-reset-token/${resetToken}`)
+        .expect(200);
+
+      // Assert - Token should still be usable for actual password reset
+      const response = await request(app)
+        .patch(`/api/auth/reset-password/${resetToken}`)
+        .send({
+          password: "newPassword123",
+          passwordConfirm: "newPassword123",
+        })
+        .expect("Content-Type", /json/)
+        .expect(200);
+
+      expect(response.body.status).toBe("success");
+    });
+  });
+
   describe("PATCH /api/auth/change-password", () => {
     let agent;
     let accessToken;
