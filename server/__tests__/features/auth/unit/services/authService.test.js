@@ -1,7 +1,7 @@
 import { jest } from "@jest/globals"; // Use this for mocking ES modules
 
 // --- Mock Dependencies ---
-jest.unstable_mockModule("../../../models/userModel.js", () => ({
+jest.unstable_mockModule("../../../../../models/userModel.js", () => ({
   __esModule: true,
   default: {
     findOne: jest.fn(),
@@ -11,7 +11,7 @@ jest.unstable_mockModule("../../../models/userModel.js", () => ({
   },
 }));
 
-jest.unstable_mockModule("../../../utils/AppError.js", () => ({
+jest.unstable_mockModule("../../../../../utils/AppError.js", () => ({
   __esModule: true,
   errorTypes: {
     badRequest: jest.fn((msg) => new Error(msg)),
@@ -22,7 +22,7 @@ jest.unstable_mockModule("../../../utils/AppError.js", () => ({
   },
 }));
 
-jest.unstable_mockModule("../../../utils/logger.js", () => ({
+jest.unstable_mockModule("../../../../../utils/logger.js", () => ({
   __esModule: true,
   logInfo: jest.fn(),
   logDebug: jest.fn(),
@@ -51,11 +51,11 @@ const {
   requestPasswordReset,
   resetUserPassword,
   changeUserPassword,
-} = await import("../../../services/authService.js");
+} = await import("../../../../../services/authService.js");
 
 // Import mocks for easy access in tests
-const User = (await import("../../../models/userModel.js")).default;
-const { errorTypes } = await import("../../../utils/AppError.js");
+const User = (await import("../../../../../models/userModel.js")).default;
+const { errorTypes } = await import("../../../../../utils/AppError.js");
 
 describe("Auth Service - Unit Tests", () => {
   beforeEach(() => {

@@ -1,7 +1,7 @@
 import { jest } from "@jest/globals";
 
 // --- Mock Dependencies ---
-jest.unstable_mockModule("../../../models/userModel.js", () => ({
+jest.unstable_mockModule("../../../../../models/userModel.js", () => ({
   __esModule: true,
   default: {
     findByIdAndUpdate: jest.fn(),
@@ -9,7 +9,7 @@ jest.unstable_mockModule("../../../models/userModel.js", () => ({
   },
 }));
 
-jest.unstable_mockModule("../../../utils/AppError.js", () => ({
+jest.unstable_mockModule("../../../../../utils/AppError.js", () => ({
   __esModule: true,
   errorTypes: {
     badRequest: jest.fn((msg) => new Error(msg)),
@@ -17,16 +17,18 @@ jest.unstable_mockModule("../../../utils/AppError.js", () => ({
   },
 }));
 
-jest.unstable_mockModule("../../../utils/logger.js", () => ({
+jest.unstable_mockModule("../../../../../utils/logger.js", () => ({
   __esModule: true,
   logInfo: jest.fn(),
   // Add other log levels if needed
 }));
 
 // --- Import Modules Under Test & Mocks ---
-const { updateUserProfile } = await import("../../../services/userService.js");
-const User = (await import("../../../models/userModel.js")).default;
-const { errorTypes } = await import("../../../utils/AppError.js");
+const { updateUserProfile } = await import(
+  "../../../../../services/userService.js"
+);
+const User = (await import("../../../../../models/userModel.js")).default;
+const { errorTypes } = await import("../../../../../utils/AppError.js");
 
 describe("User Service - Unit Tests", () => {
   beforeEach(() => {

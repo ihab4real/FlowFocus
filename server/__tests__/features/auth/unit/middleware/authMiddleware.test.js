@@ -2,13 +2,13 @@ import { jest } from "@jest/globals";
 
 // --- Mock Dependencies ---
 // Mock tokenService (used by protect middleware)
-jest.unstable_mockModule("../../../services/tokenService.js", () => ({
+jest.unstable_mockModule("../../../../../services/tokenService.js", () => ({
   __esModule: true,
   verifyAccessToken: jest.fn(),
 }));
 
 // Mock User model (used by protect middleware)
-jest.unstable_mockModule("../../../models/userModel.js", () => ({
+jest.unstable_mockModule("../../../../../models/userModel.js", () => ({
   __esModule: true,
   default: {
     findById: jest.fn(),
@@ -16,7 +16,7 @@ jest.unstable_mockModule("../../../models/userModel.js", () => ({
 }));
 
 // Mock AppError (used by protect and restrictTo)
-jest.unstable_mockModule("../../../utils/AppError.js", () => ({
+jest.unstable_mockModule("../../../../../utils/AppError.js", () => ({
   __esModule: true,
   errorTypes: {
     unauthorized: jest.fn((msg) => new Error(msg)), // Create actual errors for testing
@@ -28,7 +28,7 @@ jest.unstable_mockModule("../../../utils/AppError.js", () => ({
 // We assume asyncHandler just calls the function passed to it and handles errors.
 // For unit testing the middleware logic itself, we can often call the inner function directly.
 // Alternatively, mock it to simply return the function passed to it.
-jest.unstable_mockModule("../../../utils/asyncHandler.js", () => ({
+jest.unstable_mockModule("../../../../../utils/asyncHandler.js", () => ({
   __esModule: true,
   // Updated mock to handle errors correctly
   default: jest.fn((fn) => {
@@ -47,7 +47,7 @@ jest.unstable_mockModule("../../../utils/asyncHandler.js", () => ({
 }));
 
 // Mock logger (optional, if used inside middleware)
-jest.unstable_mockModule("../../../utils/logger.js", () => ({
+jest.unstable_mockModule("../../../../../utils/logger.js", () => ({
   __esModule: true,
   logDebug: jest.fn(),
 }));
@@ -55,13 +55,15 @@ jest.unstable_mockModule("../../../utils/logger.js", () => ({
 // --- Import Modules Under Test & Mocks ---
 // Import the middleware functions *after* mocks
 const { protect, restrictTo } = await import(
-  "../../../middleware/authMiddleware.js"
+  "../../../../../middleware/authMiddleware.js"
 );
 
 // Import mocks for verification
-const { verifyAccessToken } = await import("../../../services/tokenService.js");
-const User = (await import("../../../models/userModel.js")).default;
-const { errorTypes } = await import("../../../utils/AppError.js");
+const { verifyAccessToken } = await import(
+  "../../../../../services/tokenService.js"
+);
+const User = (await import("../../../../../models/userModel.js")).default;
+const { errorTypes } = await import("../../../../../utils/AppError.js");
 
 describe("Auth Middleware - Unit Tests", () => {
   let mockReq, mockRes, mockNext;

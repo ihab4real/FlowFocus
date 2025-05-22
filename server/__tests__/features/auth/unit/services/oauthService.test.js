@@ -1,13 +1,13 @@
 import { jest } from "@jest/globals"; // Import jest globals for ESM support
 
 // Mock dependencies first using unstable_mockModule
-jest.unstable_mockModule("../../../services/tokenService.js", () => ({
+jest.unstable_mockModule("../../../../../services/tokenService.js", () => ({
   __esModule: true,
   generateAccessToken: jest.fn(),
   generateRefreshToken: jest.fn(),
 }));
 
-jest.unstable_mockModule("../../../utils/logger.js", () => ({
+jest.unstable_mockModule("../../../../../utils/logger.js", () => ({
   __esModule: true,
   logInfo: jest.fn(),
   logError: jest.fn(),
@@ -21,9 +21,9 @@ let oauthService;
 
 // Import the mocked dependencies and service under test
 const setup = async () => {
-  tokenService = await import("../../../services/tokenService.js");
-  logger = await import("../../../utils/logger.js");
-  oauthService = await import("../../../services/oauthService.js");
+  tokenService = await import("../../../../../services/tokenService.js");
+  logger = await import("../../../../../utils/logger.js");
+  oauthService = await import("../../../../../services/oauthService.js");
 };
 
 describe("OAuth Service", () => {
