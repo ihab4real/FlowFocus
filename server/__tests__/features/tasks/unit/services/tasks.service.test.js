@@ -15,7 +15,7 @@ import {
 import "../../../../setup/db.js";
 
 // Use the unstable API for mocking ESM
-jest.unstable_mockModule("../../../utils/logger.js", () => ({
+jest.unstable_mockModule("../../../../../utils/logger.js", () => ({
   logInfo: jest.fn(),
   logDebug: jest.fn(),
   logError: jest.fn(),
