@@ -19,7 +19,7 @@ const {
   generateRefreshToken,
   verifyAccessToken,
   verifyRefreshToken,
-} = await import("../../../services/tokenService.js");
+} = await import("../../../../../services/tokenService.js");
 const jwt = (await import("jsonwebtoken")).default;
 
 describe("Token Service - Unit Tests", () => {

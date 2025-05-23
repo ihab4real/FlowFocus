@@ -172,6 +172,30 @@ export const resetUserPassword = async (
 };
 
 /**
+ * Validates a password reset token without performing the actual reset.
+ * @param {string} token - The unhashed password reset token.
+ * @returns {Promise<boolean>} True if token is valid and not expired.
+ * @throws {AppError} If token is invalid or expired.
+ */
+export const validateResetToken = async (token) => {
+  // Hash the token to match against stored hashed version
+  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() }, // Check expiry
+  });
+
+  // Check if user exists and token is valid
+  if (!user) {
+    throw errorTypes.badRequest("Token is invalid or has expired");
+  }
+
+  logDebug("Reset token validated successfully", { userId: user._id });
+  return true;
+};
+
+/**
  * Changes the password for an authenticated user.
  * @param {string} userId - The ID of the authenticated user.
  * @param {string} currentPassword - The user's current password.

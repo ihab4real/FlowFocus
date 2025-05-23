@@ -23,6 +23,19 @@ jest.mock("../../services/authService", () => ({
   },
 }));
 
+// Mock the auth store
+const mockValidateResetToken = jest.fn();
+const mockAuthStore = {
+  isValidatingToken: false,
+  isValidToken: true,
+  tokenValidationError: null,
+  validateResetToken: mockValidateResetToken,
+};
+
+jest.mock("../../store/authStore", () => ({
+  useAuthStore: () => mockAuthStore,
+}));
+
 // Mock useNavigate and useParams from react-router-dom
 const mockNavigate = jest.fn();
 jest.mock("react-router-dom", () => {
@@ -51,17 +64,22 @@ describe("ResetPasswordForm Component", () => {
     // Reset useParams mock to default behavior
     jest.mocked(useParams).mockReturnValue({ token: "test-reset-token" });
 
-    // Default success response
+    // Reset auth store mock to default valid state
+    mockAuthStore.isValidatingToken = false;
+    mockAuthStore.isValidToken = true;
+    mockAuthStore.tokenValidationError = null;
+
+    // Default success response for password reset
     authService.resetPassword.mockResolvedValue({
       data: { status: "success", message: "Password reset successfully" },
     });
   });
 
-  it("should render all form elements correctly", () => {
+  it("should render all form elements correctly", async () => {
     // Act
     renderResetPasswordForm();
 
-    // Assert
+    // Assert - Form should render immediately since token is valid
     expect(screen.getByText(/Set New Password/i)).toBeInTheDocument();
     expect(screen.getByText(/Create a new password/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/New Password/i)).toBeInTheDocument();
@@ -69,6 +87,14 @@ describe("ResetPasswordForm Component", () => {
     expect(
       screen.getByRole("button", { name: /Reset Password/i })
     ).toBeInTheDocument();
+  });
+
+  it("should call validateResetToken on mount", () => {
+    // Act
+    renderResetPasswordForm();
+
+    // Assert
+    expect(mockValidateResetToken).toHaveBeenCalledWith("test-reset-token");
   });
 
   it("should call resetPassword service with token and passwords on submit", async () => {
@@ -258,20 +284,48 @@ describe("ResetPasswordForm Component", () => {
     expect(authService.resetPassword).not.toHaveBeenCalled();
   });
 
-  // Note: This test checks the current behavior where even without a token,
-  // the form is still rendered. This matches the current implementation.
-  it("should still render the form even with a missing token", () => {
-    // Override useParams to return no token
-    jest.mocked(useParams).mockReturnValueOnce({});
+  it("should show loading state during token validation", () => {
+    // Arrange - Set loading state
+    mockAuthStore.isValidatingToken = true;
+    mockAuthStore.isValidToken = false;
 
     // Act
     renderResetPasswordForm();
 
-    // Assert - Form should still render without a token
-    expect(screen.getByText(/Set New Password/i)).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /Reset Password/i })
-    ).toBeInTheDocument();
+    // Assert
+    expect(screen.getByText(/Validating reset link/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Set New Password/i)).not.toBeInTheDocument();
+  });
+
+  it("should show error component when token is invalid", () => {
+    // Arrange - Set invalid token state
+    mockAuthStore.isValidatingToken = false;
+    mockAuthStore.isValidToken = false;
+    mockAuthStore.tokenValidationError = "Token is invalid or has expired";
+
+    // Act
+    renderResetPasswordForm();
+
+    // Assert - Should show error component instead of form
+    expect(screen.getByText(/Link Expired/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Set New Password/i)).not.toBeInTheDocument();
+  });
+
+  it("should show error component when no token provided", () => {
+    // Override useParams to return no token
+    jest.mocked(useParams).mockReturnValueOnce({});
+
+    // Arrange - Set invalid token state
+    mockAuthStore.isValidatingToken = false;
+    mockAuthStore.isValidToken = false;
+    mockAuthStore.tokenValidationError = "No reset token provided";
+
+    // Act
+    renderResetPasswordForm();
+
+    // Assert - Should show error component
+    expect(screen.getByText(/Invalid Link/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Set New Password/i)).not.toBeInTheDocument();
   });
 
   it("should navigate to login when 'Back to login' link is clicked", async () => {

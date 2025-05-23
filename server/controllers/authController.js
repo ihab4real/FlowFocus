@@ -15,6 +15,7 @@ import {
   changeUserPassword,
   requestPasswordReset,
   resetUserPassword,
+  validateResetToken,
 } from "../services/authService.js";
 import { handleOAuthSuccess } from "../services/oauthService.js";
 import { updateUserProfile } from "../services/userService.js";
@@ -240,6 +241,26 @@ export const resetPassword = asyncHandler(async (req, res) => {
     data: {
       user,
     },
+  });
+});
+
+/**
+ * Validate reset password token
+ * @route GET /api/auth/validate-reset-token/:token
+ */
+export const validateResetPasswordToken = asyncHandler(async (req, res) => {
+  const { token } = req.params;
+
+  if (!token) {
+    throw errorTypes.badRequest("Reset token is required");
+  }
+
+  // Call service to validate the token
+  await validateResetToken(token);
+
+  res.status(200).json({
+    status: "success",
+    message: "Reset token is valid",
   });
 });
 

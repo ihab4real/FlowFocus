@@ -1,7 +1,7 @@
 import { jest } from "@jest/globals"; // Use this for mocking ES modules
 
 // --- Mock Dependencies ---
-jest.unstable_mockModule("../../../models/userModel.js", () => ({
+jest.unstable_mockModule("../../../../../models/userModel.js", () => ({
   __esModule: true,
   default: {
     findOne: jest.fn(),
@@ -11,7 +11,7 @@ jest.unstable_mockModule("../../../models/userModel.js", () => ({
   },
 }));
 
-jest.unstable_mockModule("../../../utils/AppError.js", () => ({
+jest.unstable_mockModule("../../../../../utils/AppError.js", () => ({
   __esModule: true,
   errorTypes: {
     badRequest: jest.fn((msg) => new Error(msg)),
@@ -22,7 +22,7 @@ jest.unstable_mockModule("../../../utils/AppError.js", () => ({
   },
 }));
 
-jest.unstable_mockModule("../../../utils/logger.js", () => ({
+jest.unstable_mockModule("../../../../../utils/logger.js", () => ({
   __esModule: true,
   logInfo: jest.fn(),
   logDebug: jest.fn(),
@@ -51,11 +51,12 @@ const {
   requestPasswordReset,
   resetUserPassword,
   changeUserPassword,
-} = await import("../../../services/authService.js");
+  validateResetToken,
+} = await import("../../../../../services/authService.js");
 
 // Import mocks for easy access in tests
-const User = (await import("../../../models/userModel.js")).default;
-const { errorTypes } = await import("../../../utils/AppError.js");
+const User = (await import("../../../../../models/userModel.js")).default;
+const { errorTypes } = await import("../../../../../utils/AppError.js");
 
 describe("Auth Service - Unit Tests", () => {
   beforeEach(() => {
@@ -609,6 +610,112 @@ describe("Auth Service - Unit Tests", () => {
       ).rejects.toThrow("Some DB issue");
       expect(errorTypes.badRequest).not.toHaveBeenCalled();
       expect(mockUser.save).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("validateResetToken", () => {
+    const token = "validResetToken123";
+    const hashedToken = "hashedTokenValue";
+
+    beforeEach(() => {
+      // Clear specific crypto mocks used in this block
+      mockCryptoCreateHash.mockClear();
+      mockCryptoUpdate.mockClear();
+      mockCryptoDigest.mockClear();
+
+      // Configure the mock digest function to return the expected hash
+      mockCryptoDigest.mockReturnValue(hashedToken);
+    });
+
+    it("should validate token successfully when user exists and token is not expired", async () => {
+      // Arrange - Mock user with valid token and future expiry
+      const mockUser = {
+        _id: "userId123",
+        passwordResetToken: hashedToken,
+        passwordResetExpires: Date.now() + 10 * 60 * 1000, // Expires in 10 mins
+      };
+      User.findOne.mockResolvedValue(mockUser);
+
+      // Act
+      await validateResetToken(token);
+
+      // Assert
+      expect(mockCryptoCreateHash).toHaveBeenCalledWith("sha256");
+      expect(mockCryptoUpdate).toHaveBeenCalledWith(token);
+      expect(mockCryptoDigest).toHaveBeenCalledWith("hex");
+      expect(User.findOne).toHaveBeenCalledWith({
+        passwordResetToken: hashedToken,
+        passwordResetExpires: { $gt: expect.any(Number) },
+      });
+    });
+
+    it("should throw badRequest if token is invalid (user not found)", async () => {
+      // Arrange
+      User.findOne.mockResolvedValue(null); // No user found for the token/expiry
+
+      // Act & Assert
+      await expect(validateResetToken(token)).rejects.toThrow(
+        "Token is invalid or has expired"
+      );
+      expect(errorTypes.badRequest).toHaveBeenCalledWith(
+        "Token is invalid or has expired"
+      );
+      expect(User.findOne).toHaveBeenCalledWith({
+        passwordResetToken: hashedToken,
+        passwordResetExpires: { $gt: expect.any(Number) },
+      });
+    });
+
+    it("should throw badRequest if token has expired", async () => {
+      // Arrange - Mock user with expired token
+      const mockUser = {
+        _id: "userId123",
+        passwordResetToken: hashedToken,
+        passwordResetExpires: Date.now() - 10 * 60 * 1000, // Expired 10 mins ago
+      };
+      User.findOne.mockResolvedValue(null); // findOne should return null due to $gt condition
+
+      // Act & Assert
+      await expect(validateResetToken(token)).rejects.toThrow(
+        "Token is invalid or has expired"
+      );
+      expect(errorTypes.badRequest).toHaveBeenCalledWith(
+        "Token is invalid or has expired"
+      );
+    });
+
+    it("should handle database errors", async () => {
+      // Arrange
+      const dbError = new Error("Database connection failed");
+      User.findOne.mockRejectedValue(dbError);
+
+      // Act & Assert
+      await expect(validateResetToken(token)).rejects.toThrow(
+        "Database connection failed"
+      );
+      expect(User.findOne).toHaveBeenCalledWith({
+        passwordResetToken: hashedToken,
+        passwordResetExpires: { $gt: expect.any(Number) },
+      });
+    });
+
+    it("should not modify or consume the token during validation", async () => {
+      // Arrange - Mock user with valid token
+      const mockUser = {
+        _id: "userId123",
+        passwordResetToken: hashedToken,
+        passwordResetExpires: Date.now() + 10 * 60 * 1000,
+        save: jest.fn(),
+      };
+      User.findOne.mockResolvedValue(mockUser);
+
+      // Act
+      await validateResetToken(token);
+
+      // Assert - User save should not be called (token not consumed)
+      expect(mockUser.save).not.toHaveBeenCalled();
+      expect(mockUser.passwordResetToken).toBe(hashedToken); // Unchanged
+      expect(mockUser.passwordResetExpires).toBeDefined(); // Unchanged
     });
   });
 });
