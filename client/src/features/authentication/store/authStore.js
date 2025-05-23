@@ -21,6 +21,11 @@ export const useAuthStore = create(
       isLoading: false,
       error: null,
 
+      // Token validation state
+      isValidatingToken: false,
+      isValidToken: false,
+      tokenValidationError: null,
+
       // Set loading state
       setLoading: (isLoading) => set({ isLoading }),
 
@@ -206,6 +211,40 @@ export const useAuthStore = create(
           set({
             error: errorMessage,
             isLoading: false,
+          });
+          return { success: false, error: errorMessage };
+        }
+      },
+
+      // Validate reset token action
+      validateResetToken: async (token) => {
+        if (!token) {
+          set({
+            isValidatingToken: false,
+            isValidToken: false,
+            tokenValidationError: "No reset token provided",
+          });
+          return { success: false, error: "No reset token provided" };
+        }
+
+        set({ isValidatingToken: true, tokenValidationError: null });
+        try {
+          await authService.validateResetToken(token);
+          set({
+            isValidatingToken: false,
+            isValidToken: true,
+            tokenValidationError: null,
+          });
+          return { success: true };
+        } catch (error) {
+          const errorMessage =
+            error.response?.data?.message ||
+            error.message ||
+            "This password reset link is invalid or has expired";
+          set({
+            isValidatingToken: false,
+            isValidToken: false,
+            tokenValidationError: errorMessage,
           });
           return { success: false, error: errorMessage };
         }

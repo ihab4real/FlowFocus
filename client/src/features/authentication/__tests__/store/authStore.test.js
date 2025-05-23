@@ -20,6 +20,7 @@ jest.mock("../../services/authService", () => ({
     refreshToken: jest.fn(),
     updateProfile: jest.fn(),
     changePassword: jest.fn(),
+    validateResetToken: jest.fn(),
   },
 }));
 
@@ -34,6 +35,9 @@ describe("authStore", () => {
       isAuthenticated: false,
       isLoading: false,
       error: null,
+      isValidatingToken: false,
+      isValidToken: false,
+      tokenValidationError: null,
     });
   });
 
@@ -48,6 +52,9 @@ describe("authStore", () => {
     expect(state.isAuthenticated).toBe(false);
     expect(state.isLoading).toBe(false);
     expect(state.error).toBeNull();
+    expect(state.isValidatingToken).toBe(false);
+    expect(state.isValidToken).toBe(false);
+    expect(state.tokenValidationError).toBeNull();
   });
 
   // Test login action - success
@@ -262,5 +269,135 @@ describe("authStore", () => {
     expect(state.user).toBeNull();
     expect(state.token).toBeNull();
     expect(state.isAuthenticated).toBe(false);
+  });
+
+  // Test validateResetToken on reset password page email links
+  describe("validateResetToken action", () => {
+    const testToken = "test-reset-token-123";
+
+    it("should update validation state correctly on successful token validation", async () => {
+      // Arrange
+      const mockResponse = {
+        status: "success",
+        message: "Reset token is valid",
+      };
+      authService.validateResetToken.mockResolvedValue(mockResponse);
+
+      // Act
+      await useAuthStore.getState().validateResetToken(testToken);
+      const state = useAuthStore.getState();
+
+      // Assert
+      expect(authService.validateResetToken).toHaveBeenCalledWith(testToken);
+      expect(state.isValidatingToken).toBe(false);
+      expect(state.isValidToken).toBe(true);
+      expect(state.tokenValidationError).toBeNull();
+    });
+
+    it("should update validation state correctly on token validation failure", async () => {
+      // Arrange
+      const errorMessage = "Token is invalid or has expired";
+      const mockError = createErrorResponse(errorMessage);
+      authService.validateResetToken.mockRejectedValue(mockError);
+
+      // Act
+      await useAuthStore.getState().validateResetToken(testToken);
+      const state = useAuthStore.getState();
+
+      // Assert
+      expect(authService.validateResetToken).toHaveBeenCalledWith(testToken);
+      expect(state.isValidatingToken).toBe(false);
+      expect(state.isValidToken).toBe(false);
+      expect(state.tokenValidationError).toBe(errorMessage);
+    });
+
+    it("should set loading state during validation", async () => {
+      // Arrange
+      let resolveValidation;
+      const validationPromise = new Promise((resolve) => {
+        resolveValidation = resolve;
+      });
+      authService.validateResetToken.mockReturnValue(validationPromise);
+
+      // Act - start validation but don't wait
+      const validatePromise = useAuthStore
+        .getState()
+        .validateResetToken(testToken);
+
+      // Assert loading state
+      const loadingState = useAuthStore.getState();
+      expect(loadingState.isValidatingToken).toBe(true);
+      expect(loadingState.isValidToken).toBe(false);
+      expect(loadingState.tokenValidationError).toBeNull();
+
+      // Complete the validation
+      resolveValidation({ status: "success" });
+      await validatePromise;
+
+      // Assert final state
+      const finalState = useAuthStore.getState();
+      expect(finalState.isValidatingToken).toBe(false);
+      expect(finalState.isValidToken).toBe(true);
+    });
+
+    it("should handle missing token parameter", async () => {
+      // Act
+      await useAuthStore.getState().validateResetToken();
+      const state = useAuthStore.getState();
+
+      // Assert
+      expect(state.isValidatingToken).toBe(false);
+      expect(state.isValidToken).toBe(false);
+      expect(state.tokenValidationError).toBe("No reset token provided");
+      expect(authService.validateResetToken).not.toHaveBeenCalled();
+    });
+
+    it("should handle empty token parameter", async () => {
+      // Act
+      await useAuthStore.getState().validateResetToken("");
+      const state = useAuthStore.getState();
+
+      // Assert
+      expect(state.isValidatingToken).toBe(false);
+      expect(state.isValidToken).toBe(false);
+      expect(state.tokenValidationError).toBe("No reset token provided");
+      expect(authService.validateResetToken).not.toHaveBeenCalled();
+    });
+
+    it("should handle generic error responses without specific message", async () => {
+      // Arrange
+      const genericError = new Error("Network error");
+      authService.validateResetToken.mockRejectedValue(genericError);
+
+      // Act
+      await useAuthStore.getState().validateResetToken(testToken);
+      const state = useAuthStore.getState();
+
+      // Assert
+      expect(state.isValidatingToken).toBe(false);
+      expect(state.isValidToken).toBe(false);
+      expect(state.tokenValidationError).toBe("Network error");
+    });
+
+    it("should reset validation state between calls", async () => {
+      // Arrange - Set some previous validation state
+      useAuthStore.setState({
+        isValidToken: true,
+        tokenValidationError: null,
+      });
+
+      const errorMessage = "Token expired";
+      const mockError = createErrorResponse(errorMessage);
+      authService.validateResetToken.mockRejectedValue(mockError);
+
+      // Act
+      await useAuthStore.getState().validateResetToken(testToken);
+      const state = useAuthStore.getState();
+
+      // Assert - Previous state should be cleared
+      expect(state.isValidatingToken).toBe(false);
+      expect(state.isValidToken).toBe(false);
+      expect(state.tokenValidationError).toBe(errorMessage);
+    });
   });
 });

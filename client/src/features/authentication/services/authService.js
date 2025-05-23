@@ -78,6 +78,15 @@ class AuthService {
   }
 
   /**
+   * Validate reset password token
+   * @param {string} token - Reset token to validate
+   * @returns {Promise<Object>} - Response indicating token validity
+   */
+  async validateResetToken(token) {
+    return apiClient.get(`/api/auth/validate-reset-token/${token}`);
+  }
+
+  /**
    * Logout user (client-side only)
    * Clears HTTP-only cookie containing refresh token on the server
    * @returns {Promise<Object>} - Response with success message
