@@ -2,7 +2,7 @@ import { jest, describe, it, expect, beforeEach } from "@jest/globals";
 import { errorTypes as originalErrorTypes } from "../../../../../utils/AppError.js";
 
 // Use the unstable API for mocking ESM
-jest.unstable_mockModule("../../../utils/AppError.js", () => {
+jest.unstable_mockModule("../../../../../utils/AppError.js", () => {
   return {
     errorTypes: {
       badRequest: jest.fn((message) => {
