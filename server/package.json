@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon -r dotenv/config server.js",
-    "test": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --detectOpenHandles"
+    "test": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --detectOpenHandles",
+    "lint": "echo 'Server linting not configured yet' && exit 0"
   },
   "keywords": [],
   "author": "",

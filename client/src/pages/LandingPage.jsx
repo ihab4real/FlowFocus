@@ -3,7 +3,7 @@ import { Logo } from "../components/Logo";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { CheckCircle, Github, User } from "lucide-react";
 import { useAuth } from "@/features/authentication/hooks/useAuth";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import dashboardIllustration from "@/assets/dashboard-illustration.svg";
 import rocketAnimation from "@/assets/rocket-animation.svg";
 
