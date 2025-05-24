@@ -206,18 +206,18 @@ jobs:
 
   # Job 6: Conventional Commits Check (for PRs)
   # TODO: Temporarily disabled due to false positives
-  commit-check:
-    name: Validate Commit Messages
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+  # commit-check:
+  #   name: Validate Commit Messages
+  #   runs-on: ubuntu-latest
+  #   if: github.event_name == 'pull_request'
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
 
-      - name: Validate conventional commits
-        uses: wagoid/commitlint-github-action@v6
-        with:
-          configFile: .commitlintrc.json
+  #     - name: Validate conventional commits
+  #       uses: wagoid/commitlint-github-action@v6
+  #       with:
+  #         configFile: .commitlintrc.json
