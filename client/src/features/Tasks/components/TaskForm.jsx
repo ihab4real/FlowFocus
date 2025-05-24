@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { X, Calendar, Loader2 } from "lucide-react";
-import { statusMap } from "@/features/tasks/utils/taskUtils";
+import { statusMap } from "@/features/Tasks/utils/taskUtils";
 import { format } from "date-fns";
 import {
   Popover,
