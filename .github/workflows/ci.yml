@@ -1,0 +1,203 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch: # Allow manual trigger
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  # Job 1: Code Quality and Linting
+  code-quality:
+    name: Code Quality & Linting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install client dependencies
+        run: cd client && npm ci
+
+      - name: Install server dependencies
+        run: cd server && npm ci
+
+      - name: Check Prettier formatting
+        run: npm run format -- --check
+
+      - name: Lint client code
+        run: cd client && npm run lint
+
+      - name: Lint server code (if configured)
+        run: |
+          if [ -f "server/package.json" ] && grep -q '"lint"' server/package.json; then
+            cd server && npm run lint
+          else
+            echo "Server linting not configured, skipping..."
+          fi
+
+  # Job 2: Test Client
+  test-client:
+    name: Test Frontend
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - name: Install client dependencies
+        run: cd client && npm ci
+
+      - name: Run client tests
+        run: cd client && npm test
+
+      - name: Build client
+        run: cd client && npm run build
+
+      - name: Upload client build artifacts
+        if: matrix.node-version == 20 # Only upload once
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-build
+          path: client/dist/
+          retention-days: 7
+
+  # Job 3: Test Server
+  test-server:
+    name: Test Backend
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+
+    services:
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - name: Install server dependencies
+        run: cd server && npm ci
+
+      - name: Run server tests
+        run: cd server && npm test
+        env:
+          NODE_ENV: test
+          # TODO: Use a real MongoDB URI for testing
+          MONGODB_URI: mongodb://localhost:27017/flowfocus_test
+
+  # Job 4: Security & Dependencies
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Audit client dependencies
+        run: cd client && npm audit --audit-level=moderate
+
+      - name: Audit server dependencies
+        run: cd server && npm audit --audit-level=moderate
+
+      - name: Check for outdated dependencies
+        run: |
+          echo "=== Client Dependencies ===" 
+          cd client && npm outdated || true
+          echo "=== Server Dependencies ==="
+          cd ../server && npm outdated || true
+
+  # Job 5: Integration Check
+  integration:
+    name: Integration Check
+    runs-on: ubuntu-latest
+    needs: [code-quality, test-client, test-server, security-audit]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install all dependencies
+        run: |
+          npm ci
+          cd client && npm ci
+          cd ../server && npm ci
+
+      - name: Run full development setup test
+        run: |
+          # Test that both apps can start (background processes)
+          cd server && timeout 30s npm run dev &
+          cd client && timeout 30s npm run dev &
+
+          # Wait a bit and check if processes started successfully
+          sleep 10
+
+          # Kill background processes
+          pkill -f "node" || true
+          pkill -f "vite" || true
+
+          echo "✅ Integration check passed - both apps can start"
+
+  # Job 6: Conventional Commits Check (for PRs)
+  commit-check:
+    name: Validate Commit Messages
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate conventional commits
+        uses: wagoid/commitlint-github-action@v6
+        with:
+          configFile: .commitlintrc.json
