@@ -38,7 +38,8 @@
         "comments",
         "build",
         "git",
-        "ci"
+        "ci",
+        "README"
       ]
     ],
     "scope-case": [2, "always", "lower-case"],
