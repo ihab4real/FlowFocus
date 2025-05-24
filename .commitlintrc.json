@@ -37,7 +37,8 @@
         "readme",
         "comments",
         "build",
-        "git"
+        "git",
+        "ci"
       ]
     ],
     "scope-case": [2, "always", "lower-case"],
