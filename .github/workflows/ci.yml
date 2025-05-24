@@ -205,6 +205,7 @@ jobs:
           echo "✅ Integration check passed - both apps can start"
 
   # Job 6: Conventional Commits Check (for PRs)
+  # TODO: Temporarily disabled due to false positives
   commit-check:
     name: Validate Commit Messages
     runs-on: ubuntu-latest
