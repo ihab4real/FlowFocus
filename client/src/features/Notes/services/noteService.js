@@ -1,5 +1,5 @@
-import { ApiService } from "./apiService";
-import apiClient from "./apiClient";
+import { ApiService } from "@/services/api/apiService";
+import apiClient from "@/services/api/apiClient";
 
 /**
  * Note service for handling note-related API requests

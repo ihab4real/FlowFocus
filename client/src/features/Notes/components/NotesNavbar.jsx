@@ -7,7 +7,7 @@ import {
   Trash2,
   Edit,
 } from "lucide-react";
-import { DEFAULT_FOLDER } from "../constants";
+import { DEFAULT_FOLDER } from "@/features/Notes/utils/constants";
 
 const NotesNavbar = ({
   folders,

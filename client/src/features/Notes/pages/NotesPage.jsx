@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import NotesContainer from "../features/Notes";
+import NotesContainer from "@/features/Notes/components/NotesContainer";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";

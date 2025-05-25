@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { useLocation } from "react-router-dom";
-import noteService from "../../services/api/noteService";
-import { DEFAULT_FOLDER } from "./constants";
+import noteService from "@/features/Notes/services/noteService";
+import { DEFAULT_FOLDER } from "@/features/Notes/utils/constants";
 
 // Component imports
-import NotesList from "./components/NotesList";
-import NotesNavbar from "./components/NotesNavbar";
-import NoteEditor from "./components/NoteEditor";
+import NotesList from "@/features/Notes/components/NotesList";
+import NotesNavbar from "@/features/Notes/components/NotesNavbar";
+import NoteEditor from "@/features/Notes/components/NoteEditor";
 
 // Resizable panels imports
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";

@@ -13,10 +13,10 @@ import {
   FolderIcon,
   Plus,
 } from "lucide-react";
-import noteService from "@/services/api/noteService";
+import noteService from "@/features/Notes/services/noteService";
 import { toast } from "react-hot-toast";
 import { debounce } from "lodash";
-import { DEFAULT_FOLDER } from "@/features/Notes/constants";
+import { DEFAULT_FOLDER } from "@/features/Notes/utils/constants";
 import {
   Dialog,
   DialogContent,
