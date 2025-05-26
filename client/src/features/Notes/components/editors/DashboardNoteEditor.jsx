@@ -4,8 +4,8 @@ import Placeholder from "@tiptap/extension-placeholder";
 import Underline from "@tiptap/extension-underline";
 import { useEffect } from "react";
 
-// Mini version of TipTap editor for dashboard panel
-const MiniTipTapEditor = ({
+// Dashboard version of TipTap editor for dashboard panel
+const DashboardNoteEditor = ({
   content,
   onUpdate,
   onBlur,
@@ -51,4 +51,4 @@ const MiniTipTapEditor = ({
   return <EditorContent editor={editor} className="h-full" />;
 };
 
-export default MiniTipTapEditor;
+export default DashboardNoteEditor;

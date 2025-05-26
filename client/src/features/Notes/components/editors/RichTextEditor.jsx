@@ -154,8 +154,8 @@ const MenuBar = ({ editor }) => {
   );
 };
 
-// Main TipTap Editor component
-const TipTapEditor = ({ content, onUpdate, isFullScreen }) => {
+// Main Rich Text Editor component
+const RichTextEditor = ({ content, onUpdate, isFullScreen }) => {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -218,4 +218,4 @@ const TipTapEditor = ({ content, onUpdate, isFullScreen }) => {
   );
 };
 
-export default TipTapEditor;
+export default RichTextEditor;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import NotesContainer from "../features/Notes";
+import NotesPageLayout from "@/features/Notes/components/layout/NotesPageLayout";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
@@ -70,7 +70,7 @@ const NotesPage = () => {
               )}
             </Button>
           </div>
-          <NotesContainer />
+          <NotesPageLayout />
         </div>
       </main>
     </div>

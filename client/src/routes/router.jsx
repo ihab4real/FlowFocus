@@ -15,7 +15,7 @@ import {
 import { ProtectedRoute } from "../features/authentication/components";
 import Profile from "../pages/Profile";
 import FullScreenTaskBoard from "@/features/Tasks/pages/FullScreenTaskBoard";
-import NotesPage from "../pages/NotesPage";
+import NotesPage from "@/features/Notes/pages/NotesPage";
 import PomodoroPage from "../pages/PomodoroPage";
 
 // Root loader function for initial data fetching
