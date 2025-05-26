@@ -1,8 +1,17 @@
 import { useState, useEffect } from "react";
-import { toast } from "react-hot-toast";
 import { useLocation } from "react-router-dom";
-import noteService from "@/features/Notes/services/noteService";
 import { DEFAULT_FOLDER } from "@/features/Notes/utils/constants";
+import {
+  useNotesQuery,
+  useNoteQuery,
+  useCreateNoteMutation,
+  useUpdateNoteMutation,
+  useDeleteNoteMutation,
+  useFoldersQuery,
+  useCreateFolderMutation,
+  useDeleteFolderMutation,
+  useRenameFolderMutation,
+} from "@/features/Notes";
 
 // Component imports
 import NotesList from "./NotesList";
@@ -14,10 +23,7 @@ import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
 const NotesPageLayout = () => {
   // State management
-  const [notes, setNotes] = useState([]);
-  const [folders, setFolders] = useState([DEFAULT_FOLDER]);
   const [selectedNote, setSelectedNote] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [currentFolder, setCurrentFolder] = useState(DEFAULT_FOLDER);
   const [searchQuery, setSearchQuery] = useState("");
   const [isNewNote, setIsNewNote] = useState(false);
@@ -26,118 +32,58 @@ const NotesPageLayout = () => {
   // Get location to check for initial state passed from dashboard
   const location = useLocation();
 
-  // Check if we should initialize with a specific note and/or focus mode
+  // React Query hooks
+  const { data: notes = [], isLoading: notesLoading } = useNotesQuery({
+    folder: currentFolder,
+  });
+  const { data: folders = [DEFAULT_FOLDER] } = useFoldersQuery();
+  const createNoteMutation = useCreateNoteMutation();
+  const updateNoteMutation = useUpdateNoteMutation();
+  const deleteNoteMutation = useDeleteNoteMutation();
+  const createFolderMutation = useCreateFolderMutation();
+  const deleteFolderMutation = useDeleteFolderMutation();
+  const renameFolderMutation = useRenameFolderMutation();
+
+  // For initial note loading
+  const { data: initialNote } = useNoteQuery(location.state?.initialNoteId);
+
+  // Handle initial note loading from dashboard navigation
   useEffect(() => {
-    if (location.state) {
-      const { initialNoteId } = location.state;
-
-      if (initialNoteId) {
-        // Find the note by ID and select it
-        const fetchInitialNote = async () => {
-          try {
-            const response = await noteService.getById(initialNoteId);
-            if (response.data.note) {
-              setSelectedNote(response.data.note);
-              // Set the current folder to match the note's folder
-              setCurrentFolder(response.data.note.folder || DEFAULT_FOLDER);
-            }
-          } catch (error) {
-            console.error("Error fetching initial note:", error);
-          }
-        };
-
-        fetchInitialNote();
-      }
+    if (initialNote) {
+      setSelectedNote(initialNote);
+      // Set the current folder to match the note's folder
+      setCurrentFolder(initialNote.folder || DEFAULT_FOLDER);
     }
-  }, [location.state]);
+  }, [initialNote]);
 
-  // Fetch notes when component mounts or folder changes
+  // Clear selected note when changing folders unless we have a specific note requested
   useEffect(() => {
-    const fetchNotes = async () => {
-      setLoading(true);
-      try {
-        // Make sure we're explicitly filtering by the current folder
-        const response = await noteService.getNotes({ folder: currentFolder });
-
-        // Only show notes that belong to the current folder
-        const folderNotes =
-          response.data.notes?.filter(
-            (note) => note.folder === currentFolder
-          ) || [];
-
-        setNotes(folderNotes);
-
-        // Clear selected note when changing folders unless we have a specific note requested
-        if (!location.state?.initialNoteId) {
-          setSelectedNote(null);
-        }
-      } catch (error) {
-        console.error("Error fetching notes:", error);
-        toast.error("Failed to load notes. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchNotes();
+    if (!location.state?.initialNoteId) {
+      setSelectedNote(null);
+    }
   }, [currentFolder, location.state?.initialNoteId]);
 
-  // Fetch folders when component mounts or when returning to the component
+  // Also clear selected note if it doesn't belong to the current folder
   useEffect(() => {
-    const fetchFolders = async () => {
-      try {
-        const response = await noteService.getFolders();
-        const fetchedFolders = response?.data?.folders || [];
-        if (fetchedFolders.length > 0) {
-          const updatedFolders = [DEFAULT_FOLDER, ...fetchedFolders];
-          setFolders(updatedFolders);
-          // Save folders to localStorage for persistence
-          localStorage.setItem("note-folders", JSON.stringify(updatedFolders));
-        }
-      } catch (error) {
-        console.error("Error fetching folders:", error);
-        // Don't show error toast for folders as it's not critical
-      }
-    };
-
-    // Load folders from localStorage if available
-    const savedFolders = localStorage.getItem("note-folders");
-    if (savedFolders) {
-      try {
-        const parsedFolders = JSON.parse(savedFolders);
-        setFolders(parsedFolders);
-      } catch (e) {
-        console.error("Error parsing saved folders:", e);
-      }
+    if (selectedNote && selectedNote.folder !== currentFolder) {
+      setSelectedNote(null);
     }
-
-    // Always fetch fresh data from server
-    fetchFolders();
-
-    // Set up an interval to periodically refresh folders while component is mounted
-    const folderRefreshInterval = setInterval(fetchFolders, 30000); // Refresh every 30 seconds
-
-    // Clean up the interval when component unmounts
-    return () => clearInterval(folderRefreshInterval);
-  }, []);
+  }, [selectedNote, currentFolder]);
 
   // Create a new note
   const handleCreateNote = async () => {
     try {
-      const response = await noteService.create({
+      const newNote = await createNoteMutation.mutateAsync({
         title: "Untitled Note",
         content: "",
         folder: currentFolder,
       });
 
-      const newNote = response.data.note;
-      setNotes([newNote, ...notes]);
       setSelectedNote(newNote);
       setIsNewNote(true); // Mark as new note to trigger title focus
-      toast.success("Note created");
     } catch (error) {
+      // Error handling is done in the mutation
       console.error("Error creating note:", error);
-      toast.error("Failed to create note");
     }
   };
 
@@ -150,13 +96,13 @@ const NotesPageLayout = () => {
   // Handler for updating a note
   const handleUpdateNote = async (id, updatedData) => {
     try {
-      const response = await noteService.update(id, updatedData);
-      setNotes(
-        notes.map((note) => (note._id === id ? response.data.note : note))
-      );
+      const updatedNote = await updateNoteMutation.mutateAsync({
+        id,
+        data: updatedData,
+      });
 
       if (selectedNote && selectedNote._id === id) {
-        setSelectedNote(response.data.note);
+        setSelectedNote(updatedNote);
       }
 
       // If we're updating the title of a new note, clear the new note flag
@@ -166,8 +112,8 @@ const NotesPageLayout = () => {
 
       // No toast here as this will be called frequently during auto-save
     } catch (error) {
+      // Error handling is done in the mutation
       console.error("Error updating note:", error);
-      toast.error("Failed to save note");
     }
   };
 
@@ -183,102 +129,61 @@ const NotesPageLayout = () => {
   // Handler for creating a new folder
   const handleCreateFolder = async (name) => {
     try {
-      const response = await noteService.createFolder(name);
-      const updatedFolders = [...folders, name];
-      setFolders(updatedFolders);
-      // Save updated folders to localStorage
-      localStorage.setItem("note-folders", JSON.stringify(updatedFolders));
+      const { welcomeNote } = await createFolderMutation.mutateAsync(name);
 
       setCurrentFolder(name);
-      // Add the newly created welcome note to the notes list
-      setNotes([response.data.note]);
-      setSelectedNote(response.data.note);
-      toast.success(`Folder "${name}" created`);
+      // Select the newly created welcome note
+      if (welcomeNote) {
+        setSelectedNote(welcomeNote);
+      }
     } catch (error) {
+      // Error handling is done in the mutation
       console.error("Error creating folder:", error);
-      toast.error(error.response?.data?.message || "Failed to create folder");
     }
   };
 
   // Handler for deleting a folder
   const handleDeleteFolder = async (name) => {
     try {
-      const response = await noteService.deleteFolder(name);
-
-      // Remove the folder from state
-      const updatedFolders = folders.filter((f) => f !== name);
-      setFolders(updatedFolders);
-      // Save updated folders to localStorage
-      localStorage.setItem("note-folders", JSON.stringify(updatedFolders));
+      await deleteFolderMutation.mutateAsync(name);
 
       // If we're currently in the deleted folder, switch to General
       if (currentFolder === name) {
         setCurrentFolder(DEFAULT_FOLDER);
-        // Fetch notes from the General folder
-        const notesResponse = await noteService.getNotes({
-          folder: DEFAULT_FOLDER,
-        });
-        setNotes(notesResponse.data.notes || []);
         setSelectedNote(null);
       }
-
-      toast.success(response.data.data.message || `Folder "${name}" deleted`);
     } catch (error) {
+      // Error handling is done in the mutation
       console.error("Error deleting folder:", error);
-      toast.error(error.response?.data?.message || "Failed to delete folder");
     }
   };
 
   // Handler for renaming a folder
   const handleRenameFolder = async (oldName, newName) => {
     try {
-      const response = await noteService.renameFolder(oldName, newName);
-
-      // Update folders in state
-      const updatedFolders = folders.map((f) => (f === oldName ? newName : f));
-      setFolders(updatedFolders);
-      // Save updated folders to localStorage
-      localStorage.setItem("note-folders", JSON.stringify(updatedFolders));
+      await renameFolderMutation.mutateAsync({ oldName, newName });
 
       // If we're in the renamed folder, update currentFolder
       if (currentFolder === oldName) {
         setCurrentFolder(newName);
       }
-
-      // Update notes array if we're currently viewing the folder
-      if (currentFolder === oldName) {
-        setNotes(
-          notes.map((note) => ({
-            ...note,
-            folder: newName,
-          }))
-        );
-      }
-
-      toast.success(
-        response.data.data.message || `Folder renamed to "${newName}"`
-      );
     } catch (error) {
+      // Error handling is done in the mutation
       console.error("Error renaming folder:", error);
-      toast.error(error.response?.data?.message || "Failed to rename folder");
     }
   };
 
   // Handler for deleting a note
   const handleDeleteNote = async (id) => {
     try {
-      await noteService.delete(id);
-
-      setNotes(notes.filter((note) => note._id !== id));
+      await deleteNoteMutation.mutateAsync(id);
 
       if (selectedNote && selectedNote._id === id) {
         setSelectedNote(null);
       }
-
-      toast.success("Note deleted");
     } catch (error) {
+      // Error handling is done in the mutation
       console.error("Error deleting note:", error);
-      toast.error("Failed to delete note");
     }
   };
 
@@ -325,7 +230,7 @@ const NotesPageLayout = () => {
             onSelectNote={handleSelectNote}
             onCreateNote={handleCreateNote}
             onDeleteNote={handleDeleteNote}
-            loading={loading}
+            loading={notesLoading}
             currentFolder={currentFolder}
           />
         </Panel>

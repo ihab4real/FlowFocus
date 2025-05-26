@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,10 +13,15 @@ import {
   FolderIcon,
   Plus,
 } from "lucide-react";
-import noteService from "@/features/Notes/services/noteService";
 import { toast } from "react-hot-toast";
 import { debounce } from "lodash";
 import { DEFAULT_FOLDER } from "@/features/Notes/utils/constants";
+import {
+  useNotesQuery,
+  useCreateNoteMutation,
+  useUpdateNoteMutation,
+  useFoldersQuery,
+} from "@/features/Notes";
 import {
   Dialog,
   DialogContent,
@@ -37,10 +42,7 @@ import { Label } from "@/components/ui/label";
 import DashboardNoteEditor from "@/features/Notes/components/editors/DashboardNoteEditor";
 
 const NotesDashboardPanel = () => {
-  const [notes, setNotes] = useState([]);
-  const [folders, setFolders] = useState([DEFAULT_FOLDER]);
   const [activeNote, setActiveNote] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newNoteTitle, setNewNoteTitle] = useState("New Note");
   const [selectedFolder, setSelectedFolder] = useState(DEFAULT_FOLDER);
@@ -48,62 +50,45 @@ const NotesDashboardPanel = () => {
 
   const navigate = useNavigate();
 
-  // Fetch notes and folders when component mounts
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch notes
-        const notesResponse = await noteService.getNotes({ limit: 5 });
-        const fetchedNotes = notesResponse.data.notes || [];
+  // Use React Query hooks
+  const { data: notes = [], isLoading: notesLoading } = useNotesQuery({
+    limit: 5,
+  });
+  const { data: folders = [DEFAULT_FOLDER] } = useFoldersQuery();
+  const createNoteMutation = useCreateNoteMutation();
+  const updateNoteMutation = useUpdateNoteMutation();
 
-        // Get folders from localStorage and ensure no duplicates
-        const storedFolders = JSON.parse(
-          localStorage.getItem("note-folders") || "[]"
-        );
-        const allFolders = storedFolders.includes(DEFAULT_FOLDER)
-          ? storedFolders
-          : [DEFAULT_FOLDER, ...storedFolders];
+  // Set active note when notes are loaded
+  React.useEffect(() => {
+    if (notes.length > 0 && !activeNote) {
+      setActiveNote(notes[0]._id);
+    }
+  }, [notes, activeNote]);
 
-        setNotes(fetchedNotes);
-        setFolders(allFolders);
-
-        if (fetchedNotes.length > 0) {
-          setActiveNote(fetchedNotes[0]._id);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const loading = notesLoading;
 
   // Handle creating a new note
   const handleCreateNote = async () => {
     try {
-      const response = await noteService.create({
+      const newNote = await createNoteMutation.mutateAsync({
         title: newNoteTitle,
         content: "",
         folder: selectedFolder,
       });
 
-      setNotes([response.data.note, ...notes]);
-      setActiveNote(response.data.note._id);
+      setActiveNote(newNote._id);
       setIsCreateDialogOpen(false);
       setNewNoteTitle("New Note");
-      toast.success("Note created");
     } catch (error) {
+      // Error handling is done in the mutation
       console.error("Error creating note:", error);
-      toast.error("Failed to create note");
     }
   };
 
   // Handle updating a note
   const handleUpdateNote = debounce(async (id, content) => {
     try {
-      await noteService.update(id, { content });
+      await updateNoteMutation.mutateAsync({ id, data: { content } });
     } catch (error) {
       console.error("Error updating note:", error);
     }
@@ -153,13 +138,24 @@ const NotesDashboardPanel = () => {
       <Card className="h-full shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Notes</CardTitle>
-          <Button
-            size="sm"
-            className="bg-[#6C63FF] hover:bg-[#6C63FF]/90"
-            onClick={openCreateDialog}
-          >
-            New Note
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              className="bg-[#6C63FF] hover:bg-[#6C63FF]/90"
+              onClick={openCreateDialog}
+            >
+              New Note
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleFullScreen}
+              className="transition-all duration-300 ease-in-out border-[#6C63FF]/30 hover:border-[#6C63FF] hover:bg-[#6C63FF]/5 text-[#6C63FF]"
+              title="Open in Editor"
+            >
+              <Maximize2 className="h-4 w-4 hover:scale-110 transition-transform" />
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="flex flex-col justify-center items-center h-64">
           <p className="text-gray-500 mb-2">No notes yet</p>
