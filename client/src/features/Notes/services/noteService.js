@@ -75,7 +75,9 @@ noteService.createFolder = async (name) => {
  * @returns {Promise<Object>} - Response with success message
  */
 noteService.deleteFolder = async (name) => {
-  return apiClient.delete(`${noteService.resourcePath}/folders/${name}`);
+  return apiClient.delete(
+    `${noteService.resourcePath}/folders/${encodeURIComponent(name)}`
+  );
 };
 
 /**
@@ -85,9 +87,12 @@ noteService.deleteFolder = async (name) => {
  * @returns {Promise<Object>} - Response with success message
  */
 noteService.renameFolder = async (oldName, newName) => {
-  return apiClient.patch(`${noteService.resourcePath}/folders/${oldName}`, {
-    name: newName,
-  });
+  return apiClient.patch(
+    `${noteService.resourcePath}/folders/${encodeURIComponent(oldName)}`,
+    {
+      name: newName,
+    }
+  );
 };
 
 export default noteService;

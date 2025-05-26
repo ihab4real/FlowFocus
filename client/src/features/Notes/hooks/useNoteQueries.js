@@ -251,7 +251,7 @@ export const useDeleteFolderMutation = () => {
   return useMutation({
     mutationFn: async (name) => {
       const response = await noteService.deleteFolder(name);
-      return { folderName: name, message: response.data.data.message };
+      return { folderName: name, message: response.data.message };
     },
     onSuccess: ({ folderName, message }) => {
       // Update folders cache
@@ -293,7 +293,7 @@ export const useRenameFolderMutation = () => {
   return useMutation({
     mutationFn: async ({ oldName, newName }) => {
       const response = await noteService.renameFolder(oldName, newName);
-      return { oldName, newName, message: response.data.data.message };
+      return { oldName, newName, message: response.data.message };
     },
     onSuccess: ({ oldName, newName, message }) => {
       // Update folders cache
