@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { debounce } from "lodash";
-import TipTapEditor from "./TipTapEditor";
+import RichTextEditor from "../editors/RichTextEditor";
 import { Maximize2, Minimize2 } from "lucide-react";
 
-const NoteEditor = ({
+const NoteEditingPanel = ({
   note,
   onUpdateNote,
   isNewNote,
@@ -169,7 +169,7 @@ const NoteEditor = ({
       <div
         className={`flex-grow overflow-auto scrollbar-hide ${isFullScreen ? "absolute inset-0 mt-16 mb-10" : ""}`}
       >
-        <TipTapEditor
+        <RichTextEditor
           content={content}
           onUpdate={handleTipTapUpdate}
           isFullScreen={isFullScreen}
@@ -186,4 +186,4 @@ const NoteEditor = ({
   );
 };
 
-export default NoteEditor;
+export default NoteEditingPanel;

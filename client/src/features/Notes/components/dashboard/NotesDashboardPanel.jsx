@@ -34,9 +34,9 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import MiniTipTapEditor from "@/features/Notes/components/MiniTipTapEditor";
+import DashboardNoteEditor from "@/features/Notes/components/editors/DashboardNoteEditor";
 
-export function NotesPanel() {
+const NotesDashboardPanel = () => {
   const [notes, setNotes] = useState([]);
   const [folders, setFolders] = useState([DEFAULT_FOLDER]);
   const [activeNote, setActiveNote] = useState(null);
@@ -349,7 +349,7 @@ export function NotesPanel() {
               </div>
 
               <div className="h-40 overflow-y-auto flex-grow scrollbar-hide">
-                <MiniTipTapEditor
+                <DashboardNoteEditor
                   content={note.content}
                   onUpdate={(content) => handleUpdateNote(note._id, content)}
                   onBlur={() => handleBlur(note._id, note.content)}
@@ -415,4 +415,6 @@ export function NotesPanel() {
       </Dialog>
     </Card>
   );
-}
+};
+
+export default NotesDashboardPanel;

@@ -2,7 +2,7 @@ import React from "react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Sidebar } from "@/components/Sidebar";
 import { MiniScreenTaskBoard } from "@/features/Tasks/pages/MiniScreenTaskBoard";
-import { NotesPanel } from "@/features/Notes/components/NotesPanel";
+import NotesDashboardPanel from "@/features/Notes/components/dashboard/NotesDashboardPanel";
 import PomodoroContainer from "@/features/Pomodoro";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -18,7 +18,7 @@ function Dashboard() {
           </div>
           <div className="space-y-4">
             <PomodoroContainer />
-            <NotesPanel />
+            <NotesDashboardPanel />
           </div>
         </div>
       </main>

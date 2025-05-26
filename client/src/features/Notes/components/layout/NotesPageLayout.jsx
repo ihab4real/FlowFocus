@@ -5,14 +5,14 @@ import noteService from "@/features/Notes/services/noteService";
 import { DEFAULT_FOLDER } from "@/features/Notes/utils/constants";
 
 // Component imports
-import NotesList from "@/features/Notes/components/NotesList";
-import NotesNavbar from "@/features/Notes/components/NotesNavbar";
-import NoteEditor from "@/features/Notes/components/NoteEditor";
+import NotesList from "./NotesList";
+import NotesNavbar from "./NotesNavbar";
+import NoteEditingPanel from "./NoteEditingPanel";
 
 // Resizable panels imports
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
-const NotesContainer = () => {
+const NotesPageLayout = () => {
   // State management
   const [notes, setNotes] = useState([]);
   const [folders, setFolders] = useState([DEFAULT_FOLDER]);
@@ -335,7 +335,7 @@ const NotesContainer = () => {
 
         {/* Right section with note editor - takes remaining space */}
         <Panel defaultSize={55} className="overflow-hidden flex flex-col">
-          <NoteEditor
+          <NoteEditingPanel
             note={selectedNote}
             onUpdateNote={handleUpdateNote}
             isNewNote={isNewNote}
@@ -348,4 +348,4 @@ const NotesContainer = () => {
   );
 };
 
-export default NotesContainer;
+export default NotesPageLayout;
