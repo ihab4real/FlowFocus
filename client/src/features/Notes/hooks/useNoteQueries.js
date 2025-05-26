@@ -4,6 +4,28 @@ import { toast } from "react-hot-toast";
 import { DEFAULT_FOLDER } from "../utils/constants";
 
 /**
+ * Helper function to get current user ID from auth storage
+ * @returns {string|null} User ID or null if not authenticated
+ */
+const getCurrentUserId = () => {
+  try {
+    const authStorage = JSON.parse(localStorage.getItem("auth-storage"));
+    return authStorage?.state?.user?.id || null;
+  } catch (e) {
+    return null;
+  }
+};
+
+/**
+ * Helper function to get user-specific localStorage key for folders
+ * @returns {string|null} User-specific key or null if no user
+ */
+const getFoldersStorageKey = () => {
+  const userId = getCurrentUserId();
+  return userId ? `note-folders-${userId}` : null;
+};
+
+/**
  * Note query keys for proper cache management
  */
 export const noteKeys = {
@@ -185,14 +207,17 @@ export const useFoldersQuery = () => {
     // Initialize with localStorage data while fetching
     initialData: () => {
       try {
-        const savedFolders = localStorage.getItem("note-folders");
-        if (savedFolders) {
-          const parsed = JSON.parse(savedFolders);
-          // Ensure DEFAULT_FOLDER is always first
-          if (!parsed.includes(DEFAULT_FOLDER)) {
-            return [DEFAULT_FOLDER, ...parsed];
+        const storageKey = getFoldersStorageKey();
+        if (storageKey) {
+          const savedFolders = localStorage.getItem(storageKey);
+          if (savedFolders) {
+            const parsed = JSON.parse(savedFolders);
+            // Ensure DEFAULT_FOLDER is always first
+            if (!parsed.includes(DEFAULT_FOLDER)) {
+              return [DEFAULT_FOLDER, ...parsed];
+            }
+            return parsed;
           }
-          return parsed;
         }
       } catch (e) {
         console.error("Error parsing saved folders:", e);
@@ -221,7 +246,10 @@ export const useCreateFolderMutation = () => {
           ? currentFolders
           : [...currentFolders, folder];
         // Save to localStorage for persistence
-        localStorage.setItem("note-folders", JSON.stringify(updatedFolders));
+        const storageKey = getFoldersStorageKey();
+        if (storageKey) {
+          localStorage.setItem(storageKey, JSON.stringify(updatedFolders));
+        }
         return updatedFolders;
       });
 
@@ -263,7 +291,10 @@ export const useDeleteFolderMutation = () => {
           updatedFolders.unshift(DEFAULT_FOLDER);
         }
         // Save to localStorage for persistence
-        localStorage.setItem("note-folders", JSON.stringify(updatedFolders));
+        const storageKey = getFoldersStorageKey();
+        if (storageKey) {
+          localStorage.setItem(storageKey, JSON.stringify(updatedFolders));
+        }
         return updatedFolders;
       });
 
@@ -303,7 +334,10 @@ export const useRenameFolderMutation = () => {
           f === oldName ? newName : f
         );
         // Save to localStorage for persistence
-        localStorage.setItem("note-folders", JSON.stringify(updatedFolders));
+        const storageKey = getFoldersStorageKey();
+        if (storageKey) {
+          localStorage.setItem(storageKey, JSON.stringify(updatedFolders));
+        }
         return updatedFolders;
       });
 

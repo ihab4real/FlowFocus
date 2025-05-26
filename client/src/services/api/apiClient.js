@@ -115,7 +115,25 @@ apiClient.interceptors.response.use(
           processQueue(refreshError, null);
 
           // If we can't refresh, log out the user by clearing auth state
+          // Get user ID before clearing auth storage
+          const authStorage = JSON.parse(localStorage.getItem("auth-storage"));
+          const userId = authStorage?.state?.user?.id;
+
+          // Clear auth storage
           localStorage.removeItem("auth-storage");
+
+          // Clean up user-specific localStorage
+          if (userId) {
+            try {
+              localStorage.removeItem(`note-folders-${userId}`);
+              // Add other user-specific cleanup here if needed in the future
+            } catch (cleanupError) {
+              console.error(
+                "Error cleaning up user-specific localStorage:",
+                cleanupError
+              );
+            }
+          }
 
           // Redirect to login (optional - can be handled by the component)
           window.location.href = "/login";
