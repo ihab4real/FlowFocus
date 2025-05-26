@@ -33,10 +33,10 @@ const NotesPageLayout = () => {
   const location = useLocation();
 
   // React Query hooks
+  const { data: folders = [DEFAULT_FOLDER] } = useFoldersQuery();
   const { data: notes = [], isLoading: notesLoading } = useNotesQuery({
     folder: currentFolder,
   });
-  const { data: folders = [DEFAULT_FOLDER] } = useFoldersQuery();
   const createNoteMutation = useCreateNoteMutation();
   const updateNoteMutation = useUpdateNoteMutation();
   const deleteNoteMutation = useDeleteNoteMutation();

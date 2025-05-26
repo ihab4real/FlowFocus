@@ -1,4 +1,5 @@
 import axios from "axios";
+import { queryClient } from "../../config/queryClient";
 
 // Create axios instance with custom config
 const apiClient = axios.create({
@@ -133,6 +134,13 @@ apiClient.interceptors.response.use(
                 cleanupError
               );
             }
+          }
+
+          // Clear React Query cache to prevent data leakage between users
+          try {
+            queryClient.clear();
+          } catch (cacheError) {
+            console.error("Error clearing React Query cache:", cacheError);
           }
 
           // Redirect to login (optional - can be handled by the component)

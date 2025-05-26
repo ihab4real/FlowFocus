@@ -12,6 +12,7 @@ const getCurrentUserId = () => {
     const authStorage = JSON.parse(localStorage.getItem("auth-storage"));
     return authStorage?.state?.user?.id || null;
   } catch (e) {
+    console.error("Error getting current user ID:", e);
     return null;
   }
 };
@@ -27,14 +28,15 @@ const getFoldersStorageKey = () => {
 
 /**
  * Note query keys for proper cache management
+ * All keys are user-specific to prevent data leakage between users
  */
 export const noteKeys = {
-  all: ["notes"],
-  lists: () => [...noteKeys.all, "list"],
-  list: (filters) => [...noteKeys.lists(), { filters }],
-  details: () => [...noteKeys.all, "detail"],
-  detail: (id) => [...noteKeys.details(), id],
-  folders: () => [...noteKeys.all, "folders"],
+  all: (userId) => ["notes", userId],
+  lists: (userId) => [...noteKeys.all(userId), "list"],
+  list: (userId, filters) => [...noteKeys.lists(userId), { filters }],
+  details: (userId) => [...noteKeys.all(userId), "detail"],
+  detail: (userId, id) => [...noteKeys.details(userId), id],
+  folders: (userId) => [...noteKeys.all(userId), "folders"],
 };
 
 /**
@@ -42,8 +44,10 @@ export const noteKeys = {
  * Note: Server returns all notes, client-side filtering is applied
  */
 export const useNotesQuery = (filters = {}) => {
+  const userId = getCurrentUserId();
+
   return useQuery({
-    queryKey: noteKeys.list(filters),
+    queryKey: noteKeys.list(userId, filters),
     queryFn: async () => {
       const response = await noteService.getNotes(); // Server doesn't support filters yet
       let notes = response.data.notes || [];
@@ -59,6 +63,7 @@ export const useNotesQuery = (filters = {}) => {
 
       return notes;
     },
+    enabled: !!userId, // Only run query if user is authenticated
     staleTime: 30 * 1000, // 30 seconds - notes don't change as frequently
     networkMode: "online",
   });
@@ -68,13 +73,15 @@ export const useNotesQuery = (filters = {}) => {
  * Hook for fetching a single note by ID
  */
 export const useNoteQuery = (id) => {
+  const userId = getCurrentUserId();
+
   return useQuery({
-    queryKey: noteKeys.detail(id),
+    queryKey: noteKeys.detail(userId, id),
     queryFn: async () => {
       const response = await noteService.getById(id);
       return response.data.note;
     },
-    enabled: !!id, // Only run query if id exists
+    enabled: !!id && !!userId, // Only run query if id exists and user is authenticated
     staleTime: 60 * 1000, // 1 minute - individual notes are accessed less frequently
   });
 };
@@ -84,6 +91,7 @@ export const useNoteQuery = (id) => {
  */
 export const useCreateNoteMutation = () => {
   const queryClient = useQueryClient();
+  const userId = getCurrentUserId();
 
   return useMutation({
     mutationFn: async (data) => {
@@ -91,12 +99,14 @@ export const useCreateNoteMutation = () => {
       return response.data.note;
     },
     onSuccess: (newNote) => {
+      if (!userId) return;
+
       // Invalidate all note lists to refresh data
-      queryClient.invalidateQueries({ queryKey: noteKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: noteKeys.lists(userId) });
 
       // Optionally add the new note to existing cache for immediate UI update
       queryClient.setQueryData(
-        noteKeys.list({ folder: newNote.folder }),
+        noteKeys.list(userId, { folder: newNote.folder }),
         (oldData) => {
           if (oldData) {
             return [newNote, ...oldData];
@@ -119,6 +129,7 @@ export const useCreateNoteMutation = () => {
  */
 export const useUpdateNoteMutation = () => {
   const queryClient = useQueryClient();
+  const userId = getCurrentUserId();
 
   return useMutation({
     mutationFn: async ({ id, data }) => {
@@ -126,18 +137,26 @@ export const useUpdateNoteMutation = () => {
       return response.data.note;
     },
     onSuccess: (updatedNote, variables) => {
+      if (!userId) return;
+
       // Update the specific note in cache
-      queryClient.setQueryData(noteKeys.detail(variables.id), updatedNote);
+      queryClient.setQueryData(
+        noteKeys.detail(userId, variables.id),
+        updatedNote
+      );
 
       // Update the note in all list caches
-      queryClient.setQueriesData({ queryKey: noteKeys.lists() }, (oldData) => {
-        if (oldData) {
-          return oldData.map((note) =>
-            note._id === variables.id ? updatedNote : note
-          );
+      queryClient.setQueriesData(
+        { queryKey: noteKeys.lists(userId) },
+        (oldData) => {
+          if (oldData) {
+            return oldData.map((note) =>
+              note._id === variables.id ? updatedNote : note
+            );
+          }
+          return oldData;
         }
-        return oldData;
-      });
+      );
 
       // Show success message only for explicit saves (when title is updated)
       if (variables.data.title) {
@@ -156,6 +175,7 @@ export const useUpdateNoteMutation = () => {
  */
 export const useDeleteNoteMutation = () => {
   const queryClient = useQueryClient();
+  const userId = getCurrentUserId();
 
   return useMutation({
     mutationFn: async (id) => {
@@ -163,16 +183,21 @@ export const useDeleteNoteMutation = () => {
       return response.data;
     },
     onSuccess: (_, noteId) => {
+      if (!userId) return;
+
       // Remove the note from all caches
-      queryClient.removeQueries({ queryKey: noteKeys.detail(noteId) });
+      queryClient.removeQueries({ queryKey: noteKeys.detail(userId, noteId) });
 
       // Remove from all list caches
-      queryClient.setQueriesData({ queryKey: noteKeys.lists() }, (oldData) => {
-        if (oldData) {
-          return oldData.filter((note) => note._id !== noteId);
+      queryClient.setQueriesData(
+        { queryKey: noteKeys.lists(userId) },
+        (oldData) => {
+          if (oldData) {
+            return oldData.filter((note) => note._id !== noteId);
+          }
+          return oldData;
         }
-        return oldData;
-      });
+      );
 
       toast.success("Note deleted");
     },
@@ -185,24 +210,84 @@ export const useDeleteNoteMutation = () => {
 
 /**
  * Hook for fetching all folders
+ * This hook derives folders from notes data for better performance and consistency
  */
 export const useFoldersQuery = () => {
-  return useQuery({
-    queryKey: noteKeys.folders(),
-    queryFn: async () => {
-      const response = await noteService.getFolders();
-      const serverFolders = response?.data?.folders || [];
+  const userId = getCurrentUserId();
+  const queryClient = useQueryClient();
 
-      // Always ensure DEFAULT_FOLDER is included and comes first
+  return useQuery({
+    queryKey: noteKeys.folders(userId),
+    queryFn: async () => {
+      // First, try to get folders from existing notes cache
+      const cachedNotes = queryClient.getQueriesData({
+        queryKey: noteKeys.lists(userId),
+      });
+
+      let allNotes = [];
+
+      // Collect all notes from different cache entries
+      cachedNotes.forEach(([queryKey, data]) => {
+        if (data && Array.isArray(data)) {
+          allNotes.push(...data);
+        }
+      });
+
+      // If no cached notes, fetch fresh notes
+      if (allNotes.length === 0) {
+        try {
+          const response = await noteService.getNotes();
+          allNotes = response.data.notes || [];
+        } catch (error) {
+          console.error("Error fetching notes:", error);
+          // Fallback to server folders endpoint
+          try {
+            const response = await noteService.getFolders();
+            const serverFolders = response?.data?.folders || [];
+
+            const folders = [DEFAULT_FOLDER];
+            serverFolders.forEach((folder) => {
+              if (folder !== DEFAULT_FOLDER && !folders.includes(folder)) {
+                folders.push(folder);
+              }
+            });
+            return folders;
+          } catch (fallbackError) {
+            console.error("Error fetching folders:", fallbackError);
+            return [DEFAULT_FOLDER];
+          }
+        }
+      }
+
+      // Extract unique folders from notes
+      const folderSet = new Set();
+      allNotes.forEach((note) => {
+        if (note.folder) {
+          folderSet.add(note.folder);
+        }
+      });
+
+      // Convert to array and ensure DEFAULT_FOLDER is first
       const folders = [DEFAULT_FOLDER];
-      serverFolders.forEach((folder) => {
+      Array.from(folderSet).forEach((folder) => {
         if (folder !== DEFAULT_FOLDER && !folders.includes(folder)) {
           folders.push(folder);
         }
       });
 
+      // Save the derived folders to localStorage for persistence
+      const storageKey = getFoldersStorageKey();
+      if (storageKey) {
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(folders));
+        } catch (e) {
+          console.error("Error saving folders to localStorage:", e);
+        }
+      }
+
       return folders;
     },
+    enabled: !!userId, // Only run query if user is authenticated
     staleTime: 5 * 60 * 1000, // 5 minutes - folders change less frequently
     // Initialize with localStorage data while fetching
     initialData: () => {
@@ -210,19 +295,22 @@ export const useFoldersQuery = () => {
         const storageKey = getFoldersStorageKey();
         if (storageKey) {
           const savedFolders = localStorage.getItem(storageKey);
-          if (savedFolders) {
+          if (savedFolders && savedFolders !== "null") {
             const parsed = JSON.parse(savedFolders);
-            // Ensure DEFAULT_FOLDER is always first
-            if (!parsed.includes(DEFAULT_FOLDER)) {
-              return [DEFAULT_FOLDER, ...parsed];
+            // Only use if it's a valid array with more than just DEFAULT_FOLDER
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              // Ensure DEFAULT_FOLDER is always first
+              if (!parsed.includes(DEFAULT_FOLDER)) {
+                return [DEFAULT_FOLDER, ...parsed];
+              }
+              return parsed;
             }
-            return parsed;
           }
         }
       } catch (e) {
         console.error("Error parsing saved folders:", e);
       }
-      return [DEFAULT_FOLDER];
+      return undefined; // Return undefined to trigger queryFn
     },
   });
 };
@@ -232,6 +320,7 @@ export const useFoldersQuery = () => {
  */
 export const useCreateFolderMutation = () => {
   const queryClient = useQueryClient();
+  const userId = getCurrentUserId();
 
   return useMutation({
     mutationFn: async (name) => {
@@ -239,8 +328,10 @@ export const useCreateFolderMutation = () => {
       return { folder: name, welcomeNote: response.data.note };
     },
     onSuccess: ({ folder, welcomeNote }) => {
+      if (!userId) return;
+
       // Update folders cache
-      queryClient.setQueryData(noteKeys.folders(), (oldFolders) => {
+      queryClient.setQueryData(noteKeys.folders(userId), (oldFolders) => {
         const currentFolders = oldFolders || [DEFAULT_FOLDER];
         const updatedFolders = currentFolders.includes(folder)
           ? currentFolders
@@ -255,11 +346,13 @@ export const useCreateFolderMutation = () => {
 
       // Add welcome note to the new folder's note list
       if (welcomeNote) {
-        queryClient.setQueryData(noteKeys.list({ folder }), [welcomeNote]);
+        queryClient.setQueryData(noteKeys.list(userId, { folder }), [
+          welcomeNote,
+        ]);
       }
 
       // Invalidate note lists to ensure consistency
-      queryClient.invalidateQueries({ queryKey: noteKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: noteKeys.lists(userId) });
 
       toast.success(`Folder "${folder}" created`);
     },
@@ -275,6 +368,7 @@ export const useCreateFolderMutation = () => {
  */
 export const useDeleteFolderMutation = () => {
   const queryClient = useQueryClient();
+  const userId = getCurrentUserId();
 
   return useMutation({
     mutationFn: async (name) => {
@@ -282,8 +376,10 @@ export const useDeleteFolderMutation = () => {
       return { folderName: name, message: response.data.message };
     },
     onSuccess: ({ folderName, message }) => {
+      if (!userId) return;
+
       // Update folders cache
-      queryClient.setQueryData(noteKeys.folders(), (oldFolders) => {
+      queryClient.setQueryData(noteKeys.folders(userId), (oldFolders) => {
         const currentFolders = oldFolders || [DEFAULT_FOLDER];
         const updatedFolders = currentFolders.filter((f) => f !== folderName);
         // Ensure DEFAULT_FOLDER is always present (server restriction)
@@ -300,11 +396,11 @@ export const useDeleteFolderMutation = () => {
 
       // Remove all queries related to this folder
       queryClient.removeQueries({
-        queryKey: noteKeys.list({ folder: folderName }),
+        queryKey: noteKeys.list(userId, { folder: folderName }),
       });
 
       // Invalidate all note lists to ensure consistency
-      queryClient.invalidateQueries({ queryKey: noteKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: noteKeys.lists(userId) });
 
       toast.success(message || `Folder "${folderName}" deleted`);
     },
@@ -320,6 +416,7 @@ export const useDeleteFolderMutation = () => {
  */
 export const useRenameFolderMutation = () => {
   const queryClient = useQueryClient();
+  const userId = getCurrentUserId();
 
   return useMutation({
     mutationFn: async ({ oldName, newName }) => {
@@ -327,8 +424,10 @@ export const useRenameFolderMutation = () => {
       return { oldName, newName, message: response.data.message };
     },
     onSuccess: ({ oldName, newName, message }) => {
+      if (!userId) return;
+
       // Update folders cache
-      queryClient.setQueryData(noteKeys.folders(), (oldFolders) => {
+      queryClient.setQueryData(noteKeys.folders(userId), (oldFolders) => {
         const currentFolders = oldFolders || [DEFAULT_FOLDER];
         const updatedFolders = currentFolders.map((f) =>
           f === oldName ? newName : f
@@ -342,27 +441,30 @@ export const useRenameFolderMutation = () => {
       });
 
       // Update notes in the renamed folder
-      queryClient.setQueriesData({ queryKey: noteKeys.lists() }, (oldData) => {
-        if (oldData) {
-          return oldData.map((note) => ({
-            ...note,
-            folder: note.folder === oldName ? newName : note.folder,
-          }));
+      queryClient.setQueriesData(
+        { queryKey: noteKeys.lists(userId) },
+        (oldData) => {
+          if (oldData) {
+            return oldData.map((note) => ({
+              ...note,
+              folder: note.folder === oldName ? newName : note.folder,
+            }));
+          }
+          return oldData;
         }
-        return oldData;
-      });
+      );
 
       // Move the cache from old folder to new folder
       const oldFolderData = queryClient.getQueryData(
-        noteKeys.list({ folder: oldName })
+        noteKeys.list(userId, { folder: oldName })
       );
       if (oldFolderData) {
         queryClient.setQueryData(
-          noteKeys.list({ folder: newName }),
+          noteKeys.list(userId, { folder: newName }),
           oldFolderData
         );
         queryClient.removeQueries({
-          queryKey: noteKeys.list({ folder: oldName }),
+          queryKey: noteKeys.list(userId, { folder: oldName }),
         });
       }
 

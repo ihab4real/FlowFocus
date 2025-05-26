@@ -5,6 +5,7 @@ import {
   initializeSocket,
   disconnectSocket,
 } from "../../../services/socketService";
+import { queryClient } from "../../../config/queryClient";
 
 /**
  * Authentication store using Zustand
@@ -118,6 +119,13 @@ export const useAuthStore = create(
             }
           }
 
+          // Clear React Query cache to prevent data leakage between users
+          try {
+            queryClient.clear();
+          } catch (error) {
+            console.error("Error clearing React Query cache:", error);
+          }
+
           // Clear auth state regardless of API call success
           set({
             user: null,
@@ -164,6 +172,7 @@ export const useAuthStore = create(
                   return true;
                 }
               } catch (refreshError) {
+                console.error("Error refreshing token:", refreshError);
                 // If refresh fails, clear auth state
                 useAuthStore.getState().logout();
                 return false;
