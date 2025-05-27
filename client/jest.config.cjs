@@ -17,7 +17,7 @@ module.exports = {
   },
   // Updated to exclude react-dnd and related packages that use ES modules
   transformIgnorePatterns: [
-    "/node_modules/(?!(react-dnd|react-dnd-html5-backend|dnd-core|@react-dnd)/).*/",
+    "/node_modules/(?!(react-dnd|react-dnd-html5-backend|dnd-core|@react-dnd|lowlight|devlop)/).*/",
   ],
   // Ignore utility files in __tests__ that are not actual tests
   testPathIgnorePatterns: [
