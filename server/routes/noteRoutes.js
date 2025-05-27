@@ -78,106 +78,6 @@ router
 
 /**
  * @swagger
- * /api/notes/{id}:
- *   get:
- *     summary: Get a note by ID
- *     tags: [Notes]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Note ID
- *     responses:
- *       200:
- *         description: Successfully retrieved note
- *       401:
- *         description: Unauthorized - Authentication required
- *       403:
- *         description: Forbidden - Note belongs to another user
- *       404:
- *         description: Note not found
- */
-/**
- * @swagger
- * /api/notes/{id}:
- *   patch:
- *     summary: Update a note
- *     tags: [Notes]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Note ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               title:
- *                 type: string
- *               content:
- *                 type: string
- *               folder:
- *                 type: string
- *               tags:
- *                 type: array
- *                 items:
- *                   type: string
- *     responses:
- *       200:
- *         description: Note updated successfully
- *       400:
- *         description: Validation error
- *       401:
- *         description: Unauthorized - Authentication required
- *       403:
- *         description: Forbidden - Note belongs to another user
- *       404:
- *         description: Note not found
- */
-/**
- * @swagger
- * /api/notes/{id}:
- *   delete:
- *     summary: Delete a note
- *     tags: [Notes]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Note ID
- *     responses:
- *       204:
- *         description: Note deleted successfully
- *       401:
- *         description: Unauthorized - Authentication required
- *       403:
- *         description: Forbidden - Note belongs to another user
- *       404:
- *         description: Note not found
- */
-router
-  .route("/:id")
-  .get(getNote)
-  .patch(sanitizeBody(["content"]), updateNote)
-  .delete(deleteNote);
-
-/**
- * @swagger
  * /api/notes/folders:
  *   get:
  *     summary: Get all folders for the authenticated user
@@ -280,5 +180,105 @@ router.route("/folders").get(getFolders).post(createFolder);
  *         description: Folder not found
  */
 router.route("/folders/:name").delete(deleteFolder).patch(renameFolder);
+
+/**
+ * @swagger
+ * /api/notes/{id}:
+ *   get:
+ *     summary: Get a note by ID
+ *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Note ID
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved note
+ *       401:
+ *         description: Unauthorized - Authentication required
+ *       403:
+ *         description: Forbidden - Note belongs to another user
+ *       404:
+ *         description: Note not found
+ */
+/**
+ * @swagger
+ * /api/notes/{id}:
+ *   patch:
+ *     summary: Update a note
+ *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Note ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               content:
+ *                 type: string
+ *               folder:
+ *                 type: string
+ *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: Note updated successfully
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized - Authentication required
+ *       403:
+ *         description: Forbidden - Note belongs to another user
+ *       404:
+ *         description: Note not found
+ */
+/**
+ * @swagger
+ * /api/notes/{id}:
+ *   delete:
+ *     summary: Delete a note
+ *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Note ID
+ *     responses:
+ *       204:
+ *         description: Note deleted successfully
+ *       401:
+ *         description: Unauthorized - Authentication required
+ *       403:
+ *         description: Forbidden - Note belongs to another user
+ *       404:
+ *         description: Note not found
+ */
+router
+  .route("/:id")
+  .get(getNote)
+  .patch(sanitizeBody(["content"]), updateNote)
+  .delete(deleteNote);
 
 export default router;

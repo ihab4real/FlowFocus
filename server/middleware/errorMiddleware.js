@@ -38,14 +38,6 @@ const errorHandler = (err, req, res, next) => {
     },
   };
 
-  if (err.statusCode >= 500) {
-    logError("Server Error", logContext);
-  } else if (err.statusCode >= 400) {
-    logWarn("Client Error", logContext);
-  } else {
-    logInfo("Request Error", logContext);
-  }
-
   // Mongoose validation error
   if (err.name === "ValidationError") {
     const message = Object.values(err.errors)
@@ -88,16 +80,25 @@ const errorHandler = (err, req, res, next) => {
 
   // Determine if this is an operational error (expected) or programming error (unexpected)
   const isOperational =
-    err.isOperational !== undefined ? err.isOperational : true;
+    error.isOperational !== undefined ? error.isOperational : true;
 
   // Set status code
-  const statusCode = err.statusCode || res.statusCode || 500;
+  const statusCode = error.statusCode || res.statusCode || 500;
+
+  // Log error with appropriate level based on final status code
+  if (statusCode >= 500) {
+    logError("Server Error", logContext);
+  } else if (statusCode >= 400) {
+    logWarn("Client Error", logContext);
+  } else {
+    logInfo("Request Error", logContext);
+  }
 
   // Create response based on environment
   const errorResponse = {
-    status: err.status || "error",
-    message: err.message || "Something went wrong",
-    ...(err.errorCode && { code: err.errorCode }),
+    status: error.status || "error",
+    message: error.message || "Something went wrong",
+    ...(error.errorCode && { code: error.errorCode }),
   };
 
   // Add additional details in development environment
