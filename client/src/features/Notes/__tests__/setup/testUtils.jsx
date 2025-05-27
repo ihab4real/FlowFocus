@@ -30,8 +30,9 @@ export function renderWithProviders(
 }
 
 // Mock note data factory
+let noteIdCounter = 0;
 export const createMockNote = (overrides = {}) => ({
-  _id: "note-123",
+  _id: `note-${++noteIdCounter}`,
   title: "Test Note",
   content: "Test note content",
   folder: "General",
@@ -57,9 +58,9 @@ export const createMockNotes = (count = 5) => {
     .fill(null)
     .map((_, index) =>
       createMockNote({
-        _id: `note-${index}`,
-        title: `Note ${index}`,
-        content: `Content for note ${index}`,
+        _id: `mock-note-${index + 1}`,
+        title: `Note ${index + 1}`,
+        content: `Content for note ${index + 1}`,
         folder: folders[index % folders.length],
         tags: tags[index % tags.length],
       })
