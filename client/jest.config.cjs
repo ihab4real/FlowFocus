@@ -17,13 +17,14 @@ module.exports = {
   },
   // Updated to exclude react-dnd and related packages that use ES modules
   transformIgnorePatterns: [
-    "/node_modules/(?!(react-dnd|react-dnd-html5-backend|dnd-core|@react-dnd)/).*/",
+    "/node_modules/(?!(react-dnd|react-dnd-html5-backend|dnd-core|@react-dnd|lowlight|devlop)/).*/",
   ],
   // Ignore utility files in __tests__ that are not actual tests
   testPathIgnorePatterns: [
     "/node_modules/",
     "<rootDir>/src/features/authentication/__tests__/setup/testUtils.jsx",
     "<rootDir>/src/features/Tasks/__tests__/setup/testUtils.jsx",
+    "<rootDir>/src/features/Notes/__tests__/setup/testUtils.jsx",
   ],
   // If your package.json has "type": "module", Jest's ESM support via --experimental-vm-modules
   // might require specific handling or ensuring Babel outputs compatible code.

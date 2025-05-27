@@ -43,4 +43,10 @@ noteSchema.pre("save", function (next) {
   next();
 });
 
+// Update the updatedAt timestamp before updating
+noteSchema.pre("findOneAndUpdate", function (next) {
+  this.set({ updatedAt: Date.now() });
+  next();
+});
+
 export default mongoose.model("Note", noteSchema);
