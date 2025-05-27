@@ -5,6 +5,7 @@ import {
   initializeSocket,
   disconnectSocket,
 } from "../../../services/socketService";
+import { queryClient } from "../../../config/queryClient";
 
 /**
  * Authentication store using Zustand
@@ -91,6 +92,10 @@ export const useAuthStore = create(
       // Logout action
       logout: async () => {
         set({ isLoading: true });
+
+        // Get current user before clearing state
+        const currentUser = useAuthStore.getState().user;
+
         try {
           // Disconnect socket
           disconnectSocket();
@@ -100,6 +105,27 @@ export const useAuthStore = create(
         } catch (error) {
           console.error("Error during logout:", error);
         } finally {
+          // Clean up user-specific localStorage
+          if (currentUser?.id) {
+            try {
+              // Remove user-specific note folders cache
+              localStorage.removeItem(`note-folders-${currentUser.id}`);
+              // Add other user-specific cleanup here if needed in the future
+            } catch (error) {
+              console.error(
+                "Error cleaning up user-specific localStorage:",
+                error
+              );
+            }
+          }
+
+          // Clear React Query cache to prevent data leakage between users
+          try {
+            queryClient.clear();
+          } catch (error) {
+            console.error("Error clearing React Query cache:", error);
+          }
+
           // Clear auth state regardless of API call success
           set({
             user: null,
@@ -146,6 +172,7 @@ export const useAuthStore = create(
                   return true;
                 }
               } catch (refreshError) {
+                console.error("Error refreshing token:", refreshError);
                 // If refresh fails, clear auth state
                 useAuthStore.getState().logout();
                 return false;
