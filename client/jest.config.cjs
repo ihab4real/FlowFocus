@@ -24,6 +24,7 @@ module.exports = {
     "/node_modules/",
     "<rootDir>/src/features/authentication/__tests__/setup/testUtils.jsx",
     "<rootDir>/src/features/Tasks/__tests__/setup/testUtils.jsx",
+    "<rootDir>/src/features/Notes/__tests__/setup/testUtils.jsx",
   ],
   // If your package.json has "type": "module", Jest's ESM support via --experimental-vm-modules
   // might require specific handling or ensuring Babel outputs compatible code.
