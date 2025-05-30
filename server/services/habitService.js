@@ -112,7 +112,8 @@ export const logHabitEntry = async (entryData, userId) => {
 
   if (existingEntry) {
     // Update existing entry
-    existingEntry.currentValue = currentValue || existingEntry.currentValue;
+    existingEntry.currentValue =
+      currentValue !== undefined ? currentValue : existingEntry.currentValue;
     existingEntry.completed =
       completed !== undefined ? completed : existingEntry.completed;
     existingEntry.notes = notes || existingEntry.notes;
