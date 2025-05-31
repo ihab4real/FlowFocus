@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Pencil, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 import { HABIT_CATEGORIES } from "../../constants/habitConstants";
 import {
   calculateProgress,
@@ -16,6 +17,7 @@ const HabitCard = ({
   onDelete,
   isToday = true,
   showActions = true,
+  compact = false,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -54,6 +56,143 @@ const HabitCard = ({
     handleProgressUpdate(newValue);
   };
 
+  // Compact mode layout
+  if (compact) {
+    return (
+      <div
+        className={`
+        group relative bg-card border border-border rounded-lg p-3 
+        transition-all duration-200 hover:shadow-md
+        ${isCompleted ? "ring-1" : ""}
+      `}
+        style={{
+          ringColor: isCompleted ? habit.color : "transparent",
+          backgroundColor: isCompleted
+            ? hexToRgba(habit.color, 0.03)
+            : undefined,
+        }}
+      >
+        <div className="flex items-center justify-between gap-3">
+          {/* Left side - Icon, name, and progress info */}
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            {/* Category Icon */}
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold shadow-sm flex-shrink-0"
+              style={{
+                backgroundColor: hexToRgba(habit.color, 0.1),
+                color: habit.color,
+              }}
+            >
+              {category.icon}
+            </div>
+
+            {/* Habit Info */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-baseline gap-2">
+                <h3 className="font-medium text-card-foreground truncate text-sm">
+                  {habit.name}
+                </h3>
+                {habit.type !== "simple" && (
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    {entry?.currentValue || 0}/{habit.targetValue} {habit.unit}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Progress Ring */}
+            <ProgressRing
+              progress={progress}
+              size={32}
+              strokeWidth={3}
+              color={habit.color}
+              showPercentage={false}
+              className="flex-shrink-0"
+            />
+
+            {/* Status Badge */}
+            {isCompleted ? (
+              <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-1 rounded-full whitespace-nowrap">
+                ✓ Done
+              </span>
+            ) : (
+              <span className="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 px-2 py-1 rounded-full whitespace-nowrap">
+                {Math.round(progress)}%
+              </span>
+            )}
+          </div>
+
+          {/* Center - Action buttons */}
+          {showActions && isToday && (
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {habit.type === "simple" ? (
+                <button
+                  onClick={handleToggleComplete}
+                  disabled={isUpdating}
+                  className={`
+                    px-3 py-1 text-xs rounded-md font-medium transition-all duration-200
+                    ${
+                      isCompleted
+                        ? "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50"
+                        : "text-white hover:opacity-90"
+                    }
+                    ${isUpdating ? "opacity-50 cursor-not-allowed" : ""}
+                  `}
+                  style={{
+                    backgroundColor: !isCompleted ? habit.color : undefined,
+                  }}
+                >
+                  {isUpdating ? "⏳" : isCompleted ? "Undo" : "Done"}
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={decrementProgress}
+                    disabled={isUpdating || (entry?.currentValue || 0) === 0}
+                    className="w-7 h-7 rounded-md border border-border hover:bg-muted transition-colors disabled:opacity-50 text-sm font-medium flex items-center justify-center"
+                  >
+                    −
+                  </button>
+                  <button
+                    onClick={incrementProgress}
+                    disabled={
+                      isUpdating ||
+                      (entry?.currentValue || 0) >= habit.targetValue
+                    }
+                    className="w-7 h-7 rounded-md border border-border hover:bg-muted transition-colors disabled:opacity-50 text-sm font-medium flex items-center justify-center"
+                  >
+                    +
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Right side - Edit/Delete Actions (Permanent) */}
+          {showActions && (
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <button
+                onClick={() => onEdit?.(habit)}
+                className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+                aria-label="Edit habit"
+              >
+                <Pencil className="h-3 w-3" />
+              </button>
+              <button
+                onClick={() => onDelete?.(habit)}
+                className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                aria-label="Delete habit"
+              >
+                <Trash2 className="h-3 w-3" />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Original full-size layout
   return (
     <div
       className={`
@@ -160,8 +299,8 @@ const HabitCard = ({
             <>
               <button
                 onClick={decrementProgress}
-                disabled={isUpdating || (entry?.currentValue || 0) === 0}
-                className="p-2 rounded-md border border-border hover:bg-muted transition-colors disabled:opacity-50"
+                disabled={isUpdating}
+                className="p-2 w-12 rounded-md border border-border hover:bg-muted transition-colors disabled:opacity-50 text-lg font-medium"
               >
                 −
               </button>
@@ -186,7 +325,7 @@ const HabitCard = ({
                 disabled={
                   isUpdating || (entry?.currentValue || 0) >= habit.targetValue
                 }
-                className="p-2 rounded-md border border-border hover:bg-muted transition-colors disabled:opacity-50"
+                className="p-2 w-12 rounded-md border border-border hover:bg-muted transition-colors disabled:opacity-50 text-lg font-medium"
               >
                 +
               </button>
@@ -202,17 +341,35 @@ const HabitCard = ({
             <label className="text-sm font-medium text-card-foreground">
               Progress:
             </label>
-            <input
-              type="number"
-              min="0"
-              max={habit.targetValue}
-              value={entry?.currentValue || 0}
-              onChange={(e) =>
-                handleProgressUpdate(parseInt(e.target.value) || 0)
-              }
-              className="flex-1 px-3 py-1 border border-border rounded-md bg-background"
-            />
-            <span className="text-sm text-muted-foreground">{habit.unit}</span>
+            <div className="relative flex-1 flex items-center">
+              <button
+                onClick={decrementProgress}
+                disabled={isUpdating}
+                className="absolute left-0 h-full px-2.5 flex items-center justify-center border-r border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              >
+                −
+              </button>
+              <input
+                type="number"
+                min="0"
+                max={habit.targetValue}
+                value={entry?.currentValue || 0}
+                onChange={(e) =>
+                  handleProgressUpdate(parseInt(e.target.value) || 0)
+                }
+                className="w-full h-9 pl-10 pr-10 text-center border border-border rounded-md bg-background focus:ring-1 focus:ring-primary focus:border-primary focus-visible:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
+              <button
+                onClick={incrementProgress}
+                disabled={
+                  isUpdating || (entry?.currentValue || 0) >= habit.targetValue
+                }
+                className="absolute right-0 h-full px-2.5 flex items-center justify-center border-l border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              >
+                +
+              </button>
+            </div>
+            <span className="text-sm font-medium">{habit.unit}</span>
           </div>
         </div>
       )}
@@ -223,15 +380,17 @@ const HabitCard = ({
           <div className="flex space-x-1">
             <button
               onClick={() => onEdit?.(habit)}
-              className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-card-foreground"
+              className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+              aria-label="Edit habit"
             >
-              ✏️
+              <Pencil className="h-4 w-4" />
             </button>
             <button
-              onClick={() => onDelete?.(habit._id)}
-              className="p-1 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+              onClick={() => onDelete?.(habit)}
+              className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+              aria-label="Delete habit"
             >
-              🗑️
+              <Trash2 className="h-4 w-4" />
             </button>
           </div>
         </div>
