@@ -25,11 +25,15 @@ import {
   validateHabitEntry,
   validateBatchEntries,
 } from "../middleware/habitValidation.js";
+import habitIntegrationRoutes from "./habitIntegrationRoutes.js";
 
 const router = express.Router();
 
 // Apply authentication middleware to all routes
 router.use(protect);
+
+// Mount integration routes
+router.use("/integrations", habitIntegrationRoutes);
 
 /**
  * @swagger

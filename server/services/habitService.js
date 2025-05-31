@@ -1,6 +1,14 @@
 import Habit from "../models/habitModel.js";
 import HabitEntry from "../models/habitEntryModel.js";
 import { errorTypes } from "../utils/AppError.js";
+import {
+  emitHabitCreated,
+  emitHabitUpdated,
+  emitHabitDeleted,
+  emitHabitCompleted,
+  emitProgressUpdated,
+  emitStreakAchieved,
+} from "./habitEventService.js";
 
 // Get user's habits
 export const getUserHabits = async (userId, filters = {}) => {
@@ -35,11 +43,20 @@ export const createUserHabit = async (habitData, userId) => {
     user: userId,
   });
 
-  return await habit.save();
+  const savedHabit = await habit.save();
+
+  // Emit habit created event for extensions
+  const user = { _id: userId };
+  await emitHabitCreated(savedHabit, user);
+
+  return savedHabit;
 };
 
 // Update habit
 export const updateUserHabit = async (habitId, userId, updateData) => {
+  // Get the previous habit data for comparison
+  const previousHabit = await getUserHabitById(habitId, userId);
+
   const habit = await Habit.findOneAndUpdate(
     { _id: habitId, user: userId },
     { ...updateData, updatedAt: Date.now() },
@@ -49,6 +66,10 @@ export const updateUserHabit = async (habitId, userId, updateData) => {
   if (!habit) {
     throw errorTypes.notFound("Habit not found");
   }
+
+  // Emit habit updated event for extensions
+  const user = { _id: userId };
+  await emitHabitUpdated(habit, previousHabit.toObject(), user);
 
   return habit;
 };
@@ -63,6 +84,10 @@ export const deleteUserHabit = async (habitId, userId) => {
 
   // Also delete all associated habit entries
   await HabitEntry.deleteMany({ habit: habitId, user: userId });
+
+  // Emit habit deleted event for extensions
+  const user = { _id: userId };
+  await emitHabitDeleted(habit, user);
 
   return habit;
 };
@@ -110,7 +135,15 @@ export const logHabitEntry = async (entryData, userId) => {
     date: date,
   });
 
+  let entry;
+  let wasNewCompletion = false;
+  let progressChanged = false;
+
   if (existingEntry) {
+    // Track if this is a new completion or progress change
+    const wasCompleted = existingEntry.completed;
+    const oldValue = existingEntry.currentValue;
+
     // Update existing entry
     existingEntry.currentValue =
       currentValue !== undefined ? currentValue : existingEntry.currentValue;
@@ -119,10 +152,14 @@ export const logHabitEntry = async (entryData, userId) => {
     existingEntry.notes = notes || existingEntry.notes;
     existingEntry.updatedAt = Date.now();
 
-    return await existingEntry.save();
+    entry = await existingEntry.save();
+
+    // Check if this was a new completion
+    wasNewCompletion = !wasCompleted && entry.completed;
+    progressChanged = oldValue !== entry.currentValue;
   } else {
     // Create new entry
-    const entry = new HabitEntry({
+    entry = new HabitEntry({
       habit: habitId,
       user: userId,
       date,
@@ -131,14 +168,43 @@ export const logHabitEntry = async (entryData, userId) => {
       notes: notes || "",
     });
 
-    return await entry.save();
+    entry = await entry.save();
+    wasNewCompletion = entry.completed;
+    progressChanged = true;
   }
+
+  // Emit events for extensions
+  const user = { _id: userId };
+
+  if (progressChanged) {
+    await emitProgressUpdated(habit, entry, user);
+  }
+
+  if (wasNewCompletion) {
+    // Calculate streak data for completion event
+    const streakData = await calculateStreakData(habit, userId, date);
+
+    await emitHabitCompleted(habit, entry, user, streakData);
+
+    // Check if this completion achieved a notable streak
+    if (streakData && isNotableStreak(streakData.currentStreak)) {
+      await emitStreakAchieved(habit, user, streakData);
+    }
+  }
+
+  return entry;
 };
 
 // Update specific habit entry
 export const updateHabitEntry = async (habitId, date, userId, updateData) => {
   // Verify habit belongs to user
-  await getUserHabitById(habitId, userId);
+  const habit = await getUserHabitById(habitId, userId);
+
+  const oldEntry = await HabitEntry.findOne({
+    habit: habitId,
+    user: userId,
+    date,
+  });
 
   const entry = await HabitEntry.findOneAndUpdate(
     { habit: habitId, user: userId, date },
@@ -148,6 +214,24 @@ export const updateHabitEntry = async (habitId, date, userId, updateData) => {
 
   if (!entry) {
     throw errorTypes.notFound("Habit entry not found");
+  }
+
+  // Emit events for extensions
+  const user = { _id: userId };
+
+  // Check if progress changed
+  if (!oldEntry || oldEntry.currentValue !== entry.currentValue) {
+    await emitProgressUpdated(habit, entry, user);
+  }
+
+  // Check if completion status changed to true
+  if ((!oldEntry || !oldEntry.completed) && entry.completed) {
+    const streakData = await calculateStreakData(habit, userId, date);
+    await emitHabitCompleted(habit, entry, user, streakData);
+
+    if (streakData && isNotableStreak(streakData.currentStreak)) {
+      await emitStreakAchieved(habit, user, streakData);
+    }
   }
 
   return entry;
@@ -169,4 +253,27 @@ export const deleteHabitEntry = async (habitId, date, userId) => {
   }
 
   return entry;
+};
+
+// Helper function to calculate streak data
+const calculateStreakData = async (habit, userId, currentDate) => {
+  try {
+    // Import streak calculation service
+    const { calculateStreakForHabit } = await import("./habitStreakService.js");
+    return await calculateStreakForHabit(habit._id, userId, currentDate);
+  } catch (error) {
+    // Fallback if streak service doesn't exist yet
+    return {
+      currentStreak: 1,
+      bestStreak: 1,
+      totalCompletions: 1,
+    };
+  }
+};
+
+// Helper function to determine if a streak is notable
+const isNotableStreak = (streakLength) => {
+  // Consider streaks notable at 3, 7, 30, 100, 365 days
+  const notableNumbers = [3, 7, 30, 100, 365];
+  return notableNumbers.includes(streakLength);
 };
