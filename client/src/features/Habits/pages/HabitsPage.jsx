@@ -13,6 +13,8 @@ import {
   LayoutGrid,
   List,
   Minimize2,
+  BarChart3,
+  X,
 } from "lucide-react";
 import {
   Dialog,
@@ -42,6 +44,7 @@ import {
 import HabitForm from "../components/forms/HabitForm";
 import HabitTemplateSelector from "../components/forms/HabitTemplateSelector";
 import HabitCard from "../components/tracking/HabitCard";
+import HabitAnalytics from "../components/analytics/HabitAnalytics";
 import { HABIT_CATEGORIES } from "../constants/habitConstants";
 import {
   useHabitsQuery,
@@ -65,6 +68,11 @@ const HabitsPage = () => {
   const [showInactive, setShowInactive] = useState(false);
   const [habitToDelete, setHabitToDelete] = useState(null);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+
+  // Analytics panel state
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [selectedHabitForAnalytics, setSelectedHabitForAnalytics] =
+    useState(null);
 
   // Animation state
   const [isVisible, setIsVisible] = useState(false);
@@ -215,6 +223,21 @@ const HabitsPage = () => {
     navigate("/dashboard");
   };
 
+  // Analytics handlers
+  const handleToggleAnalytics = () => {
+    setShowAnalytics(!showAnalytics);
+    if (!showAnalytics && filteredHabits.length > 0) {
+      setSelectedHabitForAnalytics(filteredHabits[0]);
+    }
+  };
+
+  const handleSelectHabitForAnalytics = (habit) => {
+    setSelectedHabitForAnalytics(habit);
+    if (!showAnalytics) {
+      setShowAnalytics(true);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       <Sidebar />
@@ -249,6 +272,19 @@ const HabitsPage = () => {
                   </Button>
                 }
               />
+              <Button
+                onClick={handleToggleAnalytics}
+                size="sm"
+                variant={showAnalytics ? "default" : "outline"}
+                className={
+                  showAnalytics
+                    ? ""
+                    : "border-primary/30 text-primary hover:bg-primary/5"
+                }
+              >
+                <BarChart3 className="h-4 w-4 mr-1" />
+                Analytics
+              </Button>
               <Button onClick={openAddHabitDialog} size="sm">
                 <PlusCircle className="h-4 w-4 mr-1" />
                 New Habit
@@ -269,220 +305,279 @@ const HabitsPage = () => {
             </div>
           </div>
 
-          {/* Filters and Tabs */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <Tabs
-              defaultValue="all"
-              value={activeTab}
-              onValueChange={setActiveTab}
-              className="w-full sm:w-auto"
+          {/* Main Content Area */}
+          <div
+            className={`flex gap-6 ${showAnalytics ? "min-h-[calc(100vh-200px)]" : ""}`}
+          >
+            {/* Left Panel - Habits List */}
+            <div
+              className={`${showAnalytics ? "w-1/2" : "w-full"} space-y-6 transition-all duration-300`}
             >
-              <TabsList>
-                <TabsTrigger value="all">All Habits</TabsTrigger>
-                <TabsTrigger value="completed">Completed</TabsTrigger>
-                <TabsTrigger value="incomplete">Incomplete</TabsTrigger>
-              </TabsList>
-            </Tabs>
+              {/* Filters and Tabs */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <Tabs
+                  defaultValue="all"
+                  value={activeTab}
+                  onValueChange={setActiveTab}
+                  className="w-full sm:w-auto"
+                >
+                  <TabsList>
+                    <TabsTrigger value="all">All Habits</TabsTrigger>
+                    <TabsTrigger value="completed">Completed</TabsTrigger>
+                    <TabsTrigger value="incomplete">Incomplete</TabsTrigger>
+                  </TabsList>
+                </Tabs>
 
-            <div className="flex items-center gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Filter className="h-4 w-4 mr-1" />
-                    Filter
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <div className="p-2">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">Categories</span>
+                <div className="flex items-center gap-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Filter className="h-4 w-4 mr-1" />
+                        Filter
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <div className="p-2">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium">
+                            Categories
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2 text-xs"
+                            onClick={toggleAllCategories}
+                          >
+                            {selectedCategories.length ===
+                            Object.keys(HABIT_CATEGORIES).length
+                              ? "Clear All"
+                              : "Select All"}
+                          </Button>
+                        </div>
+                        {Object.entries(HABIT_CATEGORIES).map(
+                          ([key, category]) => (
+                            <DropdownMenuCheckboxItem
+                              key={key}
+                              checked={selectedCategories.includes(key)}
+                              onCheckedChange={() => toggleCategory(key)}
+                            >
+                              <span className="mr-2">{category.icon}</span>
+                              {key}
+                            </DropdownMenuCheckboxItem>
+                          )
+                        )}
+                        <Separator className="my-2" />
+                        <DropdownMenuCheckboxItem
+                          checked={showInactive}
+                          onCheckedChange={setShowInactive}
+                        >
+                          Show Inactive Habits
+                        </DropdownMenuCheckboxItem>
+                      </div>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  {!showAnalytics && (
+                    <div className="border rounded-md overflow-hidden flex">
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 px-2 text-xs"
-                        onClick={toggleAllCategories}
+                        className={`rounded-none px-3 h-9 ${
+                          viewMode === "grid"
+                            ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
+                            : "hover:bg-muted"
+                        }`}
+                        onClick={() => setViewMode("grid")}
                       >
-                        {selectedCategories.length ===
-                        Object.keys(HABIT_CATEGORIES).length
-                          ? "Clear All"
-                          : "Select All"}
+                        <LayoutGrid className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`rounded-none px-3 h-9 ${
+                          viewMode === "list"
+                            ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
+                            : "hover:bg-muted"
+                        }`}
+                        onClick={() => setViewMode("list")}
+                      >
+                        <List className="h-4 w-4" />
                       </Button>
                     </div>
-                    {Object.entries(HABIT_CATEGORIES).map(([key, category]) => (
-                      <DropdownMenuCheckboxItem
-                        key={key}
-                        checked={selectedCategories.includes(key)}
-                        onCheckedChange={() => toggleCategory(key)}
-                      >
-                        <span className="mr-2">{category.icon}</span>
-                        {key}
-                      </DropdownMenuCheckboxItem>
-                    ))}
-                    <Separator className="my-2" />
-                    <DropdownMenuCheckboxItem
-                      checked={showInactive}
-                      onCheckedChange={setShowInactive}
-                    >
-                      Show Inactive Habits
-                    </DropdownMenuCheckboxItem>
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <div className="border rounded-md overflow-hidden flex">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={`rounded-none px-3 h-9 ${
-                    viewMode === "grid"
-                      ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
-                      : "hover:bg-muted"
-                  }`}
-                  onClick={() => setViewMode("grid")}
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={`rounded-none px-3 h-9 ${
-                    viewMode === "list"
-                      ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
-                      : "hover:bg-muted"
-                  }`}
-                  onClick={() => setViewMode("list")}
-                >
-                  <List className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Habits Grid/List */}
-          {loading ? (
-            <div className="flex justify-center items-center py-12">
-              <RefreshCw className="h-6 w-6 animate-spin text-primary" />
-            </div>
-          ) : filteredHabits.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <div className="rounded-full bg-primary/10 p-4 mb-4">
-                  <Target className="h-8 w-8 text-primary" />
+                  )}
                 </div>
-                <h3 className="text-xl font-medium mb-2">No habits found</h3>
-                <p className="text-muted-foreground text-center max-w-md mb-6">
-                  {habits.length === 0
-                    ? "You haven't created any habits yet. Get started by creating your first habit!"
-                    : "No habits match your current filters. Try adjusting your filter settings."}
-                </p>
-                {habits.length === 0 ? (
-                  <div className="flex gap-2">
-                    <HabitTemplateSelector
-                      onSelectTemplate={handleTemplateSelect}
-                      trigger={
-                        <Button variant="outline">Use a Template</Button>
-                      }
-                    />
-                    <Button onClick={openAddHabitDialog}>
-                      <PlusCircle className="h-4 w-4 mr-1" />
-                      Create Habit
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setSelectedCategories(Object.keys(HABIT_CATEGORIES));
-                      setActiveTab("all");
-                      setShowInactive(true);
-                    }}
-                  >
-                    Reset Filters
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          ) : (
-            <div
-              className={
-                viewMode === "grid"
-                  ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-                  : "space-y-3"
-              }
-            >
-              {filteredHabits.map((habit) => {
-                const entry = todayEntries.find(
-                  (e) => (e.habit._id || e.habit) === habit._id
-                );
+              </div>
 
-                return (
-                  <HabitCard
-                    key={habit._id}
-                    habit={habit}
-                    entry={entry}
-                    onToggleComplete={handleToggleComplete}
-                    onUpdateProgress={handleUpdateProgress}
-                    onEdit={() => openEditHabitDialog(habit)}
-                    onDelete={() => handleDeleteClick(habit)}
-                    isToday={true}
-                    showActions={true}
-                  />
-                );
-              })}
+              {/* Habits Grid/List */}
+              {loading ? (
+                <div className="flex justify-center items-center py-12">
+                  <RefreshCw className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              ) : filteredHabits.length === 0 ? (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-12">
+                    <div className="rounded-full bg-primary/10 p-4 mb-4">
+                      <Target className="h-8 w-8 text-primary" />
+                    </div>
+                    <h3 className="text-xl font-medium mb-2">
+                      No habits found
+                    </h3>
+                    <p className="text-muted-foreground text-center max-w-md mb-6">
+                      {habits.length === 0
+                        ? "You haven't created any habits yet. Get started by creating your first habit!"
+                        : "No habits match your current filters. Try adjusting your filter settings."}
+                    </p>
+                    {habits.length === 0 ? (
+                      <div className="flex gap-2">
+                        <HabitTemplateSelector
+                          onSelectTemplate={handleTemplateSelect}
+                          trigger={
+                            <Button variant="outline">Use a Template</Button>
+                          }
+                        />
+                        <Button onClick={openAddHabitDialog}>
+                          <PlusCircle className="h-4 w-4 mr-1" />
+                          Create Habit
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedCategories(Object.keys(HABIT_CATEGORIES));
+                          setActiveTab("all");
+                          setShowInactive(true);
+                        }}
+                      >
+                        Reset Filters
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              ) : (
+                <div
+                  className={
+                    showAnalytics || viewMode === "list"
+                      ? "space-y-3"
+                      : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                  }
+                >
+                  {filteredHabits.map((habit) => {
+                    const entry = todayEntries.find(
+                      (e) => (e.habit._id || e.habit) === habit._id
+                    );
+                    const isSelectedForAnalytics =
+                      selectedHabitForAnalytics?._id === habit._id;
+
+                    return (
+                      <div
+                        key={habit._id}
+                        className={`${
+                          showAnalytics && isSelectedForAnalytics
+                            ? "ring-2 ring-primary ring-offset-2 transition-all duration-200"
+                            : ""
+                        }`}
+                        onClick={() =>
+                          showAnalytics && handleSelectHabitForAnalytics(habit)
+                        }
+                      >
+                        <HabitCard
+                          habit={habit}
+                          entry={entry}
+                          onToggleComplete={handleToggleComplete}
+                          onUpdateProgress={handleUpdateProgress}
+                          onEdit={openEditHabitDialog}
+                          onDelete={handleDeleteClick}
+                          isToday={true}
+                          showActions={!showAnalytics}
+                          compact={showAnalytics}
+                          onClick={
+                            showAnalytics
+                              ? () => handleSelectHabitForAnalytics(habit)
+                              : undefined
+                          }
+                          className={
+                            showAnalytics
+                              ? "cursor-pointer hover:shadow-md transition-shadow"
+                              : ""
+                          }
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          )}
+
+            {/* Right Panel - Analytics */}
+            {showAnalytics && (
+              <div className="w-1/2 border-l pl-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold">Analytics</h2>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowAnalytics(false)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                <HabitAnalytics habit={selectedHabitForAnalytics} />
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Delete Habit Confirmation Dialog */}
+        <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Habit</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete "{habitToDelete?.name}"? This
+                action cannot be undone and all tracking history will be
+                permanently removed.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteHabit}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Add/Edit Habit Dialog */}
+        <Dialog open={showAddHabitDialog} onOpenChange={setShowAddHabitDialog}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>
+                {editingHabit ? "Edit Habit" : "Create New Habit"}
+              </DialogTitle>
+              <DialogDescription>
+                {editingHabit
+                  ? "Update your habit details"
+                  : "Define a new habit to track daily"}
+              </DialogDescription>
+            </DialogHeader>
+
+            <HabitForm
+              key={editingHabit?._id || "new"}
+              defaultValues={editingHabit}
+              onSubmit={editingHabit ? handleUpdateHabit : handleCreateHabit}
+              onCancel={closeHabitDialog}
+              isEditing={!!editingHabit}
+              isLoading={
+                createHabitMutation.isPending || updateHabitMutation.isPending
+              }
+            />
+          </DialogContent>
+        </Dialog>
       </main>
-
-      {/* Delete Habit Confirmation Dialog */}
-      <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Habit</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete "{habitToDelete?.name}"? This
-              action cannot be undone and all tracking history will be
-              permanently removed.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteHabit}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Add/Edit Habit Dialog */}
-      <Dialog open={showAddHabitDialog} onOpenChange={setShowAddHabitDialog}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>
-              {editingHabit ? "Edit Habit" : "Create New Habit"}
-            </DialogTitle>
-            <DialogDescription>
-              {editingHabit
-                ? "Update your habit details"
-                : "Define a new habit to track daily"}
-            </DialogDescription>
-          </DialogHeader>
-
-          <HabitForm
-            key={editingHabit?._id || "new"}
-            defaultValues={editingHabit}
-            onSubmit={editingHabit ? handleUpdateHabit : handleCreateHabit}
-            onCancel={closeHabitDialog}
-            isEditing={!!editingHabit}
-            isLoading={
-              createHabitMutation.isPending || updateHabitMutation.isPending
-            }
-          />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

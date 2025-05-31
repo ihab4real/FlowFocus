@@ -1,6 +1,9 @@
 // Export components
 export * from "./components";
 
+// Export pages
+export { default as HabitsPage } from "./pages/HabitsPage";
+
 // Export hooks
 export * from "./hooks/useHabitQueries";
 export * from "./hooks/useHabitAnalytics";
