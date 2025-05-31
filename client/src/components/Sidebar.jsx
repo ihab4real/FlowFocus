@@ -9,6 +9,7 @@ import {
   Menu,
   X,
   Trello,
+  CalendarCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -79,6 +80,13 @@ export function Sidebar() {
           collapsed={collapsed}
           active={location.pathname === "/dashboard"}
           to="/dashboard"
+        />
+        <NavItem
+          icon={<CalendarCheck />}
+          label="Habits Tracker"
+          collapsed={collapsed}
+          active={location.pathname === "/dashboard/habits"}
+          to="/dashboard/habits"
         />
         <NavItem
           icon={<Trello />}
