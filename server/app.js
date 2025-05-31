@@ -11,6 +11,7 @@ import authRoutes from "./routes/authRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import noteRoutes from "./routes/noteRoutes.js";
 import pomodoroRoutes from "./routes/pomodoroRoutes.js";
+import habitRoutes from "./routes/habitRoutes.js";
 import cookieParser from "cookie-parser";
 import mongoSanitize from "express-mongo-sanitize";
 import passport from "passport";
@@ -108,6 +109,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/notes", noteRoutes);
 app.use("/api/pomodoro", pomodoroRoutes);
+app.use("/api/habits", habitRoutes);
 
 // Handle 404 errors for undefined routes
 app.use(notFoundHandler);
