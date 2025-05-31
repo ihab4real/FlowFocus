@@ -14,6 +14,12 @@ import {
   batchUpdateEntries,
 } from "../controllers/habitController.js";
 import {
+  getHabitStreaks,
+  getWeeklyStats,
+  getMonthlyStats,
+  getSummary,
+} from "../controllers/habitAnalyticsController.js";
+import {
   validateCreateHabit,
   validateUpdateHabit,
   validateHabitEntry,
@@ -395,6 +401,261 @@ router.route("/entries/batch").post(validateBatchEntries, batchUpdateEntries);
  *         description: Entry not found
  */
 router.route("/entries/:habitId/:date").put(updateEntry).delete(deleteEntry);
+
+// Analytics Routes
+
+/**
+ * @swagger
+ * /api/habits/analytics/summary:
+ *   get:
+ *     summary: Get overall analytics summary for all user habits
+ *     tags: [Habits Analytics]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved analytics summary
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     period:
+ *                       type: object
+ *                       properties:
+ *                         start:
+ *                           type: string
+ *                           format: date
+ *                         end:
+ *                           type: string
+ *                           format: date
+ *                         days:
+ *                           type: number
+ *                     overall:
+ *                       type: object
+ *                       properties:
+ *                         totalActiveHabits:
+ *                           type: number
+ *                         totalCompletions:
+ *                           type: number
+ *                         possibleCompletions:
+ *                           type: number
+ *                         completionRate:
+ *                           type: number
+ *                     bestHabit:
+ *                       type: object
+ *                       nullable: true
+ *                     categoryBreakdown:
+ *                       type: object
+ *                     habitStats:
+ *                       type: array
+ *       401:
+ *         description: Unauthorized - Authentication required
+ */
+router.route("/analytics/summary").get(getSummary);
+
+/**
+ * @swagger
+ * /api/habits/analytics/streaks/{habitId}:
+ *   get:
+ *     summary: Get detailed streak analytics for a specific habit
+ *     tags: [Habits Analytics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: habitId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Habit ID
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved streak data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     current:
+ *                       type: number
+ *                       description: Current streak length
+ *                     best:
+ *                       type: number
+ *                       description: Best streak achieved
+ *                     total:
+ *                       type: number
+ *                       description: Total completed days
+ *                     isActive:
+ *                       type: boolean
+ *                       description: Whether streak is currently active
+ *                     consistencyScore:
+ *                       type: number
+ *                       description: Consistency score (0-100)
+ *                     milestones:
+ *                       type: object
+ *                       properties:
+ *                         nextMilestone:
+ *                           type: number
+ *                         daysToNextMilestone:
+ *                           type: number
+ *                         achievedMilestones:
+ *                           type: array
+ *                           items:
+ *                             type: number
+ *                         completionPercentage:
+ *                           type: number
+ *                     streakHistory:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           start:
+ *                             type: string
+ *                             format: date
+ *                           end:
+ *                             type: string
+ *                             format: date
+ *                           length:
+ *                             type: number
+ *       401:
+ *         description: Unauthorized - Authentication required
+ *       404:
+ *         description: Habit not found
+ */
+router.route("/analytics/streaks/:habitId").get(getHabitStreaks);
+
+/**
+ * @swagger
+ * /api/habits/analytics/weekly/{habitId}:
+ *   get:
+ *     summary: Get weekly completion analytics for a specific habit
+ *     tags: [Habits Analytics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: habitId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Habit ID
+ *       - in: query
+ *         name: weeks
+ *         schema:
+ *           type: integer
+ *           default: 12
+ *         description: Number of weeks to analyze
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved weekly analytics
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 results:
+ *                   type: number
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       weekStart:
+ *                         type: string
+ *                         format: date
+ *                       weekEnd:
+ *                         type: string
+ *                         format: date
+ *                       weekLabel:
+ *                         type: string
+ *                       completedDays:
+ *                         type: number
+ *                       totalDays:
+ *                         type: number
+ *                       completionRate:
+ *                         type: number
+ *                       entries:
+ *                         type: array
+ *       401:
+ *         description: Unauthorized - Authentication required
+ *       404:
+ *         description: Habit not found
+ */
+router.route("/analytics/weekly/:habitId").get(getWeeklyStats);
+
+/**
+ * @swagger
+ * /api/habits/analytics/monthly/{habitId}:
+ *   get:
+ *     summary: Get monthly completion analytics for a specific habit
+ *     tags: [Habits Analytics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: habitId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Habit ID
+ *       - in: query
+ *         name: months
+ *         schema:
+ *           type: integer
+ *           default: 6
+ *         description: Number of months to analyze
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved monthly analytics
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 results:
+ *                   type: number
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       monthStart:
+ *                         type: string
+ *                         format: date
+ *                       monthEnd:
+ *                         type: string
+ *                         format: date
+ *                       monthName:
+ *                         type: string
+ *                       monthLabel:
+ *                         type: string
+ *                       completedDays:
+ *                         type: number
+ *                       totalDays:
+ *                         type: number
+ *                       completionRate:
+ *                         type: number
+ *       401:
+ *         description: Unauthorized - Authentication required
+ *       404:
+ *         description: Habit not found
+ */
+router.route("/analytics/monthly/:habitId").get(getMonthlyStats);
 
 /**
  * @swagger
