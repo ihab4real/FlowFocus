@@ -29,11 +29,11 @@ This document outlines the CI/CD pipeline implementation for the FlowFocus MERN 
 
 #### 2. **Test Frontend** ⚛️
 
-- **Purpose**: Validates React frontend functionality across Node.js versions
+- **Purpose**: Validates React frontend functionality
 - **What it does**:
   - Runs Jest tests for the React app
   - Builds the Vite production bundle
-  - Tests on Node.js 18, 20, and 22
+  - Tests on Node.js 20
   - Uploads build artifacts for review
 - **Tools**: Jest, Vite, Testing Library
 
@@ -42,7 +42,7 @@ This document outlines the CI/CD pipeline implementation for the FlowFocus MERN 
 - **Purpose**: Validates Express backend functionality with real MongoDB
 - **What it does**:
   - Runs Jest tests with MongoDB test instance
-  - Tests on Node.js 18, 20, and 22
+  - Tests on Node.js 20
   - Uses MongoDB Docker service for integration tests
 - **Tools**: Jest, Supertest, MongoDB Memory Server
 
@@ -92,8 +92,8 @@ This document outlines the CI/CD pipeline implementation for the FlowFocus MERN 
 The following checks must pass before merging PRs:
 
 - ✅ Code Quality & Linting
-- ✅ Test Frontend (Node.js 18, 20, 22)
-- ✅ Test Backend (Node.js 18, 20, 22)
+- ✅ Test Frontend (Node.js 20)
+- ✅ Test Backend (Node.js 20)
 - ✅ Security Audit
 - ✅ Integration Check
 - ✅ Conventional Commits (PRs only)
@@ -104,7 +104,7 @@ The following checks must pass before merging PRs:
 
 - **Early Issue Detection**: Catches problems before they reach main branches
 - **Consistent Code Quality**: Automated formatting and linting enforcement
-- **Cross-Environment Testing**: Validates compatibility across Node.js versions
+- **Standardized Environment**: Validates functionality on Node.js 20
 - **Security Awareness**: Regular dependency vulnerability scanning
 
 ### **For CV/Portfolio**

@@ -54,18 +54,14 @@ jobs:
     name: Test Frontend
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [18, 20, 22]
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
       - name: Install client dependencies
@@ -78,7 +74,6 @@ jobs:
         run: cd client && npm run build
 
       - name: Upload client build artifacts
-        if: matrix.node-version == 20 # Only upload once
         uses: actions/upload-artifact@v4
         with:
           name: client-build
@@ -90,10 +85,6 @@ jobs:
     name: Test Backend
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [18, 20, 22]
-
     services:
       mongodb:
         image: mongo:7.0
@@ -104,10 +95,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
       - name: Install server dependencies
