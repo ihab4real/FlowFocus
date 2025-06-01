@@ -1,19 +1,26 @@
 {
   "name": "flowfocus",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "FlowFocus - A productivity app built with MERN stack",
+  "main": "server/server.js",
   "scripts": {
+    "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
+    "build": "cd client && npm run build",
     "start": "cd server && npm start",
-    "server": "cd server && npm run dev",
-    "client": "cd client && npm run dev",
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server:dev": "cd server && npm run dev",
+    "client:dev": "cd client && npm run dev",
     "format": "prettier --write .",
     "test": "cd server && npm test && cd ../client && npm test"
   },
-  "keywords": [],
+  "keywords": [
+    "productivity",
+    "mern",
+    "react",
+    "express",
+    "mongodb"
+  ],
   "author": "",
   "license": "ISC",
-  "description": "",
   "devDependencies": {
     "concurrently": "^9.1.2",
     "prettier": "^3.5.3"
