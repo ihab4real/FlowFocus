@@ -1,8 +1,10 @@
 # FlowFocus
 
-![CI Pipeline](https://github.com/ihab4real/FlowFocus/actions/workflows/ci.yml/badge.svg)
+![CI Pipeline](https://github.com/ihab4real/FlowFocus/actions/workflows/ci.yml/badge.svg) ![Deploy Pipeline](https://github.com/ihab4real/FlowFocus/actions/workflows/deploy.yml/badge.svg)
 
 A full-stack productivity dashboard combining task management, notes, a Pomodoro timer, and a habit tracker built with the MERN stack.
+
+🌐 **Live Demo**: [https://flowfocus.bestoneclinic.com](https://flowfocus.bestoneclinic.com)
 
 ## Features
 
@@ -17,6 +19,8 @@ A full-stack productivity dashboard combining task management, notes, a Pomodoro
 - **Frontend**: React + Tailwind CSS
 - **Backend**: Node.js + Express + MongoDB
 - **Authentication**: JWT (Access + Refresh Tokens)
+- **Deployment**: Ubuntu VPS with PM2 + Apache
+- **CI/CD**: GitHub Actions with CI and deployment workflows
 
 ## Setup
 
@@ -29,7 +33,7 @@ A full-stack productivity dashboard combining task management, notes, a Pomodoro
 
 ```bash
 # Clone the repository
-git clone [repository-url]
+git clone https://github.com/ihab4real/FlowFocus.git
 cd FlowFocus
 
 # Install dependencies
@@ -58,16 +62,9 @@ npm run client
 - `/docs` - Project documentation
 - `/.github/workflows` - CI/CD pipeline configuration
 
-## Development Workflow
+## CI/CD Pipeline
 
-This project uses automated CI/CD with GitHub Actions to maintain code quality:
-
-- **Code Quality**: Automated Prettier formatting and ESLint checks
-- **Testing**: Jest tests for both frontend and backend across multiple Node.js versions
-- **Security**: Dependency vulnerability scanning with npm audit
-- **Integration**: Validation that both client and server can start successfully
-
-See [CI/CD Pipeline Documentation](./docs/ci-cd-pipeline.md) for detailed information.
+- 📚 [Complete CI/CD Pipeline Documentation](./docs/ci-cd-pipeline.md)
 
 ### Local Development
 
@@ -84,6 +81,24 @@ npm test
 # Security audit
 cd client && npm audit && cd ../server && npm audit
 ```
+
+## Deployment
+
+The application is automatically deployed to production on every push to the `main` branch.
+
+- **Production URL**: https://flowfocus.bestoneclinic.com
+- **Deployment Target**: Ubuntu VPS with Hostinger
+- **Process Manager**: PM2
+- **Web Server**: Apache (reverse proxy)
+- **Deployment Status**: Check the [Actions tab](https://github.com/ihab4real/FlowFocus/actions) for latest deployments
+
+### Manual Deployment
+
+To deploy manually:
+
+1. Go to the [Actions tab](https://github.com/ihab4real/FlowFocus/actions)
+2. Select "Deploy to Production"
+3. Click "Run workflow" on the `main` branch
 
 ## API Endpoints
 

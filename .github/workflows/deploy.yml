@@ -1,0 +1,164 @@
+name: Deploy to Production
+
+on:
+  # Trigger deployment when CI completes successfully on main branch
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    branches: [main]
+    types: [completed]
+
+  # Allow manual deployment trigger
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to deploy"
+        required: true
+        default: "main"
+        type: choice
+        options:
+          - main
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  deploy:
+    name: Deploy to Production VPS
+    runs-on: ubuntu-latest
+    # Only run if CI workflow completed successfully
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch || 'main' }}
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+
+      - name: Add VPS to known hosts
+        run: |
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to VPS
+        run: |
+          # Create deployment script
+          cat << 'EOF' > deploy.sh
+          #!/bin/bash
+          set -e
+
+          echo "🚀 Starting deployment to production..."
+          echo "📅 Deployment started at: $(date)"
+
+          # Navigate to project directory
+          cd /var/www/flowfocus
+
+          # Backup current version
+          echo "📦 Creating backup..."
+          BACKUP_NAME="flowfocus-backup-$(date +%Y%m%d-%H%M%S)"
+          sudo cp -r /var/www/flowfocus /var/www/$BACKUP_NAME || true
+          echo "✅ Backup created: $BACKUP_NAME"
+
+          # Pull latest changes
+          echo "📥 Pulling latest changes..."
+          git fetch origin
+          git reset --hard origin/main
+          echo "✅ Code updated to latest main branch"
+
+          # Install/update dependencies
+          echo "📦 Installing dependencies..."
+          npm ci --only=production
+          cd client && npm ci --only=production
+          cd ../server && npm ci --only=production
+          cd ..
+          echo "✅ Dependencies installed"
+
+          # Build client
+          echo "🔨 Building client..."
+          cd client
+          npm run build
+          cd ..
+          echo "✅ Client built successfully"
+
+          # Restart PM2 backend
+          echo "🔄 Restarting backend..."
+          sudo pm2 restart flowfocus-backend || {
+            echo "Process not found, starting new PM2 process..."
+            sudo pm2 start server/server.js --name flowfocus-backend
+          }
+          sudo pm2 save
+          echo "✅ Backend restarted"
+
+          # Restart Apache
+          echo "🔄 Restarting Apache..."
+          sudo systemctl restart apache2
+          echo "✅ Apache restarted"
+
+          # Check services status
+          echo "📊 Checking services status..."
+          echo "PM2 Status:"
+          sudo pm2 list
+          echo "Apache Status:"
+          sudo systemctl is-active apache2
+
+          echo "🎉 Deployment finished successfully at: $(date)"
+          EOF
+
+          # Make script executable
+          chmod +x deploy.sh
+
+          # Execute deployment on VPS
+          echo "🔗 Connecting to VPS and executing deployment..."
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} 'bash -s' < deploy.sh
+
+      - name: Health Check
+        run: |
+          echo "🏥 Performing health check..."
+          echo "⏳ Waiting for services to stabilize..."
+          sleep 15
+
+          # Check if the site is responding
+          echo "🌐 Testing site availability..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://flowfocus.bestoneclinic.com || echo "000")
+
+          if [ "$response" = "200" ] || [ "$response" = "302" ] || [ "$response" = "301" ]; then
+            echo "✅ Health check passed! Site is responding with status: $response"
+            echo "🌟 Deployment successful!"
+          else
+            echo "❌ Health check failed! Site returned status: $response"
+            echo "🔍 Please check the logs and consider rolling back"
+            exit 1
+          fi
+
+      - name: Deployment Summary
+        if: always()
+        run: |
+          echo "## 🚀 Deployment Summary"
+          echo ""
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "✅ **Status**: Deployment completed successfully!"
+            echo "🌐 **Site**: https://flowfocus.bestoneclinic.com"
+            echo "📅 **Time**: $(date)"
+            echo "🔧 **Branch**: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch || 'main' }}"
+            echo "📝 **Commit**: ${{ github.sha }}"
+          else
+            echo "❌ **Status**: Deployment failed!"
+            echo "🔍 **Action**: Check logs and consider rollback"
+            echo "📞 **Support**: Review troubleshooting guide in docs/"
+          fi
+
+      - name: Cleanup Old Backups
+        if: success()
+        run: |
+          echo "🧹 Cleaning up old backups (keeping last 5)..."
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} '
+            cd /var/www
+            # Keep only the 5 most recent backups
+            ls -t flowfocus-backup-* 2>/dev/null | tail -n +6 | xargs -r sudo rm -rf
+            echo "✅ Cleanup completed"
+            echo "📁 Remaining backups:"
+            ls -la flowfocus-backup-* 2>/dev/null || echo "No backups found"
+          '
