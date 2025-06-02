@@ -1,151 +1,218 @@
 # CI/CD Pipeline Documentation
 
-## 🚀 Overview
+## Overview
 
-This document outlines the CI/CD pipeline implementation for the FlowFocus MERN stack monorepo. The pipeline is designed to maintain code quality, catch issues early, and streamline the development workflow.
+This document outlines the CI/CD pipeline implementation for the FlowFocus MERN stack monorepo. The pipeline maintains code quality, catches issues early, and automatically deploys to production VPS using separate CI and CD workflows.
 
-## 📊 Pipeline Status
+## Pipeline Status
 
-![CI Pipeline](https://github.com/YOUR_GITHUB_USERNAME/FlowFocus/actions/workflows/ci.yml/badge.svg)
+![CI Pipeline](https://github.com/ihab4real/FlowFocus/actions/workflows/ci.yml/badge.svg)
+![Deploy Pipeline](https://github.com/ihab4real/FlowFocus/actions/workflows/deploy.yml/badge.svg)
 
-## 🔧 Current Implementation (CI Focus)
+## Pipeline Architecture
 
-### **Pipeline Triggers**
+### Separated Workflows
+
+- **`ci.yml`** - Continuous Integration (runs on all branches and PRs)
+- **`deploy.yml`** - Continuous Deployment (runs only after CI passes on main)
+
+### Pipeline Triggers
+
+#### CI Pipeline (`ci.yml`)
 
 - Push to `main` and `develop` branches
 - Pull requests targeting `main` and `develop`
 - Manual workflow dispatch
 
-### **Pipeline Jobs**
+#### CD Pipeline (`deploy.yml`)
 
-#### 1. **Code Quality & Linting** 🎨
+- Automatically triggered when CI completes successfully on `main` branch
+- Manual deployment trigger with branch selection
+- Only deploys if CI pipeline passes
+
+### Workflow Dependencies
+
+```
+Push to main → CI Pipeline → (if successful) → CD Pipeline → Production
+```
+
+## CI Pipeline Jobs (`ci.yml`)
+
+#### 1. Code Quality & Linting
 
 - **Purpose**: Ensures consistent code formatting and catches linting issues
-- **What it does**:
+- **Actions**:
   - Verifies Prettier formatting
   - Runs ESLint on client code
   - Conditionally runs server linting (when configured)
 - **Tools**: Prettier, ESLint
 
-#### 2. **Test Frontend** ⚛️
+#### 2. Test Frontend
 
 - **Purpose**: Validates React frontend functionality
-- **What it does**:
+- **Actions**:
   - Runs Jest tests for the React app
   - Builds the Vite production bundle
   - Tests on Node.js 20
   - Uploads build artifacts for review
 - **Tools**: Jest, Vite, Testing Library
 
-#### 3. **Test Backend** 🌐
+#### 3. Test Backend
 
 - **Purpose**: Validates Express backend functionality with real MongoDB
-- **What it does**:
+- **Actions**:
   - Runs Jest tests with MongoDB test instance
   - Tests on Node.js 20
   - Uses MongoDB Docker service for integration tests
 - **Tools**: Jest, Supertest, MongoDB Memory Server
 
-#### 4. **Security Audit** 🔒
+#### 4. Security Audit
 
 - **Purpose**: Identifies security vulnerabilities and outdated dependencies
-- **What it does**:
+- **Actions**:
   - Runs `npm audit` on both client and server
   - Reports outdated packages
   - Fails on moderate+ security issues
 - **Tools**: npm audit
 
-#### 5. **Integration Check** 🔗
+#### 5. Integration Check
 
 - **Purpose**: Ensures both apps can start and work together
-- **What it does**:
+- **Actions**:
   - Installs all dependencies across the monorepo
   - Tests that both client and server can start
   - Validates development environment setup
 - **Dependencies**: Requires all previous jobs to pass
 
-#### 6. **Conventional Commits** 📝
+## CD Pipeline Jobs (`deploy.yml`)
 
-- **Purpose**: Validates commit message format (PR only)
-- **What it does**:
-  - Checks commit messages follow conventional commit standards
-  - Validates against configured scopes and types
-  - Aligns with project's git workflow strategy
-- **Tools**: Commitlint
+#### Deploy to Production
 
-## 📋 Configuration Files
+- **Purpose**: Automated deployment to Ubuntu VPS
+- **Trigger**: Only after CI pipeline completes successfully on `main` branch
+- **Actions**:
+  - Connects to VPS via SSH
+  - Creates timestamped backup of current deployment
+  - Pulls latest code from GitHub
+  - Installs/updates dependencies
+  - Builds client application
+  - Restarts PM2 backend service
+  - Restarts Apache reverse proxy
+  - Performs health check
+  - Provides deployment summary
+  - Cleans up old backups (keeps last 5)
+- **Tools**: SSH, PM2, Apache2, curl
+- **Target**: https://flowfocus.bestoneclinic.com
 
-### **Workflow File**
+## Required GitHub Secrets
 
-- **Location**: `.github/workflows/ci.yml`
-- **Purpose**: Main CI pipeline definition
+### VPS Deployment Secrets
 
-### **Commitlint Config**
+- `VPS_HOST` - VPS hostname/IP
+- `VPS_USER` - VPS username
+- `VPS_SSH_PRIVATE_KEY` - SSH private key content for deployment
+
+### Setting Up Secrets
+
+1. Navigate to GitHub repository Settings → Secrets and variables → Actions
+2. Add each secret with the exact names above
+3. Ensure SSH key is properly formatted with headers and footers
+
+## Configuration Files
+
+### Workflow Files
+
+- **Location**: `.github/workflows/ci.yml` and `.github/workflows/deploy.yml`
+- **Purpose**: Separated CI and CD pipeline definitions
+
+### Deployment Architecture
+
+```
+GitHub Actions (CI) → GitHub Actions (CD) → Ubuntu VPS
+                                        ↓
+                                    /var/www/flowfocus/
+                                        ├── client/ (React + Vite)
+                                        ├── server/ (Express + PM2)
+                                        └── Apache Reverse Proxy
+```
+
+### Commitlint Config
 
 - **Location**: `.commitlintrc.json`
 - **Purpose**: Validates conventional commit format
 - **Allowed Types**: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `ci`, `perf`, `revert`
 - **Allowed Scopes**: Matches project structure (client, server, docs, etc.)
 
-## 🚦 Status Checks
+## Status Checks
 
-The following checks must pass before merging PRs:
+### CI Pipeline Status Checks (Required for all PRs)
 
 - ✅ Code Quality & Linting
 - ✅ Test Frontend (Node.js 20)
 - ✅ Test Backend (Node.js 20)
 - ✅ Security Audit
 - ✅ Integration Check
-- ✅ Conventional Commits (PRs only)
 
-## 📈 Benefits
+### CD Pipeline (Automatic on main)
 
-### **For Development**
+- ✅ Deploy to Production (only after CI passes)
+
+## Benefits
+
+### CI Benefits
 
 - **Early Issue Detection**: Catches problems before they reach main branches
 - **Consistent Code Quality**: Automated formatting and linting enforcement
 - **Standardized Environment**: Validates functionality on Node.js 20
 - **Security Awareness**: Regular dependency vulnerability scanning
 
-### **For CV/Portfolio**
+### CD Benefits
 
-- **Professional Standards**: Shows understanding of modern DevOps practices
-- **Code Quality**: Demonstrates commitment to maintainable code
-- **Documentation**: Well-documented processes and workflows
-- **Automation**: Exhibits knowledge of CI/CD best practices
+- **Automated Deployment**: Zero-touch deployment to production
+- **Consistent Deployments**: Same process every time
+- **Rollback Capability**: Automated backups for quick recovery
+- **Health Monitoring**: Automatic health checks post-deployment
+- **Reduced Downtime**: Fast, automated deployment process
 
-## 🔮 Future Enhancements (CD Phase)
+### Separation Benefits
 
-When ready for deployment to Ubuntu VPS:
+- **Faster CI**: CI pipeline runs quickly without deployment overhead
+- **Focused Workflows**: Each pipeline has a clear, single responsibility
+- **Better Debugging**: Easier to troubleshoot CI vs deployment issues
+- **Flexible Deployment**: Can deploy manually without re-running CI
 
-### **Planned CD Components**
+## Deployment Process
 
-- **Docker Containerization**: Multi-stage builds for client/server
-- **Environment Management**: Staging and production configurations
-- **Database Migrations**: Automated MongoDB schema updates
-- **VPS Deployment**: SSH-based deployment to Ubuntu server
-- **Health Checks**: Application monitoring and rollback capabilities
-- **SSL/Domain**: HTTPS setup and domain configuration
+### Automatic Deployment Flow
 
-### **Potential Workflow**
+1. **Push to main** → Triggers CI pipeline
+2. **CI Pipeline** → All quality checks must pass
+3. **CD Pipeline** → Automatically triggered if CI succeeds
+4. **Backup** → Current version backed up with timestamp
+5. **Update** → Latest code pulled from GitHub
+6. **Build** → Dependencies installed, client built
+7. **Restart** → PM2 backend and Apache restarted
+8. **Health Check** → Site availability verified
+9. **Cleanup** → Old backups removed (keeps last 5)
+10. **Summary** → Deployment status reported
 
-```yaml
-# Future CD workflow structure
-deploy-staging:
-  - Build Docker images
-  - Deploy to staging environment
-  - Run smoke tests
-  - Await manual approval
+### Manual Deployment
 
-deploy-production:
-  - Deploy to production VPS
-  - Run health checks
-  - Send deployment notifications
-```
+#### Option 1: Manual CD Trigger
 
-## 🛠 Local Development
+1. Navigate to Actions tab in GitHub
+2. Select "Deploy to Production"
+3. Click "Run workflow"
+4. Select `main` branch
+5. Click "Run workflow"
 
-### **Running CI Checks Locally**
+#### Option 2: Push to Main
+
+Push any change to the `main` branch and both pipelines will run automatically.
+
+## Local Development
+
+### Running CI Checks Locally
 
 ```bash
 # Check code formatting
@@ -162,75 +229,151 @@ cd client && npm audit
 cd ../server && npm audit
 ```
 
-### **Pre-commit Hooks** (Optional Enhancement)
-
-Consider adding Husky for local commit validation:
+### VPS Management Commands
 
 ```bash
-npm install --save-dev husky
-npx husky install
-npx husky add .husky/pre-commit "npm run format -- --check"
-npx husky add .husky/commit-msg "npx commitlint --edit $1"
+# SSH into VPS
+ssh user@vps_host
+
+# Check PM2 status
+sudo pm2 list
+
+# Check Apache status
+sudo systemctl status apache2
+
+# View deployment logs
+sudo journalctl -f
+
+# Check recent backups
+ls -la /var/www/flowfocus-backup-*
 ```
 
-## 📊 Monitoring & Metrics
+## Monitoring & Metrics
 
-### **Current Tracking**
+### CI Tracking
 
-- Build success/failure rates
-- Test coverage (when implemented)
-- Security vulnerability counts
-- Build duration trends
+- Build success/failure rates for all branches
+- Test coverage and performance
+- Security vulnerability trends
+- Lint and formatting compliance
 
-### **GitHub Integration**
+### CD Tracking
 
-- Status checks on PRs
-- Build artifacts for review
-- Automated failure notifications
-- Branch protection rules
+- Deployment success/failure rates
+- Deployment duration trends
+- Health check response times
+- Backup creation verification
 
-## 🤝 Contributing
+### Production Monitoring
+
+- Site availability (automated health checks)
+- PM2 process status
+- Apache server status
+- Disk space usage (for backups)
+
+## Troubleshooting
+
+### CI Pipeline Issues
+
+#### Tests Failing
+
+```bash
+# Run tests locally
+cd client && npm test
+cd ../server && npm test
+```
+
+#### Linting Errors
+
+```bash
+# Fix formatting
+npm run format
+
+# Check linting
+cd client && npm run lint
+```
+
+### CD Pipeline Issues
+
+#### SSH Connection Failed
+
+**Error**: "Permission denied" or "Host key verification failed"
+
+**Solution**:
+
+```bash
+# Verify SSH key works
+ssh -T git@github.com
+ssh user@vps_host
+```
+
+#### PM2 Process Not Starting
+
+**Error**: "Process 'flowfocus-backend' not found"
+
+**Solution**:
+
+```bash
+# On VPS, restart PM2 manually
+cd /var/www/flowfocus
+sudo pm2 restart flowfocus-backend
+sudo pm2 logs flowfocus-backend
+```
+
+#### Apache Not Responding
+
+**Error**: Site returns 500 or doesn't respond
+
+**Solution**:
+
+```bash
+# Check Apache status and logs
+sudo systemctl status apache2
+sudo journalctl -u apache2 -f
+sudo systemctl restart apache2
+```
+
+### Rollback Procedure
+
+If deployment fails, rollback can be performed:
+
+```bash
+# SSH into VPS
+ssh user@vps_host
+
+# Find latest backup
+ls -la /var/www/flowfocus-backup-*
+
+# Restore backup (replace with actual backup name)
+sudo rm -rf /var/www/flowfocus
+sudo mv /var/www/flowfocus-backup-YYYYMMDD-HHMMSS /var/www/flowfocus
+
+# Restart services
+sudo pm2 restart flowfocus-backend
+sudo systemctl restart apache2
+```
+
+## Contributing
 
 When contributing to this project:
 
 1. **Follow Conventional Commits**: Use the established format and scopes
-2. **Ensure All Checks Pass**: Pipeline must be green before merging
-3. **Write Tests**: Add tests for new features and bug fixes
-4. **Update Documentation**: Keep docs in sync with changes
+2. **Ensure CI Passes**: All CI checks must be green before merging
+3. **Test Thoroughly**: Both local and staging environments
+4. **Monitor Deployments**: Check deployment status after merge to main
 
-## 🆘 Troubleshooting
+## Future Enhancements
 
-### **Common Issues**
+### Potential Improvements
 
-**Pipeline Fails on Formatting**
-
-```bash
-# Fix locally
-npm run format
-git add .
-git commit -m "style: fix code formatting"
-```
-
-**Tests Fail Locally**
-
-```bash
-# Client tests
-cd client && npm test
-
-# Server tests
-cd server && npm test
-```
-
-**Security Vulnerabilities**
-
-```bash
-# Auto-fix where possible
-npm audit fix
-
-# Manual review for breaking changes
-npm audit
-```
+- **Staging Environment**: Deploy to staging before production
+- **Blue-Green Deployment**: Zero-downtime deployments
+- **Database Migrations**: Automated schema updates
+- **Performance Monitoring**: Response time and error tracking
+- **Slack/Discord Integration**: Deployment notifications
+- **Environment Variables Management**: Secure config deployment
+- **Multi-environment Support**: Dev, staging, and production environments
 
 ---
 
-This pipeline evolves with the project. As new requirements emerge, we'll enhance it accordingly while maintaining the balance between thoroughness and development velocity.
+This separated CI/CD pipeline provides a professional, scalable approach that follows industry best practices while maintaining high standards for code quality and deployment reliability.
