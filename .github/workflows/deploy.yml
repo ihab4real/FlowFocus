@@ -62,13 +62,34 @@ jobs:
           echo "$VPS_PASSWORD" | sudo -S chown -R $USER:$USER /var/www/flowfocus
           echo "$VPS_PASSWORD" | sudo -S chmod -R 755 /var/www/flowfocus
 
+          # Ensure GitHub is in known_hosts for the current user
+          echo "🔐 Setting up GitHub SSH access..."
+          mkdir -p ~/.ssh
+          if ! grep -q "github.com" ~/.ssh/known_hosts 2>/dev/null; then
+            ssh-keyscan -H github.com >> ~/.ssh/known_hosts 2>/dev/null || true
+            echo "✅ Added GitHub host key to user known_hosts"
+          else
+            echo "✅ GitHub host key already exists in user known_hosts"
+          fi
+          chmod 600 ~/.ssh/known_hosts 2>/dev/null || true
+
+          # Also check root's known_hosts since some git operations might run as root
+          echo "$VPS_PASSWORD" | sudo -S mkdir -p /root/.ssh
+          if ! echo "$VPS_PASSWORD" | sudo -S grep -q "github.com" /root/.ssh/known_hosts 2>/dev/null; then
+            echo "$VPS_PASSWORD" | sudo -S sh -c 'ssh-keyscan -H github.com >> /root/.ssh/known_hosts 2>/dev/null || true'
+            echo "✅ Added GitHub host key to root known_hosts"
+          else
+            echo "✅ GitHub host key already exists in root known_hosts"
+          fi
+          echo "$VPS_PASSWORD" | sudo -S chmod 600 /root/.ssh/known_hosts 2>/dev/null || true
+
           # Backup current version
           echo "📦 Creating backup..."
           BACKUP_NAME="flowfocus-backup-$(date +%Y%m%d-%H%M%S)"
           echo "$VPS_PASSWORD" | sudo -S cp -r /var/www/flowfocus /var/www/$BACKUP_NAME || true
           echo "✅ Backup created: $BACKUP_NAME"
 
-          # Pull latest changes
+          # Pull latest changes (run as current user, not sudo)
           echo "📥 Pulling latest changes..."
           git fetch origin
           git reset --hard origin/main
