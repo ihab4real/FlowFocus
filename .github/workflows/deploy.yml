@@ -41,6 +41,7 @@ jobs:
 
       - name: Add VPS to known hosts
         run: |
+          # Get the current VPS host key and add to known_hosts for secure connection
           ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy to VPS
@@ -78,7 +79,7 @@ jobs:
           sudo chmod 600 /root/.ssh/flowfocus_deploy
 
           # Configure git to use the deployment key
-          export GIT_SSH_COMMAND="ssh -i /root/.ssh/flowfocus_deploy -o StrictHostKeyChecking=no"
+          export GIT_SSH_COMMAND="ssh -i /root/.ssh/flowfocus_deploy"
 
           # Ensure GitHub is in known_hosts
           if ! grep -q "github.com" ~/.ssh/known_hosts 2>/dev/null; then
@@ -105,8 +106,8 @@ jobs:
 
           # Pull latest changes using deployment key
           echo "📥 Pulling latest changes with deployment key..."
-          sudo env GIT_SSH_COMMAND="ssh -i /root/.ssh/flowfocus_deploy -o StrictHostKeyChecking=no" git fetch origin
-          sudo env GIT_SSH_COMMAND="ssh -i /root/.ssh/flowfocus_deploy -o StrictHostKeyChecking=no" git reset --hard origin/main
+          sudo env GIT_SSH_COMMAND="ssh -i /root/.ssh/flowfocus_deploy" git fetch origin
+          sudo env GIT_SSH_COMMAND="ssh -i /root/.ssh/flowfocus_deploy" git reset --hard origin/main
           echo "✅ Code updated to latest main branch"
 
           # Install/update dependencies
@@ -162,8 +163,8 @@ jobs:
           chmod +x deploy.sh
 
           # Execute deployment on VPS
-          echo "🔗 Connecting to VPS with deployment key..."
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} 'bash -s' < deploy.sh
+          echo "🔗 Connecting to VPS with verified host key..."
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} 'bash -s' < deploy.sh
 
       - name: Health Check
         run: |
@@ -206,7 +207,7 @@ jobs:
         if: success()
         run: |
           echo "🧹 Cleaning up old backups (keeping last 5)..."
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} '
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} '
             cd /var/www
             # Keep only the 5 most recent backups
             ls -t flowfocus-backup-* 2>/dev/null | tail -n +6 | xargs -r sudo rm -rf
