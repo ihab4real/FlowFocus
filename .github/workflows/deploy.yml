@@ -111,9 +111,9 @@ jobs:
 
           # Install/update dependencies
           echo "📦 Installing dependencies..."
-          npm ci --only=production
-          cd client && npm ci --only=production
-          cd ../server && npm ci --only=production
+          npm ci
+          cd client && npm ci
+          cd ../server && npm ci
           cd ..
           echo "✅ Dependencies installed"
 
