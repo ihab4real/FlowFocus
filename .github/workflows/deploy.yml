@@ -59,8 +59,8 @@ jobs:
 
           # Fix ownership and permissions first
           echo "🔧 Fixing permissions..."
-          echo "$VPS_PASSWORD" | sudo -S chown -R $USER:$USER /var/www/flowfocus
-          echo "$VPS_PASSWORD" | sudo -S chmod -R 755 /var/www/flowfocus
+          sudo chown -R $USER:$USER /var/www/flowfocus
+          sudo chmod -R 755 /var/www/flowfocus
 
           # Ensure GitHub is in known_hosts for the current user
           echo "🔐 Setting up GitHub SSH access..."
@@ -74,25 +74,25 @@ jobs:
           chmod 600 ~/.ssh/known_hosts 2>/dev/null || true
 
           # Also check root's known_hosts since some git operations might run as root
-          echo "$VPS_PASSWORD" | sudo -S mkdir -p /root/.ssh
-          if ! echo "$VPS_PASSWORD" | sudo -S grep -q "github.com" /root/.ssh/known_hosts 2>/dev/null; then
-            echo "$VPS_PASSWORD" | sudo -S sh -c 'ssh-keyscan -H github.com >> /root/.ssh/known_hosts 2>/dev/null || true'
+          sudo mkdir -p /root/.ssh
+          if ! sudo grep -q "github.com" /root/.ssh/known_hosts 2>/dev/null; then
+            sudo sh -c 'ssh-keyscan -H github.com >> /root/.ssh/known_hosts 2>/dev/null || true'
             echo "✅ Added GitHub host key to root known_hosts"
           else
             echo "✅ GitHub host key already exists in root known_hosts"
           fi
-          echo "$VPS_PASSWORD" | sudo -S chmod 600 /root/.ssh/known_hosts 2>/dev/null || true
+          sudo chmod 600 /root/.ssh/known_hosts 2>/dev/null || true
 
           # Backup current version
           echo "📦 Creating backup..."
           BACKUP_NAME="flowfocus-backup-$(date +%Y%m%d-%H%M%S)"
-          echo "$VPS_PASSWORD" | sudo -S cp -r /var/www/flowfocus /var/www/$BACKUP_NAME || true
+          sudo cp -r /var/www/flowfocus /var/www/$BACKUP_NAME || true
           echo "✅ Backup created: $BACKUP_NAME"
 
           # Pull latest changes (run as root since SSH keys are in /root/.ssh/)
           echo "📥 Pulling latest changes..."
-          echo "$VPS_PASSWORD" | sudo -S git fetch origin
-          echo "$VPS_PASSWORD" | sudo -S git reset --hard origin/main
+          sudo git fetch origin
+          sudo git reset --hard origin/main
           echo "✅ Code updated to latest main branch"
 
           # Install/update dependencies
@@ -112,24 +112,24 @@ jobs:
 
           # Restart PM2 backend
           echo "🔄 Restarting backend..."
-          echo "$VPS_PASSWORD" | sudo -S pm2 restart flowfocus-backend || {
+          sudo pm2 restart flowfocus-backend || {
             echo "Process not found, starting new PM2 process..."
-            echo "$VPS_PASSWORD" | sudo -S pm2 start server/server.js --name flowfocus-backend
+            sudo pm2 start server/server.js --name flowfocus-backend
           }
-          echo "$VPS_PASSWORD" | sudo -S pm2 save
+          sudo pm2 save
           echo "✅ Backend restarted"
 
           # Restart Apache
           echo "🔄 Restarting Apache..."
-          echo "$VPS_PASSWORD" | sudo -S systemctl restart apache2
+          sudo systemctl restart apache2
           echo "✅ Apache restarted"
 
           # Check services status
           echo "📊 Checking services status..."
           echo "PM2 Status:"
-          echo "$VPS_PASSWORD" | sudo -S pm2 list
+          sudo pm2 list
           echo "Apache Status:"
-          echo "$VPS_PASSWORD" | sudo -S systemctl is-active apache2
+          sudo systemctl is-active apache2
 
           echo "🎉 Deployment finished successfully at: $(date)"
           EOF
@@ -139,7 +139,7 @@ jobs:
 
           # Execute deployment on VPS using deployment key
           echo "🔗 Connecting to VPS with deployment key..."
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "VPS_PASSWORD='${{ secrets.VPS_PASSWORD }}'" 'bash -s' < deploy.sh
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} 'bash -s' < deploy.sh
 
       - name: Health Check
         run: |
@@ -182,10 +182,10 @@ jobs:
         if: success()
         run: |
           echo "🧹 Cleaning up old backups (keeping last 5)..."
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "VPS_PASSWORD='${{ secrets.VPS_PASSWORD }}'" '
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} '
             cd /var/www
             # Keep only the 5 most recent backups
-            ls -t flowfocus-backup-* 2>/dev/null | tail -n +6 | xargs -r echo "$VPS_PASSWORD" | sudo -S rm -rf
+            ls -t flowfocus-backup-* 2>/dev/null | tail -n +6 | xargs -r sudo rm -rf
             echo "✅ Cleanup completed"
             echo "📁 Remaining backups:"
             ls -la flowfocus-backup-* 2>/dev/null || echo "No backups found"
