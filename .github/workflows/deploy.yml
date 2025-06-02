@@ -52,7 +52,7 @@ jobs:
 
           echo "🚀 Starting deployment to production..."
           echo "📅 Deployment started at: $(date)"
-          echo "🔑 Using deployment SSH key with password authentication"
+          echo "🔑 Using passwordless deployment key"
 
           # Navigate to project directory
           cd /var/www/flowfocus
@@ -62,9 +62,25 @@ jobs:
           sudo chown -R $USER:$USER /var/www/flowfocus
           sudo chmod -R 755 /var/www/flowfocus
 
-          # Ensure GitHub is in known_hosts for the current user
-          echo "🔐 Setting up GitHub SSH access..."
+          # Copy deployment key to VPS and set up Git to use it
+          echo "🔐 Setting up passwordless deployment key..."
           mkdir -p ~/.ssh
+          sudo mkdir -p /root/.ssh
+
+          # Copy the deployment key content to VPS (will be passed via stdin)
+          cat > ~/.ssh/flowfocus_deploy << 'KEYEOF'
+          DEPLOY_KEY_CONTENT
+          KEYEOF
+
+          # Also copy to root for sudo git operations
+          sudo cp ~/.ssh/flowfocus_deploy /root/.ssh/flowfocus_deploy
+          chmod 600 ~/.ssh/flowfocus_deploy
+          sudo chmod 600 /root/.ssh/flowfocus_deploy
+
+          # Configure git to use the deployment key
+          export GIT_SSH_COMMAND="ssh -i /root/.ssh/flowfocus_deploy -o StrictHostKeyChecking=no"
+
+          # Ensure GitHub is in known_hosts
           if ! grep -q "github.com" ~/.ssh/known_hosts 2>/dev/null; then
             ssh-keyscan -H github.com >> ~/.ssh/known_hosts 2>/dev/null || true
             echo "✅ Added GitHub host key to user known_hosts"
@@ -73,8 +89,6 @@ jobs:
           fi
           chmod 600 ~/.ssh/known_hosts 2>/dev/null || true
 
-          # Also check root's known_hosts since some git operations might run as root
-          sudo mkdir -p /root/.ssh
           if ! sudo grep -q "github.com" /root/.ssh/known_hosts 2>/dev/null; then
             sudo sh -c 'ssh-keyscan -H github.com >> /root/.ssh/known_hosts 2>/dev/null || true'
             echo "✅ Added GitHub host key to root known_hosts"
@@ -89,10 +103,10 @@ jobs:
           sudo cp -r /var/www/flowfocus /var/www/$BACKUP_NAME || true
           echo "✅ Backup created: $BACKUP_NAME"
 
-          # Pull latest changes (run as root since SSH keys are in /root/.ssh/)
-          echo "📥 Pulling latest changes..."
-          sudo git fetch origin
-          sudo git reset --hard origin/main
+          # Pull latest changes using deployment key
+          echo "📥 Pulling latest changes with deployment key..."
+          sudo env GIT_SSH_COMMAND="ssh -i /root/.ssh/flowfocus_deploy -o StrictHostKeyChecking=no" git fetch origin
+          sudo env GIT_SSH_COMMAND="ssh -i /root/.ssh/flowfocus_deploy -o StrictHostKeyChecking=no" git reset --hard origin/main
           echo "✅ Code updated to latest main branch"
 
           # Install/update dependencies
@@ -131,13 +145,23 @@ jobs:
           echo "Apache Status:"
           sudo systemctl is-active apache2
 
+          # Cleanup deployment key for security
+          echo "🧹 Cleaning up deployment key..."
+          rm -f ~/.ssh/flowfocus_deploy
+          sudo rm -f /root/.ssh/flowfocus_deploy
+
           echo "🎉 Deployment finished successfully at: $(date)"
           EOF
+
+          # Replace placeholder with actual key content from GitHub secret
+          echo '${{ secrets.VPS_SSH_PRIVATE_KEY }}' > temp_deploy_key
+          sed -i "s|DEPLOY_KEY_CONTENT|$(cat temp_deploy_key | sed 's/$/\\n/' | tr -d '\n')|g" deploy.sh
+          rm temp_deploy_key
 
           # Make script executable
           chmod +x deploy.sh
 
-          # Execute deployment on VPS using deployment key
+          # Execute deployment on VPS
           echo "🔗 Connecting to VPS with deployment key..."
           ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} 'bash -s' < deploy.sh
 
