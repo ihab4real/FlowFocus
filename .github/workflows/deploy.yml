@@ -34,7 +34,7 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch || 'main' }}
 
-      - name: Setup SSH
+      - name: Setup SSH with deployment key
         uses: webfactory/ssh-agent@v0.7.0
         with:
           ssh-private-key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
@@ -52,14 +52,20 @@ jobs:
 
           echo "🚀 Starting deployment to production..."
           echo "📅 Deployment started at: $(date)"
+          echo "🔑 Using deployment SSH key with password authentication"
 
           # Navigate to project directory
           cd /var/www/flowfocus
 
+          # Fix ownership and permissions first
+          echo "🔧 Fixing permissions..."
+          echo "$VPS_PASSWORD" | sudo -S chown -R $USER:$USER /var/www/flowfocus
+          echo "$VPS_PASSWORD" | sudo -S chmod -R 755 /var/www/flowfocus
+
           # Backup current version
           echo "📦 Creating backup..."
           BACKUP_NAME="flowfocus-backup-$(date +%Y%m%d-%H%M%S)"
-          sudo cp -r /var/www/flowfocus /var/www/$BACKUP_NAME || true
+          echo "$VPS_PASSWORD" | sudo -S cp -r /var/www/flowfocus /var/www/$BACKUP_NAME || true
           echo "✅ Backup created: $BACKUP_NAME"
 
           # Pull latest changes
@@ -85,24 +91,24 @@ jobs:
 
           # Restart PM2 backend
           echo "🔄 Restarting backend..."
-          sudo pm2 restart flowfocus-backend || {
+          echo "$VPS_PASSWORD" | sudo -S pm2 restart flowfocus-backend || {
             echo "Process not found, starting new PM2 process..."
-            sudo pm2 start server/server.js --name flowfocus-backend
+            echo "$VPS_PASSWORD" | sudo -S pm2 start server/server.js --name flowfocus-backend
           }
-          sudo pm2 save
+          echo "$VPS_PASSWORD" | sudo -S pm2 save
           echo "✅ Backend restarted"
 
           # Restart Apache
           echo "🔄 Restarting Apache..."
-          sudo systemctl restart apache2
+          echo "$VPS_PASSWORD" | sudo -S systemctl restart apache2
           echo "✅ Apache restarted"
 
           # Check services status
           echo "📊 Checking services status..."
           echo "PM2 Status:"
-          sudo pm2 list
+          echo "$VPS_PASSWORD" | sudo -S pm2 list
           echo "Apache Status:"
-          sudo systemctl is-active apache2
+          echo "$VPS_PASSWORD" | sudo -S systemctl is-active apache2
 
           echo "🎉 Deployment finished successfully at: $(date)"
           EOF
@@ -110,9 +116,9 @@ jobs:
           # Make script executable
           chmod +x deploy.sh
 
-          # Execute deployment on VPS
-          echo "🔗 Connecting to VPS and executing deployment..."
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} 'bash -s' < deploy.sh
+          # Execute deployment on VPS using deployment key
+          echo "🔗 Connecting to VPS with deployment key..."
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "VPS_PASSWORD='${{ secrets.VPS_PASSWORD }}'" 'bash -s' < deploy.sh
 
       - name: Health Check
         run: |
@@ -144,6 +150,7 @@ jobs:
             echo "📅 **Time**: $(date)"
             echo "🔧 **Branch**: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch || 'main' }}"
             echo "📝 **Commit**: ${{ github.sha }}"
+            echo "🔑 **Auth**: SSH key with password sudo"
           else
             echo "❌ **Status**: Deployment failed!"
             echo "🔍 **Action**: Check logs and consider rollback"
@@ -154,10 +161,10 @@ jobs:
         if: success()
         run: |
           echo "🧹 Cleaning up old backups (keeping last 5)..."
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} '
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "VPS_PASSWORD='${{ secrets.VPS_PASSWORD }}'" '
             cd /var/www
             # Keep only the 5 most recent backups
-            ls -t flowfocus-backup-* 2>/dev/null | tail -n +6 | xargs -r sudo rm -rf
+            ls -t flowfocus-backup-* 2>/dev/null | tail -n +6 | xargs -r echo "$VPS_PASSWORD" | sudo -S rm -rf
             echo "✅ Cleanup completed"
             echo "📁 Remaining backups:"
             ls -la flowfocus-backup-* 2>/dev/null || echo "No backups found"
