@@ -89,10 +89,10 @@ jobs:
           echo "$VPS_PASSWORD" | sudo -S cp -r /var/www/flowfocus /var/www/$BACKUP_NAME || true
           echo "✅ Backup created: $BACKUP_NAME"
 
-          # Pull latest changes (run as current user, not sudo)
+          # Pull latest changes (run as root since SSH keys are in /root/.ssh/)
           echo "📥 Pulling latest changes..."
-          git fetch origin
-          git reset --hard origin/main
+          echo "$VPS_PASSWORD" | sudo -S git fetch origin
+          echo "$VPS_PASSWORD" | sudo -S git reset --hard origin/main
           echo "✅ Code updated to latest main branch"
 
           # Install/update dependencies
