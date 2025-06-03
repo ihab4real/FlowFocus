@@ -1,18 +1,13 @@
 import React from "react";
-import ResponsiveTaskBoard from "@/features/Tasks/components/ResponsiveTaskBoard";
+import TaskBoard from "@/features/Tasks/components/TaskBoard";
 
 /**
- * MiniScreenTaskBoard component
- * This is now a wrapper around the ResponsiveTaskBoard that automatically
- * adapts to different screen sizes and device capabilities
+ * Mini task board view for dashboard - optimized for mobile responsiveness
+ * This is a wrapper around the TaskBoard that automatically
+ * detects device type and renders the appropriate layout
  */
-export function MiniScreenTaskBoard() {
-  return (
-    <div className="relative group">
-      <ResponsiveTaskBoard />
-      <div className="absolute top-2 right-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-xs bg-black/70 text-white p-1 rounded hidden lg:block">
-        Use fullscreen for better workflow
-      </div>
-    </div>
-  );
+function MiniScreenTaskBoard() {
+  return <TaskBoard />;
 }
+
+export default MiniScreenTaskBoard;
