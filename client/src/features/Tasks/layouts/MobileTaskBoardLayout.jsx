@@ -233,7 +233,7 @@ function MobileTaskBoardLayout({
               >
                 {getTasksForActiveTab().map((task) => (
                   <MobileTaskCard
-                    key={task.id}
+                    key={task._id || task.id}
                     task={task}
                     onEdit={onEditTask}
                     onMove={onMoveTask}
