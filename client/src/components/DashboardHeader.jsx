@@ -9,13 +9,16 @@ export function DashboardHeader() {
   const { user } = useAuth();
 
   return (
-    <header className="border-b border-border p-4 flex items-center justify-between">
+    <header className="border-b border-border p-4 flex items-center justify-between bg-background md:relative fixed top-16 left-0 right-0 z-30 md:top-auto md:z-auto">
       <div className="flex items-center w-full max-w-md">
         <Search className="w-4 h-4 mr-2 text-muted-foreground" />
-        <Input placeholder="Search tasks, notes..." className="bg-background" />
+        <Input
+          placeholder="Search tasks, notes..."
+          className="bg-background text-sm md:text-base"
+        />
       </div>
 
-      <div className="flex items-center">
+      <div className="flex items-center ml-4">
         {/* <Avatar>
           <AvatarImage src="/placeholder.svg?height=32&width=32" />
           <AvatarFallback>JD</AvatarFallback>

@@ -11,21 +11,21 @@ function Dashboard() {
   return (
     <div className="flex h-screen bg-background">
       <Sidebar />
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto pt-16 md:pt-0">
         <DashboardHeader />
 
-        <div className="p-6 space-y-6">
-          <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-            <div className="xl:col-span-2">
+        <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6">
+            <div className="lg:col-span-2">
               <PomodoroContainer />
             </div>
 
-            <div className="xl:col-span-3">
+            <div className="lg:col-span-3">
               <HabitsDashboardPanel />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
             <div className="lg:col-span-2">
               <MiniScreenTaskBoard />
             </div>
@@ -37,7 +37,7 @@ function Dashboard() {
         </div>
       </main>
 
-      <div className="fixed bottom-4 right-4">
+      <div className="fixed bottom-4 right-4 z-30">
         <ThemeToggle />
       </div>
     </div>
