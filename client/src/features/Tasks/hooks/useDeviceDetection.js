@@ -27,6 +27,12 @@ export function useDeviceDetection() {
       );
     };
 
+    // Store the orientationchange handler in a variable for proper cleanup
+    const orientationChangeHandler = () => {
+      // Delay check to allow for orientation change to complete
+      setTimeout(checkDevice, 100);
+    };
+
     // Check on mount
     checkDevice();
 
@@ -34,14 +40,11 @@ export function useDeviceDetection() {
     window.addEventListener("resize", checkDevice);
 
     // Add orientation change listener for mobile devices
-    window.addEventListener("orientationchange", () => {
-      // Delay check to allow for orientation change to complete
-      setTimeout(checkDevice, 100);
-    });
+    window.addEventListener("orientationchange", orientationChangeHandler);
 
     return () => {
       window.removeEventListener("resize", checkDevice);
-      window.removeEventListener("orientationchange", checkDevice);
+      window.removeEventListener("orientationchange", orientationChangeHandler);
     };
   }, []);
 
