@@ -1,7 +1,7 @@
 import React from "react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Sidebar } from "@/components/Sidebar";
-import { MiniScreenTaskBoard } from "@/features/Tasks/pages/MiniScreenTaskBoard";
+import MiniScreenTaskBoard from "@/features/Tasks/pages/MiniScreenTaskBoard";
 import NotesDashboardPanel from "@/features/Notes/components/dashboard/NotesDashboardPanel";
 import HabitsDashboardPanel from "@/features/Habits/components/dashboard/HabitsDashboardPanel";
 import PomodoroContainer from "@/features/Pomodoro";
