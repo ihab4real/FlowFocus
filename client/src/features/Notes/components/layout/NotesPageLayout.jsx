@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { DEFAULT_FOLDER } from "@/features/Notes/utils/constants";
+import { useDeviceDetection } from "@/features/Notes/hooks/useDeviceDetection";
+import DesktopNotesLayout from "@/features/Notes/layouts/DesktopNotesLayout";
+import MobileNotesLayout from "@/features/Notes/layouts/MobileNotesLayout";
 import {
   useNotesQuery,
   useNoteQuery,
@@ -22,6 +25,10 @@ import NoteEditingPanel from "./NoteEditingPanel";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
 const NotesPageLayout = () => {
+  // Device detection
+  const { isMobile, isTablet } = useDeviceDetection();
+  const shouldUseMobileLayout = isMobile || isTablet;
+
   // State management
   const [selectedNote, setSelectedNote] = useState(null);
   const [currentFolder, setCurrentFolder] = useState(DEFAULT_FOLDER);
@@ -194,63 +201,44 @@ const NotesPageLayout = () => {
       note.content.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  return (
-    <div className="h-full flex flex-col overflow-hidden">
-      <PanelGroup direction="horizontal" className="flex-grow overflow-hidden">
-        {/* Left sidebar with folders and search - min width 240px (15%) */}
-        <Panel
-          defaultSize={20}
-          minSize={15}
-          className="overflow-hidden flex flex-col"
-        >
-          <NotesNavbar
-            folders={folders}
-            currentFolder={currentFolder}
-            onFolderChange={handleFolderChange}
-            onCreateFolder={handleCreateFolder}
-            onDeleteFolder={handleDeleteFolder}
-            onRenameFolder={handleRenameFolder}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-          />
-        </Panel>
+  // Common props for both layouts
+  const layoutProps = {
+    // State props
+    selectedNote,
+    currentFolder,
+    searchQuery,
+    isNewNote,
+    isFullScreen,
 
-        {/* Subtle divider between folders and notes list */}
-        <PanelResizeHandle className="w-px bg-border/30 hover:bg-primary/20 transition-colors duration-200" />
+    // Data props
+    folders,
+    notes,
+    filteredNotes,
+    notesLoading,
 
-        {/* Middle section with notes list - min width 240px (15%) */}
-        <Panel
-          defaultSize={25}
-          minSize={15}
-          className="overflow-hidden flex flex-col"
-        >
-          <NotesList
-            notes={filteredNotes}
-            selectedNote={selectedNote}
-            onSelectNote={handleSelectNote}
-            onCreateNote={handleCreateNote}
-            onDeleteNote={handleDeleteNote}
-            loading={notesLoading}
-            currentFolder={currentFolder}
-          />
-        </Panel>
+    // Handlers
+    onSelectNote: handleSelectNote,
+    onCreateNote: handleCreateNote,
+    onUpdateNote: handleUpdateNote,
+    onDeleteNote: handleDeleteNote,
+    onFolderChange: handleFolderChange,
+    onCreateFolder: handleCreateFolder,
+    onDeleteFolder: handleDeleteFolder,
+    onRenameFolder: handleRenameFolder,
+    onSearchChange: setSearchQuery,
+    onToggleFullScreen: () => setIsFullScreen(!isFullScreen),
+  };
 
-        {/* Subtle divider between notes list and editor */}
-        <PanelResizeHandle className="w-px bg-border/30 hover:bg-primary/20 transition-colors duration-200" />
+  // Conditionally render the appropriate layout based on device detection
+  if (shouldUseMobileLayout) {
+    return (
+      <div className="h-full overflow-hidden pt-0">
+        <MobileNotesLayout {...layoutProps} isTablet={isTablet} />
+      </div>
+    );
+  }
 
-        {/* Right section with note editor - takes remaining space */}
-        <Panel defaultSize={55} className="overflow-hidden flex flex-col">
-          <NoteEditingPanel
-            note={selectedNote}
-            onUpdateNote={handleUpdateNote}
-            isNewNote={isNewNote}
-            isFullScreen={isFullScreen}
-            onToggleFullScreen={() => setIsFullScreen(!isFullScreen)}
-          />
-        </Panel>
-      </PanelGroup>
-    </div>
-  );
+  return <DesktopNotesLayout {...layoutProps} />;
 };
 
 export default NotesPageLayout;

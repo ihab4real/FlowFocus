@@ -44,8 +44,8 @@ const ToolbarButton = ({ title, icon, onClick, isActive }) => (
 );
 
 // Toolbar component
-const MenuBar = ({ editor }) => {
-  // Define callbacks outside conditional returns
+const MenuBar = ({ editor, isMobileView = false }) => {
+  // Define callbacks for link and image
   const addLink = useCallback(() => {
     if (!editor) return;
     const url = window.prompt("Enter URL");
@@ -67,86 +67,93 @@ const MenuBar = ({ editor }) => {
     return null;
   }
 
+  const iconSize = isMobileView ? "h-3.5 w-3.5" : "h-4 w-4";
+  const dividerHeight = isMobileView ? "h-5" : "h-6";
+  const spacingClass = isMobileView ? "space-x-1" : "space-x-2";
+  const paddingClass = isMobileView ? "py-1.5" : "py-2 mb-2";
+
   return (
-    <div className="flex items-center space-x-2 mb-2 py-2 border-b border-gray-200 dark:border-gray-700 flex-wrap">
+    <div
+      className={`flex items-center ${spacingClass} ${paddingClass} border-b border-gray-200 dark:border-gray-700 overflow-x-auto`}
+    >
       <ToolbarButton
         title="Bold"
-        icon={<Bold className="h-4 w-4" />}
+        icon={<Bold className={iconSize} />}
         onClick={() => editor.chain().focus().toggleBold().run()}
         isActive={editor.isActive("bold")}
       />
       <ToolbarButton
         title="Italic"
-        icon={<Italic className="h-4 w-4" />}
+        icon={<Italic className={iconSize} />}
         onClick={() => editor.chain().focus().toggleItalic().run()}
         isActive={editor.isActive("italic")}
       />
       <ToolbarButton
         title="Underline"
-        icon={<UnderlineIcon className="h-4 w-4" />}
+        icon={<UnderlineIcon className={iconSize} />}
         onClick={() => editor.chain().focus().toggleUnderline().run()}
         isActive={editor.isActive("underline")}
       />
-      <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
+      <div className={`w-px ${dividerHeight} bg-gray-200 dark:bg-gray-700`} />
       <ToolbarButton
         title="Heading 1"
-        icon={<Heading1 className="h-4 w-4" />}
+        icon={<Heading1 className={iconSize} />}
         onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
         isActive={editor.isActive("heading", { level: 1 })}
       />
       <ToolbarButton
         title="Heading 2"
-        icon={<Heading2 className="h-4 w-4" />}
+        icon={<Heading2 className={iconSize} />}
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
         isActive={editor.isActive("heading", { level: 2 })}
       />
-      <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
+      <div className={`w-px ${dividerHeight} bg-gray-200 dark:bg-gray-700`} />
       <ToolbarButton
         title="Bullet List"
-        icon={<List className="h-4 w-4" />}
+        icon={<List className={iconSize} />}
         onClick={() => editor.chain().focus().toggleBulletList().run()}
         isActive={editor.isActive("bulletList")}
       />
       <ToolbarButton
         title="Ordered List"
-        icon={<ListOrdered className="h-4 w-4" />}
+        icon={<ListOrdered className={iconSize} />}
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
         isActive={editor.isActive("orderedList")}
       />
-      <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
+      <div className={`w-px ${dividerHeight} bg-gray-200 dark:bg-gray-700`} />
       <ToolbarButton
         title="Code Block"
-        icon={<Code className="h-4 w-4" />}
+        icon={<Code className={iconSize} />}
         onClick={() => editor.chain().focus().toggleCodeBlock().run()}
         isActive={editor.isActive("codeBlock")}
       />
       <ToolbarButton
         title="Link"
-        icon={<LinkIcon className="h-4 w-4" />}
+        icon={<LinkIcon className={iconSize} />}
         onClick={addLink}
         isActive={editor.isActive("link")}
       />
       <ToolbarButton
         title="Image"
-        icon={<ImageIcon className="h-4 w-4" />}
+        icon={<ImageIcon className={iconSize} />}
         onClick={addImage}
       />
-      <div className="w-px h-6 bg-gray-200 dark:bg-gray-700" />
+      <div className={`w-px ${dividerHeight} bg-gray-200 dark:bg-gray-700`} />
       <ToolbarButton
         title="Align Left"
-        icon={<AlignLeft className="h-4 w-4" />}
+        icon={<AlignLeft className={iconSize} />}
         onClick={() => editor.chain().focus().setTextAlign("left").run()}
         isActive={editor.isActive({ textAlign: "left" })}
       />
       <ToolbarButton
         title="Align Center"
-        icon={<AlignCenter className="h-4 w-4" />}
+        icon={<AlignCenter className={iconSize} />}
         onClick={() => editor.chain().focus().setTextAlign("center").run()}
         isActive={editor.isActive({ textAlign: "center" })}
       />
       <ToolbarButton
         title="Align Right"
-        icon={<AlignRight className="h-4 w-4" />}
+        icon={<AlignRight className={iconSize} />}
         onClick={() => editor.chain().focus().setTextAlign("right").run()}
         isActive={editor.isActive({ textAlign: "right" })}
       />
@@ -155,7 +162,12 @@ const MenuBar = ({ editor }) => {
 };
 
 // Main Rich Text Editor component
-const RichTextEditor = ({ content, onUpdate, isFullScreen }) => {
+const RichTextEditor = ({
+  content,
+  onUpdate,
+  isFullScreen,
+  isMobileView = false,
+}) => {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -185,7 +197,7 @@ const RichTextEditor = ({ content, onUpdate, isFullScreen }) => {
     },
     editorProps: {
       attributes: {
-        class: "prose dark:prose-invert max-w-none focus:outline-none h-full",
+        class: `prose dark:prose-invert max-w-none focus:outline-none h-full ${isMobileView ? "prose-sm" : ""}`,
       },
     },
   });
@@ -198,22 +210,16 @@ const RichTextEditor = ({ content, onUpdate, isFullScreen }) => {
   }, [content, editor]);
 
   // Apply different styles based on full-screen mode
-  const containerClasses = `flex flex-col h-full ${
-    isFullScreen ? "max-w-3xl mx-auto pt-2" : "overflow-auto scrollbar-hide"
-  } transition-all duration-300 ease-in-out`;
-
-  const editorContentClasses = `flex-grow ${
-    isFullScreen
-      ? "overflow-auto scrollbar-hide md:px-8 lg:px-12 animate-in fade-in prose-lg"
-      : "overflow-auto scrollbar-hide p-4"
-  } transition-all duration-300 ease-in-out`;
+  const editorContainerClasses = isFullScreen
+    ? "p-8 h-full overflow-y-auto"
+    : "p-4 h-full overflow-y-auto";
 
   return (
-    <div className={containerClasses}>
-      <MenuBar editor={editor} />
-      <div className={editorContentClasses}>
-        <EditorContent editor={editor} className="h-full" />
-      </div>
+    <div
+      className={`${editorContainerClasses} ${isMobileView ? "px-3 py-2" : ""}`}
+    >
+      <MenuBar editor={editor} isMobileView={isMobileView} />
+      <EditorContent editor={editor} className="h-full" />
     </div>
   );
 };
