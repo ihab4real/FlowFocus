@@ -1,12 +1,11 @@
-import { app, connectDB } from "./app.js";
 import dotenv from "dotenv";
+// Load environment variables
+dotenv.config();
+import { app, connectDB } from "./app.js";
 import mongoose from "mongoose";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { verifyToken } from "./utils/authUtils.js";
-
-// Load environment variables
-dotenv.config();
 
 // Process-level error handlers
 

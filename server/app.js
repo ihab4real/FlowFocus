@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import mongoose from "mongoose";
 import morgan from "morgan";
 import helmet from "helmet";
@@ -22,9 +21,6 @@ import { configurePassport } from "./config/passport.js";
 // Get __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// Load environment variables
-dotenv.config();
 
 // Create Express application
 const app = express();
