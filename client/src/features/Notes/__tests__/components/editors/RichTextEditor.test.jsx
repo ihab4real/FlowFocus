@@ -148,7 +148,7 @@ describe("RichTextEditor Component", () => {
         editorProps: {
           attributes: {
             class:
-              "prose dark:prose-invert max-w-none focus:outline-none h-full",
+              "prose dark:prose-invert max-w-none focus:outline-none h-full ",
           },
         },
       });
