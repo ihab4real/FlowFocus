@@ -5,6 +5,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useDeviceDetection } from "@/features/Notes/hooks/useDeviceDetection";
 
 /**
  * NotesPage component
@@ -15,6 +16,8 @@ const NotesPage = () => {
   const [isVisible, setIsVisible] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { isMobile, isTablet } = useDeviceDetection();
+  const isMobileView = isMobile || isTablet;
 
   // Check if we're in fullscreen mode
   const isFullscreen = location.pathname === "/dashboard/notepanel";
@@ -48,7 +51,9 @@ const NotesPage = () => {
         `}
       >
         <DashboardHeader />
-        <div className="flex-1 relative overflow-hidden">
+        <div
+          className={`flex-1 relative overflow-hidden ${isMobileView ? "pt-0" : ""}`}
+        >
           <div className="absolute top-2 right-4 z-10">
             <Button
               size="sm"

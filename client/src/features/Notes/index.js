@@ -20,3 +20,5 @@ export {
   useRenameFolderMutation,
   noteKeys,
 } from "./hooks/useNoteQueries";
+
+export { useDeviceDetection } from "./hooks/useDeviceDetection";
