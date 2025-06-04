@@ -17,6 +17,8 @@ node_modules/
 .env.development.local
 .env.test.local
 .env.production.local
+# PM2 ecosystem file with secrets
+ecosystem.config.js
 
 # Debug logs
 npm-debug.log*
