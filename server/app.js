@@ -29,6 +29,9 @@ dotenv.config();
 // Create Express application
 const app = express();
 
+// Trust the first hop from the proxy (e.g., apache2 on VPS)
+app.set("trust proxy", 1);
+
 // Initialize Swagger documentation
 const PORT = process.env.PORT || 3000;
 swaggerDocs(app, PORT);
