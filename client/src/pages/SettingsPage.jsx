@@ -117,10 +117,24 @@ function SettingsPage() {
 
       // Add password change if provided
       if (profileData.newPassword) {
+        // Validate current password
+        if (!profileData.currentPassword) {
+          toast.error("Current password is required");
+          return;
+        }
+
+        // Validate password strength
+        if (profileData.newPassword.length < 8) {
+          toast.error("Password must be at least 8 characters long");
+          return;
+        }
+
+        // Validate password match
         if (profileData.newPassword !== profileData.confirmPassword) {
           toast.error("New passwords do not match");
           return;
         }
+
         updateData.currentPassword = profileData.currentPassword;
         updateData.password = profileData.newPassword;
         updateData.passwordConfirm = profileData.confirmPassword;
