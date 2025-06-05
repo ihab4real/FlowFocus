@@ -119,7 +119,6 @@ function SettingsPage() {
       // Validate name
       if (!profileData.name.trim()) {
         toast.error("Name is required");
-        setLoading(false);
         return;
       }
 
