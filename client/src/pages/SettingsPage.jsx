@@ -184,8 +184,8 @@ function SettingsPage() {
     link.href = url;
     link.download = `flowfocus-data-${new Date().toISOString().split("T")[0]}.json`;
     link.click();
-
-    URL.revokeObjectURL(url);
+    // Cleanup URL after a short delay to ensure download starts
+    setTimeout(() => URL.revokeObjectURL(url), 100);
     toast.success("Data exported successfully");
   };
 
