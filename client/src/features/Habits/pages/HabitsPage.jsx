@@ -71,11 +71,25 @@ const HabitsPage = () => {
 
   // Analytics panel state
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
   const [selectedHabitForAnalytics, setSelectedHabitForAnalytics] =
     useState(null);
 
   // Animation state
   const [isVisible, setIsVisible] = useState(false);
+
+  // Check if we're on mobile
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   useEffect(() => {
     // Apply entrance animation after mount
@@ -225,15 +239,28 @@ const HabitsPage = () => {
 
   // Analytics handlers
   const handleToggleAnalytics = () => {
-    setShowAnalytics(!showAnalytics);
-    if (!showAnalytics && filteredHabits.length > 0) {
-      setSelectedHabitForAnalytics(filteredHabits[0]);
+    if (isMobile) {
+      if (filteredHabits.length > 0 && !selectedHabitForAnalytics) {
+        setSelectedHabitForAnalytics(filteredHabits[0]);
+      }
+      setShowAnalyticsModal(!showAnalyticsModal);
+    } else {
+      setShowAnalytics(!showAnalytics);
+      if (
+        !showAnalytics &&
+        filteredHabits.length > 0 &&
+        !selectedHabitForAnalytics
+      ) {
+        setSelectedHabitForAnalytics(filteredHabits[0]);
+      }
     }
   };
 
   const handleSelectHabitForAnalytics = (habit) => {
     setSelectedHabitForAnalytics(habit);
-    if (!showAnalytics) {
+    if (isMobile) {
+      setShowAnalyticsModal(true);
+    } else if (!showAnalytics) {
       setShowAnalytics(true);
     }
   };
@@ -250,7 +277,7 @@ const HabitsPage = () => {
       >
         <DashboardHeader />
 
-        <div className="p-6 space-y-6 flex-1 overflow-auto">
+        <div className="p-6 pt-20 md:pt-6 space-y-6 flex-1 overflow-auto">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -275,9 +302,11 @@ const HabitsPage = () => {
               <Button
                 onClick={handleToggleAnalytics}
                 size="sm"
-                variant={showAnalytics ? "default" : "outline"}
+                variant={
+                  showAnalytics || showAnalyticsModal ? "default" : "outline"
+                }
                 className={
-                  showAnalytics
+                  showAnalytics || showAnalyticsModal
                     ? ""
                     : "border-primary/30 text-primary hover:bg-primary/5"
                 }
@@ -307,11 +336,11 @@ const HabitsPage = () => {
 
           {/* Main Content Area */}
           <div
-            className={`flex gap-6 ${showAnalytics ? "min-h-[calc(100vh-200px)]" : ""}`}
+            className={`flex gap-6 ${!isMobile && showAnalytics ? "min-h-[calc(100vh-200px)]" : ""}`}
           >
             {/* Left Panel - Habits List */}
             <div
-              className={`${showAnalytics ? "w-1/2" : "w-full"} space-y-6 transition-all duration-300`}
+              className={`${!isMobile && showAnalytics ? "w-1/2" : "w-full"} space-y-6 transition-all duration-300`}
             >
               {/* Filters and Tabs */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -377,34 +406,32 @@ const HabitsPage = () => {
                     </DropdownMenuContent>
                   </DropdownMenu>
 
-                  {!showAnalytics && (
-                    <div className="border rounded-md overflow-hidden flex">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className={`rounded-none px-3 h-9 ${
-                          viewMode === "grid"
-                            ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
-                            : "hover:bg-muted"
-                        }`}
-                        onClick={() => setViewMode("grid")}
-                      >
-                        <LayoutGrid className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className={`rounded-none px-3 h-9 ${
-                          viewMode === "list"
-                            ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
-                            : "hover:bg-muted"
-                        }`}
-                        onClick={() => setViewMode("list")}
-                      >
-                        <List className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
+                  <div className="border rounded-md overflow-hidden flex">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={`rounded-none px-3 h-9 ${
+                        viewMode === "grid"
+                          ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
+                          : "hover:bg-muted"
+                      }`}
+                      onClick={() => setViewMode("grid")}
+                    >
+                      <LayoutGrid className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={`rounded-none px-3 h-9 ${
+                        viewMode === "list"
+                          ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
+                          : "hover:bg-muted"
+                      }`}
+                      onClick={() => setViewMode("list")}
+                    >
+                      <List className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
 
@@ -457,7 +484,7 @@ const HabitsPage = () => {
               ) : (
                 <div
                   className={
-                    showAnalytics || viewMode === "list"
+                    viewMode === "list"
                       ? "space-y-3"
                       : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
                   }
@@ -473,13 +500,15 @@ const HabitsPage = () => {
                       <div
                         key={habit._id}
                         className={`${
-                          showAnalytics && isSelectedForAnalytics
+                          !isMobile && showAnalytics && isSelectedForAnalytics
                             ? "ring-2 ring-primary ring-offset-2 transition-all duration-200"
                             : ""
                         }`}
-                        onClick={() =>
-                          showAnalytics && handleSelectHabitForAnalytics(habit)
-                        }
+                        onClick={() => {
+                          if (isMobile || (!isMobile && showAnalytics)) {
+                            handleSelectHabitForAnalytics(habit);
+                          }
+                        }}
                       >
                         <HabitCard
                           habit={habit}
@@ -489,15 +518,10 @@ const HabitsPage = () => {
                           onEdit={openEditHabitDialog}
                           onDelete={handleDeleteClick}
                           isToday={true}
-                          showActions={!showAnalytics}
-                          compact={showAnalytics}
-                          onClick={
-                            showAnalytics
-                              ? () => handleSelectHabitForAnalytics(habit)
-                              : undefined
-                          }
+                          showActions={!(!isMobile && showAnalytics)}
+                          compact={!isMobile && showAnalytics}
                           className={
-                            showAnalytics
+                            isMobile || (!isMobile && showAnalytics)
                               ? "cursor-pointer hover:shadow-md transition-shadow"
                               : ""
                           }
@@ -509,8 +533,8 @@ const HabitsPage = () => {
               )}
             </div>
 
-            {/* Right Panel - Analytics */}
-            {showAnalytics && (
+            {/* Right Panel - Analytics (Desktop only) */}
+            {!isMobile && showAnalytics && (
               <div className="w-1/2 border-l pl-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold">Analytics</h2>
@@ -550,6 +574,44 @@ const HabitsPage = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Mobile Analytics Dialog */}
+        <Dialog
+          open={isMobile && showAnalyticsModal}
+          onOpenChange={setShowAnalyticsModal}
+        >
+          <DialogContent className="sm:max-w-[90%] max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center justify-between">
+                {selectedHabitForAnalytics?.name || "Habit"} Analytics
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="py-4">
+              {selectedHabitForAnalytics ? (
+                <HabitAnalytics habit={selectedHabitForAnalytics} />
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8">
+                  <p className="text-muted-foreground mb-4">
+                    Select a habit to view analytics
+                  </p>
+                  <div className="grid grid-cols-1 gap-2 w-full max-w-md">
+                    {filteredHabits.slice(0, 5).map((habit) => (
+                      <Button
+                        key={habit._id}
+                        variant="outline"
+                        className="justify-start"
+                        onClick={() => setSelectedHabitForAnalytics(habit)}
+                      >
+                        {habit.name}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Add/Edit Habit Dialog */}
         <Dialog open={showAddHabitDialog} onOpenChange={setShowAddHabitDialog}>
