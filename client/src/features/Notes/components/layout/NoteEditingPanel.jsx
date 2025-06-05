@@ -1,7 +1,9 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { debounce } from "lodash";
 import RichTextEditor from "../editors/RichTextEditor";
-import { Maximize2, Minimize2 } from "lucide-react";
+import { Maximize2, Minimize2, ChevronLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 
 const NoteEditingPanel = ({
   note,
@@ -9,6 +11,8 @@ const NoteEditingPanel = ({
   isNewNote,
   isFullScreen: externalIsFullScreen,
   onToggleFullScreen,
+  isMobileView = false,
+  onBackToList,
 }) => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -47,6 +51,20 @@ const NoteEditingPanel = ({
     }
   }, [note, isNewNote]);
 
+  // Toggle full screen mode
+  const toggleFullScreen = useCallback(
+    (value) => {
+      const newValue = value !== undefined ? value : !isFullScreen;
+      setIsFullScreen(newValue);
+
+      // Call external handler if provided
+      if (onToggleFullScreen) {
+        onToggleFullScreen(newValue);
+      }
+    },
+    [isFullScreen, onToggleFullScreen]
+  );
+
   // Handle keyboard shortcuts for fullscreen toggle
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -64,7 +82,7 @@ const NoteEditingPanel = ({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isFullScreen, note]);
+  }, [isFullScreen, note, toggleFullScreen]);
 
   // Create a memoized debounce function
   const debouncedSave = useMemo(
@@ -92,17 +110,6 @@ const NoteEditingPanel = ({
     }
   };
 
-  // Toggle full screen mode
-  const toggleFullScreen = (value) => {
-    const newValue = value !== undefined ? value : !isFullScreen;
-    setIsFullScreen(newValue);
-
-    // Call external handler if provided
-    if (onToggleFullScreen) {
-      onToggleFullScreen(newValue);
-    }
-  };
-
   // If no note is selected, show a placeholder
   if (!note) {
     return (
@@ -126,62 +133,90 @@ const NoteEditingPanel = ({
 
   return (
     <div className={editorContainerClasses}>
-      {/* Title input */}
+      {/* Title input with optional back button for mobile */}
       <div className="border-b border-gray-200 dark:border-gray-700 p-4 flex-shrink-0">
-        <input
-          ref={titleInputRef}
-          type="text"
-          value={title}
-          onChange={handleTitleChange}
-          placeholder="Note title"
-          className="w-full text-xl font-medium text-gray-900 dark:text-gray-100 focus:outline-none bg-transparent"
-        />
+        <div className={`flex items-center ${isMobileView ? "mb-2" : ""}`}>
+          {isMobileView && onBackToList && (
+            <motion.div whileTap={{ scale: 0.95 }}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mr-2 -ml-2 h-8 w-8 p-0 rounded-full"
+                onClick={onBackToList}
+              >
+                <ChevronLeft className="h-5 w-5" />
+                <span className="sr-only">Back to notes</span>
+              </Button>
+            </motion.div>
+          )}
+          <input
+            ref={titleInputRef}
+            type="text"
+            value={title}
+            onChange={handleTitleChange}
+            placeholder="Note title"
+            className={`w-full text-xl font-medium text-gray-900 dark:text-gray-100 focus:outline-none bg-transparent ${isMobileView ? "text-lg" : ""}`}
+          />
+        </div>
+        {/* Show last updated time below title on mobile view */}
+        {isMobileView && (
+          <div className="text-xs text-gray-500 dark:text-gray-400 pl-1">
+            Last updated: {new Date(note.updatedAt).toLocaleString()}
+          </div>
+        )}
       </div>
 
       {/* Fullscreen toggle button - different positions based on mode */}
-      <button
-        onClick={() => toggleFullScreen()}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-all duration-200 z-10 ${
-          isFullScreen
-            ? "absolute top-5 right-5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
-            : `absolute bottom-3 right-4 bg-primary/10 hover:bg-primary/20 text-primary hover:text-primary-foreground dark:text-primary border border-primary/30 shadow-sm hover:shadow backdrop-blur-sm hover:scale-105 ${showPulse ? "animate-pulse" : ""}`
-        }`}
-      >
-        {isFullScreen ? (
-          <>
-            <Minimize2 className="h-4 w-4" />
-            <span>
-              Exit <span className="opacity-60 text-xs">Esc</span>
-            </span>
-          </>
-        ) : (
-          <>
-            <Maximize2 className="h-4 w-4" />
-            <span>
-              Focus Mode{" "}
-              <span className="opacity-60 text-xs ml-1">Ctrl+Shift+F</span>
-            </span>
-          </>
-        )}
-      </button>
+      {!isMobileView && (
+        <button
+          onClick={() => toggleFullScreen()}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-all duration-200 z-10 ${
+            isFullScreen
+              ? "absolute top-5 right-5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
+              : `absolute bottom-3 right-4 bg-primary/10 hover:bg-primary/20 text-primary hover:text-primary-foreground dark:text-primary border border-primary/30 shadow-sm hover:shadow backdrop-blur-sm hover:scale-105 ${showPulse ? "animate-pulse" : ""}`
+          }`}
+        >
+          {isFullScreen ? (
+            <>
+              <Minimize2 className="h-4 w-4" />
+              <span>
+                Exit <span className="opacity-60 text-xs">Esc</span>
+              </span>
+            </>
+          ) : (
+            <>
+              <Maximize2 className="h-4 w-4" />
+              <span>
+                Focus Mode{" "}
+                <span className="opacity-60 text-xs ml-1">Ctrl+Shift+F</span>
+              </span>
+            </>
+          )}
+        </button>
+      )}
 
       {/* Editor content */}
       <div
-        className={`flex-grow overflow-auto scrollbar-hide ${isFullScreen ? "absolute inset-0 mt-16 mb-10" : ""}`}
+        className={`flex-grow overflow-auto scrollbar-hide ${
+          isFullScreen && !isMobileView ? "absolute inset-0 mt-16 mb-10" : ""
+        }`}
       >
         <RichTextEditor
           content={content}
           onUpdate={handleTipTapUpdate}
           isFullScreen={isFullScreen}
+          isMobileView={isMobileView}
         />
       </div>
 
       {/* Footer with metadata - fixed at bottom when in fullscreen */}
-      <div
-        className={`p-3 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ${isFullScreen ? "absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900" : ""}`}
-      >
-        <span>Last updated: {new Date(note.updatedAt).toLocaleString()}</span>
-      </div>
+      {!isMobileView && (
+        <div
+          className={`p-3 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ${isFullScreen ? "absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900" : ""}`}
+        >
+          <span>Last updated: {new Date(note.updatedAt).toLocaleString()}</span>
+        </div>
+      )}
     </div>
   );
 };
