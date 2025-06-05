@@ -235,6 +235,7 @@ function MobileTaskBoardLayout({
                   <MobileTaskCard
                     key={task._id || task.id}
                     task={task}
+                    columnId={activeTab}
                     onEdit={onEditTask}
                     onMove={onMoveTask}
                     isTabletSize={isTabletSize}
