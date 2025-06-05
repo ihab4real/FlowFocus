@@ -9,7 +9,7 @@ export function DashboardHeader() {
   const { user } = useAuth();
 
   return (
-    <header className="border-b border-border p-4 flex items-center justify-between bg-background md:relative fixed top-16 left-0 right-0 z-30 md:top-auto md:z-auto">
+    <header className="border-b border-border p-4 flex items-center justify-between bg-background fixed top-0 left-0 right-0 z-30 md:relative md:top-auto md:z-auto">
       <div className="flex items-center w-full max-w-md">
         <Search className="w-4 h-4 mr-2 text-muted-foreground" />
         <Input

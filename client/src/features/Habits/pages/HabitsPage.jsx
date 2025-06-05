@@ -250,7 +250,7 @@ const HabitsPage = () => {
       >
         <DashboardHeader />
 
-        <div className="p-6 space-y-6 flex-1 overflow-auto">
+        <div className="p-6 pt-20 md:pt-6 space-y-6 flex-1 overflow-auto">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
