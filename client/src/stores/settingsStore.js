@@ -94,11 +94,15 @@ const useSettingsStore = create(
       // Show notification (helper method)
       showNotification: (title, options = {}) => {
         if (get().canShowNotifications()) {
-          new Notification(title, {
-            icon: "/favicon.ico",
-            badge: "/favicon.ico",
-            ...options,
-          });
+          try {
+            new Notification(title, {
+              icon: "/favicon.svg",
+              badge: "/favicon.svg",
+              ...options,
+            });
+          } catch (error) {
+            console.warn("Failed to show notification:", error);
+          }
         }
       },
     }),
