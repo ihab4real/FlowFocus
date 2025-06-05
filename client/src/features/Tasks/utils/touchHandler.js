@@ -1,5 +1,6 @@
 // Touch handler for mobile drag and drop functionality
 // This replaces react-dnd for mobile devices since react-dnd doesn't work well with touch
+// TODO: this file is actually not used anywhere. it was part of the reponsive task board improvements. cc cursor chat named "improve mobile reponsiveness for dashboard"
 
 export class TouchHandler {
   constructor() {
