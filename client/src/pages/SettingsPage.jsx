@@ -53,7 +53,9 @@ import { DEFAULT_SETTINGS } from "@/features/Pomodoro/constants";
 
 // Helper to convert SNAKE_CASE to camelCase
 const snakeToCamel = (str) =>
-  str.toLowerCase().replace(/([_][a-z])/g, (group) => group.toUpperCase().replace("_", ""));
+  str
+    .toLowerCase()
+    .replace(/([_][a-z])/g, (group) => group.toUpperCase().replace("_", ""));
 
 // Function to initialize/update pomodoroData based on store settings and defaults
 const getPomodoroDataWithDefaults = (storeSettings) => {
@@ -61,7 +63,10 @@ const getPomodoroDataWithDefaults = (storeSettings) => {
   for (const snakeKey in DEFAULT_SETTINGS) {
     const camelKey = snakeToCamel(snakeKey);
     // Use value from storeSettings if available (and not undefined), otherwise use default from DEFAULT_SETTINGS
-    initialData[camelKey] = storeSettings?.[camelKey] !== undefined ? storeSettings[camelKey] : DEFAULT_SETTINGS[snakeKey];
+    initialData[camelKey] =
+      storeSettings?.[camelKey] !== undefined
+        ? storeSettings[camelKey]
+        : DEFAULT_SETTINGS[snakeKey];
   }
   return initialData;
 };
@@ -87,7 +92,9 @@ function SettingsPage() {
     confirmPassword: "",
   });
 
-  const [pomodoroData, setPomodoroData] = useState(() => getPomodoroDataWithDefaults(settings));
+  const [pomodoroData, setPomodoroData] = useState(() =>
+    getPomodoroDataWithDefaults(settings)
+  );
 
   const [notificationSettings, setNotificationSettings] =
     useState(notifications);
