@@ -14,6 +14,7 @@ import {
 } from "../features/authentication/pages";
 import { ProtectedRoute } from "../features/authentication/components";
 import Profile from "../pages/Profile";
+import SettingsPage from "../pages/SettingsPage";
 import FullScreenTaskBoard from "@/features/Tasks/pages/FullScreenTaskBoard";
 import NotesPage from "@/features/Notes/pages/NotesPage";
 import PomodoroPage from "../pages/PomodoroPage";
@@ -108,6 +109,14 @@ export const router = createBrowserRouter([
             element: (
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "dashboard/settings",
+            element: (
+              <ProtectedRoute>
+                <SettingsPage />
               </ProtectedRoute>
             ),
           },

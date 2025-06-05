@@ -77,7 +77,10 @@ export function UserProfileMenu({ user: userProp }) {
                 <button
                   className="flex w-full items-center px-4 py-2 text-sm hover:bg-accent"
                   role="menuitem"
-                  onClick={closeMenu}
+                  onClick={() => {
+                    closeMenu();
+                    navigate("/dashboard/settings");
+                  }}
                 >
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
