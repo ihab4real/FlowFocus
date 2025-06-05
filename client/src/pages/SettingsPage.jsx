@@ -49,6 +49,22 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { DEFAULT_SETTINGS } from "@/features/Pomodoro/constants";
+
+// Helper to convert SNAKE_CASE to camelCase
+const snakeToCamel = (str) =>
+  str.toLowerCase().replace(/([_][a-z])/g, (group) => group.toUpperCase().replace("_", ""));
+
+// Function to initialize/update pomodoroData based on store settings and defaults
+const getPomodoroDataWithDefaults = (storeSettings) => {
+  const initialData = {};
+  for (const snakeKey in DEFAULT_SETTINGS) {
+    const camelKey = snakeToCamel(snakeKey);
+    // Use value from storeSettings if available (and not undefined), otherwise use default from DEFAULT_SETTINGS
+    initialData[camelKey] = storeSettings?.[camelKey] !== undefined ? storeSettings[camelKey] : DEFAULT_SETTINGS[snakeKey];
+  }
+  return initialData;
+};
 
 function SettingsPage() {
   const { theme, setTheme } = useTheme();
@@ -71,16 +87,7 @@ function SettingsPage() {
     confirmPassword: "",
   });
 
-  const [pomodoroData, setPomodoroData] = useState({
-    focusDuration: settings?.focusDuration || 25,
-    shortBreakDuration: settings?.shortBreakDuration || 5,
-    longBreakDuration: settings?.longBreakDuration || 15,
-    longBreakInterval: settings?.longBreakInterval || 4,
-    autoStartBreaks: settings?.autoStartBreaks || true,
-    autoStartPomodoros: settings?.autoStartPomodoros || false,
-    soundEnabled: settings?.soundEnabled || true,
-    soundVolume: settings?.soundVolume || 80,
-  });
+  const [pomodoroData, setPomodoroData] = useState(() => getPomodoroDataWithDefaults(settings));
 
   const [notificationSettings, setNotificationSettings] =
     useState(notifications);
@@ -95,16 +102,7 @@ function SettingsPage() {
 
   // Sync pomodoro settings with store when store updates
   useEffect(() => {
-    setPomodoroData({
-      focusDuration: settings?.focusDuration || 25,
-      shortBreakDuration: settings?.shortBreakDuration || 5,
-      longBreakDuration: settings?.longBreakDuration || 15,
-      longBreakInterval: settings?.longBreakInterval || 4,
-      autoStartBreaks: settings?.autoStartBreaks || true,
-      autoStartPomodoros: settings?.autoStartPomodoros || false,
-      soundEnabled: settings?.soundEnabled || true,
-      soundVolume: settings?.soundVolume || 80,
-    });
+    setPomodoroData(getPomodoroDataWithDefaults(settings));
   }, [settings]);
 
   // Handle profile update
