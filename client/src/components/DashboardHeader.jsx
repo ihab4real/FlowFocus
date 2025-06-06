@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/features/authentication/hooks/useAuth";
 import { UserProfileMenu } from "./UserProfileMenu";
 import { SearchResults } from "./SearchResults";
-import { useSearchStore } from "@/store/useSearchStore";
+import { useSearchStore } from "@/stores/useSearchStore";
 
 export function DashboardHeader() {
   const { user } = useAuth();

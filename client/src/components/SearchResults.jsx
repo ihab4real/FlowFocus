@@ -7,7 +7,7 @@ import {
   Loader2,
   AlertCircle,
 } from "lucide-react";
-import { useSearchStore } from "@/store/useSearchStore";
+import { useSearchStore } from "@/stores/useSearchStore";
 
 export function SearchResults() {
   const {
