@@ -23,6 +23,15 @@ export function SearchResults() {
   const navigate = useNavigate();
   const resultsRef = useRef(null);
 
+  // Function to generate indexes for items
+  const createIndexGenerator = () => {
+    let index = -1;
+    return () => {
+      index += 1;
+      return index;
+    };
+  };
+
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
@@ -77,8 +86,8 @@ export function SearchResults() {
     }
   };
 
-  // Calculate current index for keyboard navigation
-  let currentIndex = -1;
+  // Create index generator for this render
+  const getNextIndex = createIndexGenerator();
 
   return (
     <div
@@ -168,7 +177,7 @@ export function SearchResults() {
                 </h3>
                 <ul>
                   {results.tasks.map((task) => {
-                    currentIndex++;
+                    const currentIndex = getNextIndex();
                     const isFocused = focusedIndex === currentIndex;
                     return (
                       <li
@@ -212,7 +221,7 @@ export function SearchResults() {
                 </h3>
                 <ul>
                   {results.notes.map((note) => {
-                    currentIndex++;
+                    const currentIndex = getNextIndex();
                     const isFocused = focusedIndex === currentIndex;
                     return (
                       <li
@@ -255,7 +264,7 @@ export function SearchResults() {
                 </h3>
                 <ul>
                   {results.habits.map((habit) => {
-                    currentIndex++;
+                    const currentIndex = getNextIndex();
                     const isFocused = focusedIndex === currentIndex;
                     return (
                       <li
