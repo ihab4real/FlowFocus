@@ -15,6 +15,19 @@ export const searchAll = asyncHandler(async (req, res, next) => {
   const limit = parseInt(req.query.limit) || 20;
   const type = req.query.type || "all"; // 'all', 'tasks', 'notes', 'habits'
 
+  // Validate inputs
+  if (limit > 100) {
+    throw errorTypes.validationError(
+      "Limit cannot exceed 100",
+      "LIMIT_EXCEEDED"
+    );
+  }
+
+  const validTypes = ["all", "tasks", "notes", "habits"];
+  if (!validTypes.includes(type)) {
+    throw errorTypes.validationError("Invalid type parameter", "INVALID_TYPE");
+  }
+
   if (!query || query.trim() === "") {
     return res.status(200).json({
       tasks: [],
