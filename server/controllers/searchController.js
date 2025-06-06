@@ -23,28 +23,9 @@ export const searchAll = asyncHandler(async (req, res, next) => {
     });
   }
 
-  // Create text search conditions
-  const searchCondition = {
-    $or: [
-      { title: { $regex: query, $options: "i" } },
-      { description: { $regex: query, $options: "i" } },
-    ],
-    user: userId,
-  };
-
-  const noteSearchCondition = {
-    $or: [
-      { title: { $regex: query, $options: "i" } },
-      { content: { $regex: query, $options: "i" } },
-    ],
-    user: userId,
-  };
-
-  const habitSearchCondition = {
-    $or: [
-      { name: { $regex: query, $options: "i" } },
-      { description: { $regex: query, $options: "i" } },
-    ],
+  // Create text search conditions using MongoDB text search
+  const baseCondition = {
+    $text: { $search: query },
     user: userId,
   };
 
@@ -56,9 +37,9 @@ export const searchAll = asyncHandler(async (req, res, next) => {
 
   if (type === "all" || type === "tasks") {
     searchPromises.push(
-      Task.find(searchCondition)
+      Task.find(baseCondition)
         .limit(limit)
-        .sort({ updatedAt: -1 })
+        .sort({ score: { $meta: "textScore" }, updatedAt: -1 })
         .select("title description status priority dueDate updatedAt")
         .lean()
         .then((tasks) => {
@@ -71,9 +52,9 @@ export const searchAll = asyncHandler(async (req, res, next) => {
 
   if (type === "all" || type === "notes") {
     searchPromises.push(
-      Note.find(noteSearchCondition)
+      Note.find(baseCondition)
         .limit(limit)
-        .sort({ updatedAt: -1 })
+        .sort({ score: { $meta: "textScore" }, updatedAt: -1 })
         .select("title content folder updatedAt")
         .lean()
         .then((notes) => {
@@ -98,9 +79,9 @@ export const searchAll = asyncHandler(async (req, res, next) => {
 
   if (type === "all" || type === "habits") {
     searchPromises.push(
-      Habit.find(habitSearchCondition)
+      Habit.find(baseCondition)
         .limit(limit)
-        .sort({ updatedAt: -1 })
+        .sort({ score: { $meta: "textScore" }, updatedAt: -1 })
         .select("name description category type targetValue unit")
         .lean()
         .then((habits) => {
