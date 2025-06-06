@@ -52,9 +52,7 @@ const NotesPageLayout = () => {
   const renameFolderMutation = useRenameFolderMutation();
 
   // For initial note loading
-  const { data: initialNote } = useNoteQuery(location.state?.initialNoteId, {
-    enabled: !!location.state?.initialNoteId,
-  });
+  const { data: initialNote } = useNoteQuery(location.state?.initialNoteId);
 
   // Handle folder selection from search navigation
   useEffect(() => {
