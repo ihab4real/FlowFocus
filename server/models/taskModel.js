@@ -51,4 +51,8 @@ taskSchema.pre("save", function (next) {
   next();
 });
 
+// Add indexes for more efficient search
+taskSchema.index({ title: "text", description: "text", tags: "text" });
+taskSchema.index({ user: 1, updatedAt: -1 });
+
 export default mongoose.model("Task", taskSchema);

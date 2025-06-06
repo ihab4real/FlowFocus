@@ -49,4 +49,9 @@ noteSchema.pre("findOneAndUpdate", function (next) {
   next();
 });
 
+// Add indexes for more efficient search
+noteSchema.index({ title: "text", content: "text", tags: "text" });
+noteSchema.index({ user: 1, updatedAt: -1 });
+noteSchema.index({ user: 1, folder: 1 });
+
 export default mongoose.model("Note", noteSchema);

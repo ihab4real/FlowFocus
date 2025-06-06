@@ -67,4 +67,8 @@ habitSchema.pre("save", function (next) {
 habitSchema.index({ user: 1, isActive: 1 });
 habitSchema.index({ user: 1, category: 1 });
 
+// Add text search indexes
+habitSchema.index({ name: "text", description: "text" });
+habitSchema.index({ user: 1, updatedAt: -1 });
+
 export default mongoose.model("Habit", habitSchema);
