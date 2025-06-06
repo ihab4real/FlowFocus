@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FileText,
@@ -23,14 +23,32 @@ export function SearchResults() {
   const navigate = useNavigate();
   const resultsRef = useRef(null);
 
-  // Function to generate indexes for items
-  const createIndexGenerator = () => {
-    let index = -1;
-    return () => {
-      index += 1;
-      return index;
-    };
-  };
+  // Get flattened results for stable indexing across renders
+  const flattenedResults = React.useMemo(() => {
+    if (!results) return [];
+
+    let items = [];
+
+    if (selectedCategory === "all" || selectedCategory === "tasks") {
+      (results.tasks || []).forEach((task) => {
+        items.push({ type: "task", id: task._id, data: task });
+      });
+    }
+
+    if (selectedCategory === "all" || selectedCategory === "notes") {
+      (results.notes || []).forEach((note) => {
+        items.push({ type: "note", id: note._id, data: note });
+      });
+    }
+
+    if (selectedCategory === "all" || selectedCategory === "habits") {
+      (results.habits || []).forEach((habit) => {
+        items.push({ type: "habit", id: habit._id, data: habit });
+      });
+    }
+
+    return items;
+  }, [results, selectedCategory]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -56,6 +74,48 @@ export function SearchResults() {
     }
   }, [focusedIndex]);
 
+  const navigateToItem = useCallback(
+    (type, id, item = {}) => {
+      closeSearch();
+      switch (type) {
+        case "task":
+          navigate(`/dashboard/taskboard?taskId=${id}`);
+          break;
+        case "note":
+          navigate(`/dashboard/notepanel`, {
+            state: {
+              initialNoteId: id,
+              folderToOpen: item.folder,
+            },
+          });
+          break;
+        case "habit":
+          navigate(`/dashboard/habits?habitId=${id}`);
+          break;
+        default:
+          break;
+      }
+    },
+    [closeSearch, navigate]
+  );
+
+  // Handle keyboard events for navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (
+        e.key === "Enter" &&
+        focusedIndex >= 0 &&
+        focusedIndex < flattenedResults.length
+      ) {
+        const selectedItem = flattenedResults[focusedIndex];
+        navigateToItem(selectedItem.type, selectedItem.id, selectedItem.data);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [focusedIndex, flattenedResults, navigateToItem]);
+
   if (!isOpen) return null;
 
   const hasResults =
@@ -63,31 +123,6 @@ export function SearchResults() {
     ((results.tasks && results.tasks.length > 0) ||
       (results.notes && results.notes.length > 0) ||
       (results.habits && results.habits.length > 0));
-
-  const navigateToItem = (type, id, item = {}) => {
-    closeSearch();
-    switch (type) {
-      case "task":
-        navigate(`/dashboard/taskboard?taskId=${id}`);
-        break;
-      case "note":
-        navigate(`/dashboard/notepanel`, {
-          state: {
-            initialNoteId: id,
-            folderToOpen: item.folder,
-          },
-        });
-        break;
-      case "habit":
-        navigate(`/dashboard/habits?habitId=${id}`);
-        break;
-      default:
-        break;
-    }
-  };
-
-  // Create index generator for this render
-  const getNextIndex = createIndexGenerator();
 
   return (
     <div
@@ -177,7 +212,10 @@ export function SearchResults() {
                 </h3>
                 <ul>
                   {results.tasks.map((task) => {
-                    const currentIndex = getNextIndex();
+                    // Calculate stable index based on position
+                    const currentIndex = flattenedResults.findIndex(
+                      (item) => item.type === "task" && item.id === task._id
+                    );
                     const isFocused = focusedIndex === currentIndex;
                     return (
                       <li
@@ -221,7 +259,10 @@ export function SearchResults() {
                 </h3>
                 <ul>
                   {results.notes.map((note) => {
-                    const currentIndex = getNextIndex();
+                    // Calculate stable index based on position
+                    const currentIndex = flattenedResults.findIndex(
+                      (item) => item.type === "note" && item.id === note._id
+                    );
                     const isFocused = focusedIndex === currentIndex;
                     return (
                       <li
@@ -264,7 +305,10 @@ export function SearchResults() {
                 </h3>
                 <ul>
                   {results.habits.map((habit) => {
-                    const currentIndex = getNextIndex();
+                    // Calculate stable index based on position
+                    const currentIndex = flattenedResults.findIndex(
+                      (item) => item.type === "habit" && item.id === habit._id
+                    );
                     const isFocused = focusedIndex === currentIndex;
                     return (
                       <li
