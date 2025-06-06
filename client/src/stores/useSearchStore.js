@@ -41,7 +41,12 @@ export const useSearchStore = create((set, get) => {
 
     // Actions
     search: (searchQuery) => {
-      set({ query: searchQuery, isSearching: true, error: null });
+      set({
+        query: searchQuery,
+        isSearching: true,
+        error: null,
+        focusedIndex: -1,
+      });
 
       if (!searchQuery.trim()) {
         set({ results: null, isOpen: false, isSearching: false });
