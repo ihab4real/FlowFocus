@@ -16,7 +16,7 @@ const options = {
       {
         url:
           process.env.NODE_ENV === "production"
-            ? "https://api.flowfocus.com" // Update this with your production URL
+            ? "https://api.flowfocus.bestoneclinic.com"
             : `http://localhost:${process.env.PORT || 3000}`,
         description:
           process.env.NODE_ENV === "production"
@@ -281,7 +281,11 @@ export const swaggerDocs = (app, port) => {
     res.send(specs);
   });
 
-  console.log(
-    `📚 API Documentation available at http://localhost:${port}/docs`
-  );
+  // Get the base URL from the same configuration used in the Swagger options
+  const baseUrl =
+    process.env.NODE_ENV === "production"
+      ? "https://api.flowfocus.bestoneclinic.com" // TODO: host this in the future
+      : `http://localhost:${port}`;
+
+  console.log(`📚 API Documentation available at ${baseUrl}/docs`);
 };
