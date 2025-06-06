@@ -13,6 +13,7 @@ import taskRoutes from "./routes/taskRoutes.js";
 import noteRoutes from "./routes/noteRoutes.js";
 import pomodoroRoutes from "./routes/pomodoroRoutes.js";
 import habitRoutes from "./routes/habitRoutes.js";
+import searchRoutes from "./routes/searchRoutes.js";
 import cookieParser from "cookie-parser";
 import mongoSanitize from "express-mongo-sanitize";
 import passport from "passport";
@@ -137,6 +138,7 @@ app.use("/api/tasks", taskRoutes);
 app.use("/api/notes", noteRoutes);
 app.use("/api/pomodoro", pomodoroRoutes);
 app.use("/api/habits", habitRoutes);
+app.use("/api/search", searchRoutes);
 
 // Serve React app for all non-API routes in production
 if (process.env.NODE_ENV === "production") {
