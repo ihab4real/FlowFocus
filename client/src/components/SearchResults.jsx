@@ -55,14 +55,19 @@ export function SearchResults() {
       (results.notes && results.notes.length > 0) ||
       (results.habits && results.habits.length > 0));
 
-  const navigateToItem = (type, id) => {
+  const navigateToItem = (type, id, item = {}) => {
     closeSearch();
     switch (type) {
       case "task":
         navigate(`/dashboard/taskboard?taskId=${id}`);
         break;
       case "note":
-        navigate(`/dashboard/notepanel?noteId=${id}`);
+        navigate(`/dashboard/notepanel`, {
+          state: {
+            initialNoteId: id,
+            folderToOpen: item.folder,
+          },
+        });
         break;
       case "habit":
         navigate(`/dashboard/habits?habitId=${id}`);
@@ -218,7 +223,7 @@ export function SearchResults() {
                             ? "bg-accent text-accent-foreground"
                             : "hover:bg-muted"
                         }`}
-                        onClick={() => navigateToItem("note", note._id)}
+                        onClick={() => navigateToItem("note", note._id, note)}
                       >
                         <FileText className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" />
                         <div>

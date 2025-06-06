@@ -36,7 +36,7 @@ const NotesPageLayout = () => {
   const [isNewNote, setIsNewNote] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
 
-  // Get location to check for initial state passed from dashboard
+  // Get location to check for initial state passed from dashboard or search
   const location = useLocation();
 
   // React Query hooks
@@ -52,9 +52,21 @@ const NotesPageLayout = () => {
   const renameFolderMutation = useRenameFolderMutation();
 
   // For initial note loading
-  const { data: initialNote } = useNoteQuery(location.state?.initialNoteId);
+  const { data: initialNote } = useNoteQuery(location.state?.initialNoteId, {
+    enabled: !!location.state?.initialNoteId,
+  });
 
-  // Handle initial note loading from dashboard navigation
+  // Handle folder selection from search navigation
+  useEffect(() => {
+    if (
+      location.state?.folderToOpen &&
+      folders.includes(location.state.folderToOpen)
+    ) {
+      setCurrentFolder(location.state.folderToOpen);
+    }
+  }, [location.state?.folderToOpen, folders]);
+
+  // Handle initial note loading from dashboard navigation or search
   useEffect(() => {
     if (initialNote) {
       setSelectedNote(initialNote);
