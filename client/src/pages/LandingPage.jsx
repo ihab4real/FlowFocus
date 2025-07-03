@@ -84,7 +84,7 @@ export default function LandingPage() {
                 </Button>
                 <Button asChild size="lg" variant="outline">
                   <a
-                    href="https://github.com/ihab4real/flowfocus"
+                    href="https://github.com/ihabadham/flowfocus"
                     target="_blank"
                     rel="noopener noreferrer"
                   >

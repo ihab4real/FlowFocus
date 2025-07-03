@@ -1,6 +1,6 @@
 # FlowFocus
 
-![CI Pipeline](https://github.com/ihab4real/FlowFocus/actions/workflows/ci.yml/badge.svg) ![Deploy Pipeline](https://github.com/ihab4real/FlowFocus/actions/workflows/deploy.yml/badge.svg)
+![CI Pipeline](https://github.com/ihabadham/FlowFocus/actions/workflows/ci.yml/badge.svg) ![Deploy Pipeline](https://github.com/ihabadham/FlowFocus/actions/workflows/deploy.yml/badge.svg)
 
 A full-stack productivity dashboard combining task management, notes, a Pomodoro timer, and a habit tracker built with the MERN stack.
 
@@ -33,7 +33,7 @@ A full-stack productivity dashboard combining task management, notes, a Pomodoro
 
 ```bash
 # Clone the repository
-git clone https://github.com/ihab4real/FlowFocus.git
+git clone https://github.com/ihabadham/FlowFocus.git
 cd FlowFocus
 
 # Install dependencies
@@ -90,13 +90,13 @@ The application is automatically deployed to production on every push to the `ma
 - **Deployment Target**: Ubuntu VPS with Hostinger
 - **Process Manager**: PM2
 - **Web Server**: Apache (reverse proxy)
-- **Deployment Status**: Check the [Actions tab](https://github.com/ihab4real/FlowFocus/actions) for latest deployments
+- **Deployment Status**: Check the [Actions tab](https://github.com/ihabadham/FlowFocus/actions) for latest deployments
 
 ### Manual Deployment
 
 To deploy manually:
 
-1. Go to the [Actions tab](https://github.com/ihab4real/FlowFocus/actions)
+1. Go to the [Actions tab](https://github.com/ihabadham/FlowFocus/actions)
 2. Select "Deploy to Production"
 3. Click "Run workflow" on the `main` branch
 
