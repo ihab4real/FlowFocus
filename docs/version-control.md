@@ -1,6 +1,6 @@
 # Version Control Strategy
 
-This document outlines the version control strategy for the `cv-portfolio` MERN stack monorepo, which includes a React frontend (`client/`) and an Express backend (`server/`). The goal is to maintain a clean, consistent, and collaborative Git history.
+This document outlines the version control strategy for the `FlowFocus` MERN stack monorepo, which includes a React frontend (`client/`) and an Express backend (`server/`). The goal is to maintain a clean, consistent, and collaborative Git history.
 
 ## Repository Structure
 
