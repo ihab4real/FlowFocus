@@ -6,8 +6,8 @@ This document outlines the CI/CD pipeline implementation for the FlowFocus MERN 
 
 ## Pipeline Status
 
-![CI Pipeline](https://github.com/ihab4real/FlowFocus/actions/workflows/ci.yml/badge.svg)
-![Deploy Pipeline](https://github.com/ihab4real/FlowFocus/actions/workflows/deploy.yml/badge.svg)
+![CI Pipeline](https://github.com/ihabadham/FlowFocus/actions/workflows/ci.yml/badge.svg)
+![Deploy Pipeline](https://github.com/ihabadham/FlowFocus/actions/workflows/deploy.yml/badge.svg)
 
 ## Pipeline Architecture
 
